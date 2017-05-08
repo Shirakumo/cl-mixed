@@ -126,9 +126,9 @@
 (defcstruct (channel :class channel :conc-name channel-)
   (data :pointer)
   (size size_t)
-  (encoding (:enum mixed-encoding))
+  (encoding encoding)
   (channels uint8_t)
-  (layout (:enum mixed-layout))
+  (layout layout)
   (samplerate size_t))
 
 (defcstruct (field-info :class field-info :conc-name field-info-)
@@ -255,12 +255,12 @@
   (from :float)
   (to :float)
   (time :float)
-  (type (:enum fade-type))
+  (type fade-type)
   (samplerate size_t)
   (segment :pointer))
 
 (defcfun (make-segment-generator "mixed_make_segment_generator") :int
-  (type (:enum generator-type))
+  (type generator-type)
   (frequency size_t)
   (samplerate size_t)
   (segment :pointer))
@@ -296,7 +296,7 @@
   (mixer :pointer))
 
 (defcfun (samplesize "mixed_samplesize") uint8_t
-  (encoding (:enum encoding)))
+  (encoding encoding))
 
 (defcfun (mixed-error "mixed_error") error)
 

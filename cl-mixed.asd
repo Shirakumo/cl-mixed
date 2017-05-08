@@ -19,6 +19,7 @@
                (:file "documentation"))
   :depends-on (:alexandria
                :cffi
+               :cffi-libffi
                :trivial-features
                :trivial-garbage
                :documentation-utils))
