@@ -25,8 +25,278 @@
 (use-foreign-library libmixed)
 
 (defctype size_t :uint)
+(defctype uint8_t :uchar)
 
+(defcenum error
+  :no-error
+  :out-of-memory
+  :unknown-encoding
+  :unknown-layout
+  :mixing-failed
+  :not-implemented
+  :not-initialized
+  :invalid-location
+  :invalid-field
+  :segment-already-started
+  :segment-already-ended
+  :open-ladspa-failed
+  :bad-ladspa-library
+  :no-ladspa-plugin-at-index
+  :ladspa-instantiation-failed)
 
+(defcenum encoding
+  :int8
+  :uint8
+  :int16
+  :uint16
+  :int24
+  :uint24
+  :int32
+  :uint32
+  :float
+  :double)
+
+(defcenum layout
+  :alternating
+  :sequential)
+
+(defcenum fields
+  :buffer
+  :general-volume
+  :general-pan
+  :fade-from
+  :fade-to
+  :fade-time
+  :fade-type
+  :generator-frequency
+  :generator-type
+  :space-location
+  :space-direction
+  :space-velocity
+  :space-up
+  :space-soundspeed
+  :space-doppler-factor
+  :space-min-distance
+  :space-max-distance
+  :space-rolloff
+  :space-attenuation)
+
+(defcenum attenuation
+  :no-attenuation
+  :inverse-attenuation
+  :linear-attenuation
+  :exponential-attenuation)
+
+(defcenum fade-type
+  :linear
+  :cubic-in
+  :cubic-out
+  :cubic-in-out)
+
+(defcenum generator-type
+  :sine
+  :square
+  :triangle
+  :sawtooth)
+
+(defcenum info-flags
+  (:inplace #x1)
+  (:modifies-input #x2)
+  (:in #x1)
+  (:out #x2)
+  (:segment #x4)
+  (:set #x8)
+  (:get #x10))
+
+(defcenum location
+  (:mono 0)
+  (:left 0)
+  (:right 1)
+  (:left-front 0)
+  (:right-front 1)
+  (:left-rear 2)
+  (:right-rear 3)
+  (:center 4)
+  (:subwoofer 5))
+
+(defcstruct (buffer :class buffer :conc-name buffer-)
+  (data :pointer)
+  (size size_t))
+
+(defcstruct (channel :class channel :conc-name channel-)
+  (data :pointer)
+  (size size_t)
+  (encoding (:enum mixed-encoding))
+  (channels uint8_t)
+  (layout (:enum mixed-layout))
+  (samplerate size_t))
+
+(defcstruct (field-info :class field-info :conc-name field-info-)
+  (field size_t)
+  (description :string)
+  (flags :int))
+
+(defcstruct (segment-info :class segment-info :conc-name segment-info-)
+  (name :string)
+  (description :string)
+  (flags :int)
+  (min-inputs size_t)
+  (max-inputs size_t)
+  (outputs size_t)
+  (fields (:struct field-info) :count 32))
+
+(defcstruct (segment :class segment :conc-name segment-)
+  (free :pointer)
+  (info :pointer)
+  (start :pointer)
+  (mix :pointer)
+  (end :pointer)
+  (set-in :pointer)
+  (set-out :pointer)
+  (get-in :pointer)
+  (get-out :pointer)
+  (set :pointer)
+  (get :pointer)
+  (data :pointer))
+
+(defcstruct (mixer :class mixer :conc-name mixer-)
+  (segments :pointer)
+  (count size_t)
+  (size size_t))
+
+(defcfun (make-buffer "mixed_make_buffer") :int
+  (size size_t)
+  (buffer :pointer))
+
+(defcfun (free-buffer "mixed_free_buffer") :void
+  (buffer :pointer))
+
+(defcfun (buffer-from-channel "mixed_buffer_from_channel") :int
+  (in :pointer)
+  (outs :pointer)
+  (samples size_t))
+
+(defcfun (buffer-to-channel "mixed_buffer_to_channel") :int
+  (ins :pointer)
+  (out :pointer)
+  (samples size_t))
+
+(defcfun (copy-buffer "mixed_buffer_copy") :int
+  (from :pointer)
+  (to :pointer))
+
+(defcfun (free-segment "mixed_free_segment") :int
+  (segment :pointer))
+
+(defcfun (segment-start "mixed_segment_start") :int
+  (segment :pointer))
+
+(defcfun (segment-mix "mixed_segment_mix") :int
+  (segment :pointer))
+
+(defcfun (segment-end "mixed_segment_end") :int
+  (segment :pointer))
+
+(defcfun (segment-set-in "mixed_segment_set_in") :int
+  (field size_t)
+  (location size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (segment-set-out "mixed_segment_set_out") :int
+  (field size_t)
+  (location size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (segment-get-in "mixed_segment_get_in") :int
+  (field size_t)
+  (location size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (segment-get-out "mixed_segment_get_out") :int
+  (field size_t)
+  (location size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (segment-info "mixed_segment_info") (:struct segment-info)
+  (segment :pointer))
+
+(defcfun (segment-set "mixed_segment_set") :int
+  (field size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (segment-get "mixed_segment_get") :int
+  (field size_t)
+  (value :pointer)
+  (segment :pointer))
+
+(defcfun (make-segment-source "mixed_make_segment_source") :int
+  (channel :pointer)
+  (segment :pointer))
+
+(defcfun (make-segment-drain "mixed_make_segment_drain") :int
+  (channel :pointer)
+  (segment :pointer))
+
+(defcfun (make-segment-mixer "mixed_make_segment_mixer") :int
+  (buffers :pointer)
+  (segment :pointer))
+
+(defcfun (make-segment-general "mixed_make_segment_general") :int
+  (volume :float)
+  (pan :float)
+  (segment :pointer))
+
+(defcfun (make-segment-fade "mixed_make_segment_fade") :int
+  (from :float)
+  (to :float)
+  (time :float)
+  (type (:enum fade-type))
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-generator "mixed_make_segment_generator") :int
+  (type (:enum generator-type))
+  (frequency size_t)
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-ladspa "mixed_make_segment_ladspa") :int
+  (file :string)
+  (index size_t)
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-space "mixed_make_segment_space") :int
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (free-mixer "mixed_free_mixer") :void
+  (segment :pointer))
+
+(defcfun (mixer-add "mixed_mixer_add") :int
+  (segment :pointer)
+  (mixer :pointer))
+
+(defcfun (mixer-remove "mixed_mixer_remove") :int
+  (segment :pointer)
+  (mixer :pointer))
+
+(defcfun (mixer-start "mixed_mixer_start") :int
+  (mixer :pointer))
+
+(defcfun (mixer-mix "mixed_mixer_mix") :int
+  (mixer :pointer))
+
+(defcfun (mixer-end "mixed_mixer_end") :int
+  (mixer :pointer))
+
+(defcfun (samplesize "mixed_samplesize") uint8_t
+  (encoding (:enum encoding)))
 
 (defcfun (mixed-error "mixed_error") error)
 
