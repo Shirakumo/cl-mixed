@@ -138,3 +138,24 @@
 
        (defmethod (setf ,name) (,value (,segment ,class))
          (setf (field ,field ,segment) ,value)))))
+
+(defun vector-remove-pos (index vector)
+  (loop for i from (1+ index) below (length vector)
+        do (setf (aref vector (1- i)) (aref vector i)))
+  (setf (aref vector (1- (length vector))) NIL)
+  (decf (fill-pointer vector))
+  vector)
+
+(defun vector-insert-pos (index element vector)
+  (when (<= index (length vector))
+    (adjust-array vector (1+ index)))
+  (setf (aref vector index) element)
+  (incf (fill-pointer vector))
+  vector)
+
+(defun vector-remove (element vector)
+  (loop for i from 0 below (length vector)
+        do (when (eq element (aref vector i))
+             (vector-remove-pos i vector)
+             (return)))
+  vector)

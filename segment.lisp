@@ -42,8 +42,10 @@
              (setf (cl-mixed-cffi:field-info-description field) description)
              (setf (cl-mixed-cffi:field-info-flags field) (encode-flags flags)))))
 
+;; See the comment on the mixer class for an explanation on the arrays.
 (defclass segment (c-object)
-  ())
+  ((inputs :initform (make-array 0 :adjustable T :fill-pointer T) :reader inputs)
+   (outputs :initform (make-array 0 :adjustable T :fill-pointer T) :reader outputs)))
 
 (defmethod info ((segment segment))
   (let ((info (cl-mixed-cffi:segment-info (handle segment))))
@@ -74,7 +76,18 @@
     (cl-mixed-cffi:free-segment handle)
     (cffi:foreign-free handle)))
 
-;; FIXME: Ensure retention of buffer references after set to avoid preemptive GC
+(defmethod (setf input-field) (value field location segment)
+  (etypecase value
+    (cffi:foreign-pointer
+     (with-error-on-failure ()
+       (cl-mixed-cffi:segment-set-in field location value (handle segment))))))
+
+(defmethod (setf output-field) (value field location segment)
+  (etypecase value
+    (cffi:foreign-pointer
+     (with-error-on-failure ()
+       (cl-mixed-cffi:segment-set-out field location value (handle segment)))))
+  value)
 
 (defmethod input-field ((field (eql :buffer)) location (segment segment))
   (cffi:with-foreign-object (ptr :pointer)
@@ -83,15 +96,17 @@
     (or (pointer->object (cffi:mem-ref ptr :pointer))
         (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
-(defmethod (setf input-field) (value field location segment)
-  (etypecase value
-    (cffi:foreign-pointer
-     (with-error-on-failure ()
-       (cl-mixed-cffi:segment-set-in field location value (handle segment))))))
-
 (defmethod (setf input-field) ((value buffer) (field (eql :buffer)) location (segment segment))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment))))
+    (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment)))
+  (vector-insert-pos location value (inputs segment))
+  value)
+
+(defmethod (setf input-field) ((value null) (field (eql :buffer)) location (segment segment))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:segment-set-in field location (cffi:null-pointer) (handle segment)))
+  (vector-remove-pos location (inputs segment))
+  value)
 
 (defmethod output-field ((field (eql :buffer)) location (segment segment))
   (cffi:with-foreign-object (ptr :pointer)
@@ -100,20 +115,24 @@
     (or (pointer->object (cffi:mem-ref ptr :pointer))
         (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
-(defmethod (setf output-field) (value field location segment)
-  (etypecase value
-    (cffi:foreign-pointer
-     (with-error-on-failure ()
-       (cl-mixed-cffi:segment-set-out field location value (handle segment))))))
-
 (defmethod (setf output-field) ((value buffer) (field (eql :buffer)) location (segment segment))
-  (cl-mixed-cffi:segment-set-out field location (handle value) (handle segment)))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:segment-set-out field location (handle value) (handle segment)))
+  (vector-insert-pos location value (outputs segment))
+  value)
+
+(defmethod (setf output-field) ((value null) (field (eql :buffer)) location (segment segment))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:segment-set-out field location (cffi:null-pointer) (handle segment)))
+  (vector-remove-pos location (outputs segment))
+  value)
 
 (defmethod (setf field) (value field (segment segment))
   (etypecase value
     (cffi:foreign-pointer
      (with-error-on-failure ()
-       (cl-mixed-cffi:segment-set field value (handle segment))))))
+       (cl-mixed-cffi:segment-set field value (handle segment)))))
+  value)
 
 (defmethod input (location (segment segment))
   (input-field :buffer location segment))
