@@ -45,6 +45,12 @@
       (tg:finalize object (free-handle object handle))
       (setf (gethash (cffi:pointer-address handle) *c-object-table*) object))))
 
+(defmethod initialize-instance :around ((object c-object) &key handle)
+  (if handle
+      (call-next-method)
+      (with-cleanup-on-failure (free object)
+        (call-next-method))))
+
 (defmethod free ((object c-object))
   (let ((handle (handle object)))
     (when handle

@@ -14,9 +14,8 @@
     (let ((handle (handle buffer)))
       (unless size
         (error "Buffer SIZE required."))
-      (with-cleanup-on-failure (cffi:foreign-free handle)
-        (with-error-on-failure ()
-          (cl-mixed-cffi:make-buffer (size buffer) handle))))))
+      (with-error-on-failure ()
+        (cl-mixed-cffi:make-buffer (size buffer) handle)))))
 
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct cl-mixed-cffi:buffer)))
