@@ -99,7 +99,7 @@
          (cffi:with-foreign-object (,value-ptr ',type)
            (setf (cffi:mem-ref ,value-ptr ',type) ,value)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment))))
+             (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
 
        (defmethod ,name ((,segment ,class))
@@ -130,7 +130,7 @@
              (setf (cffi:mem-ref ,value-ptr :float 1) ,y)
              (setf (cffi:mem-ref ,value-ptr :float 2) ,z))
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment))))
+             (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
 
        (defmethod ,name ((,segment ,class))
