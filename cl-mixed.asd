@@ -15,7 +15,11 @@
   :serial T
   :components ((:file "package")
                (:file "low-level")
-               (:file "wrapper")
+               (:file "toolkit")
+               (:file "buffer")
+               (:file "channel")
+               (:file "segment")
+               (:file "mixer")
                (:file "documentation"))
   :depends-on (:alexandria
                :cffi
