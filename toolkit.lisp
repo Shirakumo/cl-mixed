@@ -53,7 +53,7 @@
       (funcall (free-handle object handle)))))
 
 (defmethod pointer->object ((pointer integer))
-  (gethash integer *c-object-table*))
+  (gethash pointer *c-object-table*))
 
 (defmethod pointer->object (pointer)
   (gethash (cffi:pointer-address pointer) *c-object-table*))

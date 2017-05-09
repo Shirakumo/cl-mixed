@@ -205,7 +205,7 @@
 
 (defmethod initialize-instance :after ((segment fade) &key from to time type samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-fade from to time type sampelerate (handle segment))))
+    (cl-mixed-cffi:make-segment-fade from to time type samplerate (handle segment))))
 
 (define-field-accessor from fade :float :fade-from)
 (define-field-accessor to fade :float :fade-to)
@@ -370,8 +370,8 @@
     (setf (cffi:mem-ref value-ptr type) value)))
 
 (define-std-callback virtual-set ((field size_t) (value :pointer) (segment :pointer))
-  (setf (field field location (pointer->object segment)) value))
+  (setf (field field (pointer->object segment)) value))
 
 (define-std-callback virtual-get ((field size_t) (value-ptr :pointer) (segment :pointer))
-  (multiple-value-bind (value type) (field field location (pointer->object segment))
+  (multiple-value-bind (value type) (field field (pointer->object segment))
     (setf (cffi:mem-ref value-ptr type) value)))
