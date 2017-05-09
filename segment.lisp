@@ -23,19 +23,39 @@
            do (setf integer (logior integer (cffi:foreign-enum-value 'cl-mixed-cffi:info-flags flag)))
            finally (return integer)))))
 
+(defun decode-field-info (info)
+  (loop for field = (cffi:foreign-slot-pointer info '(:struct cl-mixed-cffi:segment-info) 'cl-mixed-cffi::fields)
+        then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct cl-mixed-cffi:field-info)))
+        repeat 32
+        until (cffi:null-pointer-p (cl-mixed-cffi:field-info-description field))
+        collect (list :field (cl-mixed-cffi:field-info-field field)
+                      :description (cl-mixed-cffi:field-info-description field)
+                      :flags (decode-flags
+                              (cl-mixed-cffi:field-info-flags field)))))
+
+(defun encode-field-info (fields info)
+  (loop for field = (cffi:foreign-slot-pointer info '(:struct cl-mixed-cffi:segment-info) 'cl-mixed-cffi::fields)
+        then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct cl-mixed-cffi:field-info)))
+        for fieldspec in fields
+        do (destructuring-bind (&key fieldno description flags) fieldspec
+             (setf (cl-mixed-cffi:field-info-field field) fieldno)
+             (setf (cl-mixed-cffi:field-info-description field) description)
+             (setf (cl-mixed-cffi:field-info-flags field) (encode-flags flags)))))
+
 (defclass segment (c-object)
   ())
 
 (defmethod info ((segment segment))
   (let ((info (cl-mixed-cffi:segment-info (handle segment))))
-    (list :name (cl-mixed-cffi:segment-info-name info)
-          :description (cl-mixed-cffi:segment-info-description info)
-          :flags (decode-flags (cl-mixed-cffi:segment-info-flags info))
-          :min-inputs (cl-mixed-cffi:segment-info-min-inputs info)
-          :max-inputs (cl-mixed-cffi:segment-info-max-inputs info)
-          :outputs (cl-mixed-cffi:segment-info-outputs info)
-          ;; FIXME fields
-          )))
+    (unless (cffi:null-pointer-p info)
+      (prog1 (list :name (cl-mixed-cffi:segment-info-name info)
+                   :description (cl-mixed-cffi:segment-info-description info)
+                   :flags (decode-flags (cl-mixed-cffi:segment-info-flags info))
+                   :min-inputs (cl-mixed-cffi:segment-info-min-inputs info)
+                   :max-inputs (cl-mixed-cffi:segment-info-max-inputs info)
+                   :outputs (cl-mixed-cffi:segment-info-outputs info)
+                   :fields (decode-field-info info))
+        (cffi:foreign-free info)))))
 
 (defmethod start ((segment segment))
   (cl-mixed-cffi:segment-start (handle segment)))
@@ -54,23 +74,44 @@
     (cl-mixed-cffi:free-segment handle)
     (cffi:foreign-free handle)))
 
-(defmethod input-field (field location (segment segment))
-  )
+(defmethod input-field ((field (eql :buffer)) location (segment segment))
+  (cffi:with-foreign-object (ptr :pointer)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get-in field location ptr segment))
+    (or (pointer->object (cffi:mem-ref ptr :pointer))
+        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
-(defmethod (setf input-field) (value field location (segment segment))
-  )
+(defmethod (setf input-field) (value field location segment)
+  (etypecase value
+    (cffi:foreign-pointer
+     (with-error-on-failure ()
+       (cl-mixed-cffi:segment-set-in field location value (handle segment))))))
 
-(defmethod output-field (field location (segment segment))
-  )
+(defmethod (setf input-field) ((value buffer) (field (eql :buffer)) location (segment segment))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment))))
 
-(defmethod (setf output-field) (value field location (segment segment))
-  )
+(defmethod output-field ((field (eql :buffer)) location (segment segment))
+  (cffi:with-foreign-object (ptr :pointer)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get-out field location ptr segment))
+    (or (pointer->object (cffi:mem-ref ptr :pointer))
+        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
-(defmethod field (field (segment segment))
-  )
+(defmethod (setf output-field) (value field location segment)
+  (etypecase value
+    (cffi:foreign-pointer
+     (with-error-on-failure ()
+       (cl-mixed-cffi:segment-set-out field location value (handle segment))))))
+
+(defmethod (setf output-field) ((value buffer) (field (eql :buffer)) location (segment segment))
+  (cl-mixed-cffi:segment-set-out field location (handle value) (handle segment)))
 
 (defmethod (setf field) (value field (segment segment))
-  )
+  (etypecase value
+    (cffi:foreign-pointer
+     (with-error-on-failure ()
+       (cl-mixed-cffi:segment-set field value (handle segment))))))
 
 (defmethod input (location (segment segment))
   (input-field :buffer location segment))
@@ -87,6 +128,7 @@
 (defclass many-inputs-segment (segment)
   ())
 
+;; FIXME
 (defmethod add ((buffer buffer) (segment many-inputs-segment))
   )
 
@@ -125,9 +167,12 @@
    :volume 1.0
    :pan 0.0))
 
-(defmethod initialize-instance :after ((general general) &key volume pan)
+(defmethod initialize-instance :after ((segment general) &key volume pan)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-general volume pan (handle general))))
+    (cl-mixed-cffi:make-segment-general volume pan (handle segment))))
+
+(define-field-accessor volume general :float :general-volume)
+(define-field-accessor pan general :float :general-pan)
 
 (defclass fade (segment)
   ()
@@ -138,9 +183,14 @@
    :type :cubic-in-out
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((general general) &key from to time type samplerate)
+(defmethod initialize-instance :after ((segment fade) &key from to time type samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-fade from to time type sampelerate (handle general))))
+    (cl-mixed-cffi:make-segment-fade from to time type sampelerate (handle segment))))
+
+(define-field-accessor from fade :float :fade-from)
+(define-field-accessor to fade :float :fade-to)
+(define-field-accessor duration fade :float :fade-time)
+(define-field-accessor fade-type fade cl-mixed-cffi:fade-type)
 
 (defclass generator (segment)
   ()
@@ -149,9 +199,12 @@
    :frequency 440
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((generator generator) &key type frequency samplerate)
+(defmethod initialize-instance :after ((segment generator) &key type frequency samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-generator type frequency sampelerate (handle general))))
+    (cl-mixed-cffi:make-segment-generator type frequency samplerate (handle segment))))
+
+(define-field-accessor wave-type generator cl-mixed-cffi:generator-type :generator-type)
+(define-field-accessor frequency generator :float :generator-frequency)
 
 (defclass ladspa (segment)
   ()
@@ -160,9 +213,22 @@
    :index 0
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((ladspa ladspa) &key file index samplerate)
+(defmethod initialize-instance :after ((segment ladspa) &key file index samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-ladspa file index sampelerate (handle general))))
+    (cl-mixed-cffi:make-segment-ladspa file index samplerate (handle segment))))
+
+(defmethod field (field (segment ladspa))
+  (cffi:with-foreign-object (value-ptr :float)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get field value-ptr segment))
+    (cffi:mem-ref value-ptr :float)))
+
+(defmethod (setf field) (value field (segment ladspa))
+  (cffi:with-foreign-object (value-ptr :float)
+    (setf (cffi:mem-ref value-ptr :float) value)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get field value-ptr segment)))
+  value)
 
 (defclass space (many-inputs-segment)
   ()
@@ -171,13 +237,48 @@
 
 (defmethod initialize-instance :after ((space space) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-space sampelerate (handle general))))
+    (cl-mixed-cffi:make-segment-space samplerate (handle space))))
+
+(define-vector-field-accessor location space :space-location)
+(define-vector-field-accessor velocity space :space-velocity)
+(define-vector-field-accessor direction space :space-direction)
+(define-vector-field-accessor up space :space-up)
+
+(define-field-accessor soundspeed space :float :space-soundspeed)
+(define-field-accessor doppler-factor space :float :space-doppler-factor)
+(define-field-accessor min-distance space :float :space-min-distance)
+(define-field-accessor max-distance space :float :space-max-distance)
+(define-field-accessor rolloff space :float :space-rolloff)
+
+(defmethod field ((field (eql :attenuation)) (segment space))
+  (cffi:with-foreign-object (value-ptr :pointer)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get field value-ptr segment))
+    (loop with int = (cffi:mem-ref value-ptr :int)
+          for keyword in (cffi:foreign-enum-keyword-list 'cl-mixed-cffi:attenuation)
+          do (when (= int (cffi:foreign-enum-value 'cl-mixed-cffi:attenuation keyword))
+               (return keyword))
+          finally (return (cffi:mem-ref value-ptr :pointer)))))
+
+(defmethod (setf field) (value (field (eql :attenuation)) (segment space))
+  (cffi:with-foreign-object (value-ptr :pointer)
+    (etypecase value
+      (keyword
+       (setf (cffi:mem-ref value-ptr :int)
+             (cffi:foreign-enum-value 'cl-mixed-cffi:attenuation value)))
+      (cffi:foreign-pointer
+       (setf (cffi:mem-ref value-ptr :pointer) value)))
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get field value-ptr segment)))
+  value)
+
+;; FIXME: accessors for input fields
 
 (defclass virtual (segment)
   ())
 
-(defmethod initialize-instance :after ((virtual virtual) &key)
-  (let ((handle (handle virtual)))
+(defmethod initialize-instance :after ((segment virtual) &key)
+  (let ((handle (handle segment)))
     (setf (cl-mixed-cffi:direct-segment-free handle) (cffi:callback virtual-free))
     (setf (cl-mixed-cffi:direct-segment-info handle) (cffi:callback virtual-info))
     (setf (cl-mixed-cffi:direct-segment-start handle) (cffi:callback virtual-start))
@@ -217,9 +318,10 @@
       (setf (cl-mixed-cffi:segment-info-name info) name)
       (setf (cl-mixed-cffi:segment-info-description info) description)
       (setf (cl-mixed-cffi:segment-info-flags info) (encode-flags flags))
-      (setf (cl-mixed-cffi:segment-info-min-inptus info) min-inptus)
+      (setf (cl-mixed-cffi:segment-info-min-inputs info) min-inputs)
       (setf (cl-mixed-cffi:segment-info-max-inputs info) max-inputs)
-      ;; FIXME fields
+      (setf (cl-mixed-cffi:segment-info-outputs info) outputs)
+      (encode-field-info fields info)
       info)))
 
 (define-std-callback virtual-start ((segment :pointer))

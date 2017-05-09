@@ -82,3 +82,59 @@
        0
      (prog1 1
        ,@body)))
+
+(defmacro define-field-accessor (name class type &optional (enum (intern (string name) "KEYWORD")))
+  (let ((value-ptr (gensym "VALUE-PTR"))
+        (value (gensym "VALUE"))
+        (segment (gensym  "SEGMENT"))
+        (field (intern (string name) "KEYWORD")))
+    `(progn
+       (defmethod field ((field (eql ,field)) (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr ',type)
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
+           (cffi:mem-ref ,value-ptr ',type)))
+
+       (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr ',type)
+           (setf (cffi:mem-ref ,value-ptr ',type) ,value)
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment))))
+         ,value)
+
+       (defmethod ,name ((,segment ,class))
+         (field ,field ,segment))
+
+       (defmethod (setf ,name) (,value (,segment ,class))
+         (setf (field ,field ,segment) ,value)))))
+
+(defmacro define-vector-field-accessor (name class enum)
+  (let ((value-ptr (gensym "VALUE-PTR"))
+        (value (gensym "VALUE"))
+        (segment (gensym  "SEGMENT"))
+        (x (gensym "X")) (y (gensym "Y")) (z (gensym "Z"))
+        (field (intern (string name) "KEYWORD")))
+    `(progn
+       (defmethod field ((field (eql ,field)) (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr :float 3)
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
+           (list (cffi:mem-ref ,value-ptr :float 0)
+                 (cffi:mem-ref ,value-ptr :float 1)
+                 (cffi:mem-ref ,value-ptr :float 2))))
+
+       (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr :float 3)
+           (destructuring-bind (,x ,y ,z) ,value
+             (setf (cffi:mem-ref ,value-ptr :float 0) ,x)
+             (setf (cffi:mem-ref ,value-ptr :float 1) ,y)
+             (setf (cffi:mem-ref ,value-ptr :float 2) ,z))
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment))))
+         ,value)
+
+       (defmethod ,name ((,segment ,class))
+         (field ,field ,segment))
+
+       (defmethod (setf ,name) (,value (,segment ,class))
+         (setf (field ,field ,segment) ,value)))))
