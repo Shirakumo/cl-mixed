@@ -221,7 +221,7 @@
   (value :pointer)
   (segment :pointer))
 
-(defcfun (segment-info "mixed_segment_info") (:struct segment-info)
+(defcfun (segment-info "mixed_segment_info") :pointer
   (segment :pointer))
 
 (defcfun (segment-set "mixed_segment_set") :int

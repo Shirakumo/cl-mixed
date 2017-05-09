@@ -99,6 +99,8 @@
 (defpackage #:cl-mixed
   (:nicknames #:org.shirakumo.fraf.mixed)
   (:use #:cl #:cffi)
+  (:import-from #:cl-mixed-cffi #:size_t)
+  (:shadow #:space)
   ;; wrapper.lisp
   (:export
    ))

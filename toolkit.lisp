@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defvar *default-samplerate* 44100)
-(defvar *c-object-table* (make-hash-table :test 'eql))
+(defvar *c-object-table* (tg:make-weak-hash-table :test 'eql :weakness :value))
 
 (define-condition mixed-error (error)
   ((error-code :initarg :error-code :accessor error-code))
@@ -66,3 +66,19 @@
        
        (defmethod (setf ,name) (,value (,class ,class))
          (setf (,ffi (handle ,class)) ,value)))))
+
+(defmacro define-callback (name return args error-return &body body)
+  (let ((err (gensym "ERROR")))
+    `(cffi:defcallback ,name ,return ,args
+       (handler-case
+           (progn
+             ,@body)
+         (error (,err)
+           (format T "Error in ~a callback: ~a" ',name ,err)
+           ,error-return)))))
+
+(defmacro define-std-callback (name args &body body)
+  `(define-callback ,name :int ,args
+       0
+     (prog1 1
+       ,@body)))
