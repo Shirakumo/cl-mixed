@@ -137,24 +137,23 @@
 (defmethod input (location (segment segment))
   (input-field :buffer location segment))
 
-(defmethod (setf input) ((buffer buffer) location (segment segment))
+(defmethod (setf input) (buffer location (segment segment))
   (setf (input-field :buffer location segment) buffer))
 
 (defmethod output (location (segment segment))
   (output-field :buffer location segment))
 
-(defmethod (setf output) ((buffer buffer) location (segment segment))
+(defmethod (setf output) (buffer location (segment segment))
   (setf (output-field :buffer location segment) buffer))
 
 (defclass many-inputs-segment (segment)
   ())
 
-;; FIXME
 (defmethod add ((buffer buffer) (segment many-inputs-segment))
-  )
+  (setf (input (length (inputs segment)) segment) buffer))
 
 (defmethod withdraw ((buffer buffer) (segment many-inputs-segment))
-  )
+  (setf (input (position buffer (inputs segment)) segment) NIL))
 
 (defclass source (segment)
   ())
