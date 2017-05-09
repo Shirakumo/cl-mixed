@@ -6,8 +6,45 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
+(defun decode-flags (integer)
+  (etypecase integer
+    (list integer)
+    (integer
+     (loop for flag in (cffi:foreign-enum-keyword-list 'cl-mixed-cffi:info-flags)
+           when (/= 0 (logand integer (cffi:foreign-enum-value 'cl-mixed-cffi:info-flags flag)))
+           collect flag))))
+
+(Defun encode-flags (flags)
+  (etypecase flags
+    (integer flags)
+    (list
+     (loop with integer = 0
+           for flag in flags
+           do (setf integer (logior integer (cffi:foreign-enum-value 'cl-mixed-cffi:info-flags flag)))
+           finally (return integer)))))
+
 (defclass segment (c-object)
   ())
+
+(defmethod info ((segment segment))
+  (let ((info (cl-mixed-cffi:segment-info (handle segment))))
+    (list :name (cl-mixed-cffi:segment-info-name info)
+          :description (cl-mixed-cffi:segment-info-description info)
+          :flags (decode-flags (cl-mixed-cffi:segment-info-flags info))
+          :min-inputs (cl-mixed-cffi:segment-info-min-inputs info)
+          :max-inputs (cl-mixed-cffi:segment-info-max-inputs info)
+          :outputs (cl-mixed-cffi:segment-info-outputs info)
+          ;; FIXME fields
+          )))
+
+(defmethod start ((segment segment))
+  (cl-mixed-cffi:segment-start (handle segment)))
+
+(defmethod mix (samples (segment segment))
+  (cl-mixed-cffi:segment-mix samples (handle segment)))
+
+(defmethod end ((segment segment))
+  (cl-mixed-cffi:segment-end (handle segment)))
 
 (defmethod allocate-handle ((segment segment))
   (calloc '(:struct cl-mixed-cffi:segment)))
@@ -17,17 +54,23 @@
     (cl-mixed-cffi:free-segment handle)
     (cffi:foreign-free handle)))
 
-(defmethod input-field (field location (segment segment)))
+(defmethod input-field (field location (segment segment))
+  )
 
-(defmethod (setf input-field) (value field location (segment segment)))
+(defmethod (setf input-field) (value field location (segment segment))
+  )
 
-(defmethod output-field (field location (segment segment)))
+(defmethod output-field (field location (segment segment))
+  )
 
-(defmethod (setf output-field) (value field location (segment segment)))
+(defmethod (setf output-field) (value field location (segment segment))
+  )
 
-(defmethod field (field (segment segment)))
+(defmethod field (field (segment segment))
+  )
 
-(defmethod (setf field) (field (segment segment)))
+(defmethod (setf field) (value field (segment segment))
+  )
 
 (defmethod input (location (segment segment))
   (input-field :buffer location segment))
@@ -40,6 +83,15 @@
 
 (defmethod (setf output) ((buffer buffer) location (segment segment))
   (setf (output-field :buffer location segment) buffer))
+
+(defclass many-inputs-segment (segment)
+  ())
+
+(defmethod add ((buffer buffer) (segment many-inputs-segment))
+  )
+
+(defmethod withdraw ((buffer buffer) (segment many-inputs-segment))
+  )
 
 (defclass source (segment)
   ())
@@ -55,7 +107,7 @@
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-drain (handle channel) (handle drain))))
 
-(defclass linear-mixer (segment)
+(defclass linear-mixer (many-inputs-segment)
   ())
 
 (defmethod initialize-instance :after ((mixer linear-mixer) &key buffers)
@@ -66,12 +118,6 @@
     (setf (cffi:mem-aref buflist :pointer (length buffers)) (cffi:null-pointer))
     (with-error-on-failure ()
       (cl-mixed-cffi:make-segment-mixer buflist (handle mixer)))))
-
-(defmethod add ((buffer buffer) (mixer linear-mixer))
-  )
-
-(defmethod withdraw ((buffer buffer) (mixer linear-mixer))
-  )
 
 (defclass general (segment)
   ()
@@ -118,7 +164,7 @@
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-ladspa file index sampelerate (handle general))))
 
-(defclass space (segment)
+(defclass space (many-inputs-segment)
   ()
   (:default-initargs
    :samplerate *default-samplerate*))
@@ -148,13 +194,33 @@
   (lambda ()
     (cffi:foreign-free handle)))
 
+(defmethod info ((virtual virtual)))
+(defmethod start ((virtual virtual)))
+(defmethod mix (samples (virtual virtual)))
+(defmethod end ((virtual virtual)))
+(defmethod input-field (field location (virtual virtual)))
+(defmethod (setf input-field) (value field location (virtual virtual)))
+(defmethod output-field (field location (virtual virtual)))
+(defmethod (setf output-field) (value field location (virtual virtual)))
+(defmethod field (field (virtual virtual)))
+(defmethod (setf field) (value field (virtual virtual)))
+
 (define-callback virtual-free :void ((segment :pointer))
     NIL
   (free (pointer->object segment)))
 
 (define-callback virtual-info :pointer ((segment :pointer))
     (cffi:null-pointer)
-  (info (pointer->object segment)))
+  (destructuring-bind (&key name description flags min-inputs max-inputs outputs fields)
+      (info (pointer->object segment))
+    (let ((info (cffi:foreign-alloc '(:struct cl-mixed-cffi:segment-info))))
+      (setf (cl-mixed-cffi:segment-info-name info) name)
+      (setf (cl-mixed-cffi:segment-info-description info) description)
+      (setf (cl-mixed-cffi:segment-info-flags info) (encode-flags flags))
+      (setf (cl-mixed-cffi:segment-info-min-inptus info) min-inptus)
+      (setf (cl-mixed-cffi:segment-info-max-inputs info) max-inputs)
+      ;; FIXME fields
+      info)))
 
 (define-std-callback virtual-start ((segment :pointer))
   (start (pointer->object segment)))

@@ -192,6 +192,7 @@
   (segment :pointer))
 
 (defcfun (segment-mix "mixed_segment_mix") :int
+  (samples size_t)
   (segment :pointer))
 
 (defcfun (segment-end "mixed_segment_end") :int
@@ -290,6 +291,7 @@
   (mixer :pointer))
 
 (defcfun (mixer-mix "mixed_mixer_mix") :int
+  (samples size_t)
   (mixer :pointer))
 
 (defcfun (mixer-end "mixed_mixer_end") :int

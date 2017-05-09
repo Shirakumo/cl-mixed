@@ -48,8 +48,8 @@
   (with-error-on-failure ()
     (cl-mixed-cffi:mixer-start (handle mixer))))
 
-(defmethod mix ((mixer mixer))
-  (cl-mixed-cffi:mixer-mix (handle mixer))
+(defmethod mix (samples (mixer mixer))
+  (cl-mixed-cffi:mixer-mix samples (handle mixer))
   (unless (eql :no-error (cl-mixed-cffi:error))
     (error 'mixed-error)))
 
