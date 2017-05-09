@@ -264,6 +264,9 @@
 (define-vector-field-accessor direction space :space-direction)
 (define-vector-field-accessor up space :space-up)
 
+(define-input-vector-field-accessor input-location space :location :space-location)
+(define-input-vector-field-accessor input-velocity space :velocity :space-velocity)
+
 (define-field-accessor soundspeed space :float :space-soundspeed)
 (define-field-accessor doppler-factor space :float :space-doppler-factor)
 (define-field-accessor min-distance space :float :space-min-distance)
@@ -291,8 +294,6 @@
     (with-error-on-failure ()
       (cl-mixed-cffi:segment-get field value-ptr segment)))
   value)
-
-;; FIXME: accessors for input fields
 
 (defclass virtual (segment)
   ())

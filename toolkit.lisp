@@ -139,6 +139,43 @@
        (defmethod (setf ,name) (,value (,segment ,class))
          (setf (field ,field ,segment) ,value)))))
 
+(defmacro define-input-vector-field-accessor (name class field enum)
+  (let ((value-ptr (gensym "VALUE-PTR"))
+        (value (gensym "VALUE"))
+        (location (gensym "LOCATION"))
+        (segment (gensym  "SEGMENT"))
+        (x (gensym "X")) (y (gensym "Y")) (z (gensym "Z")))
+    `(progn
+       (defmethod input-field ((field (eql ,field)) ,location (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr :float 3)
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
+           (list (cffi:mem-ref ,value-ptr :float 0)
+                 (cffi:mem-ref ,value-ptr :float 1)
+                 (cffi:mem-ref ,value-ptr :float 2))))
+
+       (defmethod (setf input-field) (,value (field (eql ,field)) ,location (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr :float 3)
+           (destructuring-bind (,x ,y ,z) ,value
+             (setf (cffi:mem-ref ,value-ptr :float 0) ,x)
+             (setf (cffi:mem-ref ,value-ptr :float 1) ,y)
+             (setf (cffi:mem-ref ,value-ptr :float 2) ,z))
+           (with-error-on-failure ()
+             (cl-mixed-cffi:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
+         ,value)
+
+       (defmethod ,name ((,location buffer) (,segment ,class))
+         (input-field ,field (find ,location (inputs ,segment)) ,segment))
+
+       (defmethod ,name ((,location integer) (,segment ,class))
+         (input-field ,field ,location ,segment))
+
+       (defmethod (setf ,name) (,value (,location buffer) (,segment ,class))
+         (setf (input-field ,field (find ,location (inputs ,segment)) ,segment) ,value))
+
+       (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
+         (setf (input-field ,field ,location ,segment) ,value)))))
+
 (defun vector-remove-pos (index vector)
   (loop for i from (1+ index) below (length vector)
         do (setf (aref vector (1- i)) (aref vector i)))
