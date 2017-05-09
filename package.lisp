@@ -18,7 +18,7 @@
    #:error
    #:encoding
    #:layout
-   #:fields
+   #:field
    #:attenuation
    #:fade-type
    #:generator-type

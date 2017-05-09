@@ -60,7 +60,7 @@
   :alternating
   :sequential)
 
-(defcenum fields
+(defcenum field
   :buffer
   :general-volume
   :general-pan
@@ -198,25 +198,25 @@
   (segment :pointer))
 
 (defcfun (segment-set-in "mixed_segment_set_in") :int
-  (field size_t)
+  (field field)
   (location size_t)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-set-out "mixed_segment_set_out") :int
-  (field size_t)
+  (field field)
   (location size_t)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-get-in "mixed_segment_get_in") :int
-  (field size_t)
+  (field field)
   (location size_t)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-get-out "mixed_segment_get_out") :int
-  (field size_t)
+  (field field)
   (location size_t)
   (value :pointer)
   (segment :pointer))
@@ -225,12 +225,12 @@
   (segment :pointer))
 
 (defcfun (segment-set "mixed_segment_set") :int
-  (field size_t)
+  (field field)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-get "mixed_segment_get") :int
-  (field size_t)
+  (field field)
   (value :pointer)
   (segment :pointer))
 
