@@ -145,7 +145,7 @@
   (outputs size_t)
   (fields (:struct field-info) :count 32))
 
-(defcstruct (segment :class segment :conc-name segment-)
+(cffi:defcstruct (segment :class segment :conc-name direct-segment-)
   (free :pointer)
   (info :pointer)
   (start :pointer)
@@ -298,7 +298,7 @@
 (defcfun (samplesize "mixed_samplesize") uint8_t
   (encoding encoding))
 
-(defcfun (mixed-error "mixed_error") error)
+(defcfun (error "mixed_error") error)
 
-(defcfun (mixed-error-string "mixed_error_string") :string
+(defcfun (error-string "mixed_error_string") :string
   (error error))
