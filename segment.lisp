@@ -74,6 +74,8 @@
     (cl-mixed-cffi:free-segment handle)
     (cffi:foreign-free handle)))
 
+;; FIXME: Ensure retention of buffer references after set to avoid preemptive GC
+
 (defmethod input-field ((field (eql :buffer)) location (segment segment))
   (cffi:with-foreign-object (ptr :pointer)
     (with-error-on-failure ()

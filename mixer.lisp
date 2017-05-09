@@ -6,6 +6,11 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
+;; We have to keep track of the segments here in order to ensure
+;; that they don't get GCed and thus pulled away from under our
+;; feet during the runtime of  the program. On the other hand,
+;; this can cause problems when another C program modifies the
+;; mixer, as we will be blind to that kind of change.
 (defclass mixer (c-object)
   ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
 
