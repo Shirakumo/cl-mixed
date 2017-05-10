@@ -57,7 +57,9 @@
         (cl-mixed:start mixer)
         (unwind-protect
              (loop for tt = 0.0 then (+ tt 0.005)
-                   for x = (* 500 (sin tt))
+                   for dx = 0 then (- (* 500 (sin tt)) x)
+                   for x = (* 500 (sin tt)) then (+ x dx)
                    do (setf (cl-mixed:input-field :location 0 space) (list x 0 2))
+                      (setf (cl-mixed:input-field :velocity 0 space) (list dx 0 0))
                       (play file out mixer samples))
           (cl-mixed:end mixer))))))

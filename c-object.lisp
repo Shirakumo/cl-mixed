@@ -13,7 +13,7 @@
     (cffi:foreign-pointer thing)))
 
 (defclass c-object ()
-  ((handle :initarg :handle :accessor handle)))
+  ((handle :initarg :handle :initform NIL :accessor handle)))
 
 (defmethod initialize-instance :after ((object c-object) &key)
   (unless (handle object)
