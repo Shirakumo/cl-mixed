@@ -101,6 +101,83 @@
   (:use #:cl #:cffi)
   (:import-from #:cl-mixed-cffi #:size_t)
   (:shadow #:space)
-  ;; wrapper.lisp
+  ;; buffer.lisp
   (:export
-   ))
+   #:buffer
+   #:data
+   #:size)
+  ;; c-object.lisp
+  (:export
+   #:handle
+   #:c-object
+   #:free
+   #:pointer->object)
+  ;; channel.lisp
+  (:export
+   #:channel
+   #:data
+   #:size
+   #:encoding
+   #:channels
+   #:layout
+   #:samplerate)
+  ;; mixer.lisp
+  (:export
+   #:mixer
+   #:segments
+   #:add
+   #:withdraw
+   #:start
+   #:mix
+   #:end
+   #:size)
+  ;; segment.lisp
+  (:export
+   #:segment
+   #:inputs
+   #:outputs
+   #:info
+   #:start
+   #:mix
+   #:end
+   #:input-field
+   #:output-field
+   #:field
+   #:input
+   #:output
+   #:many-inputs-segment
+   #:add
+   #:withdraw
+   #:source
+   #:drain
+   #:linear-mixer
+   #:general
+   #:volume
+   #:pan
+   #:fade
+   #:from
+   #:to
+   #:duration
+   #:fade-type
+   #:generator
+   #:wave-type
+   #:frequency
+   #:ladspa
+   #:space
+   #:location
+   #:velocity
+   #:direction
+   #:up
+   #:input-location
+   #:input-velocity
+   #:soundspeed
+   #:doppler-factor
+   #:min-distance
+   #:max-distance
+   #:rolloff
+   #:virtual)
+  ;; toolkit.lisp
+  (:export
+   #:*default-samplerate*
+   #:mixed-error
+   #:error-code))
