@@ -7,9 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass channel (c-object)
-  ((size :initarg :size :accessor size)
-   (data :initarg :data :accessor data)
-   (own-data :initform (cons NIL NIL) :reader own-data))
+  ((own-data :initform (cons NIL NIL) :reader own-data))
   (:default-initargs
    :encoding :float
    :channels 2
@@ -18,14 +16,14 @@
 
 (defmethod initialize-instance :after ((channel channel) &key data size encoding channels layout samplerate)
   (unless data
-    (setf (data channel) (calloc :uchar (size channel)))
+    (setf data (calloc :uchar size))
     ;; We need to use a cons here because otherwise we would have to keep a
     ;; reference to the channel object in the freeing function, making it
     ;; impossible to GC. Using a cons to keep track that circumvents this.
     (setf (car (own-data channel)) T)
-    (setf (cdr (own-data channel)) (data channel)))
+    (setf (cdr (own-data channel)) data))
   (let ((handle (handle channel)))
-    (setf (cl-mixed-cffi:channel-data handle) (data channel))
+    (setf (cl-mixed-cffi:channel-data handle) data)
     (setf (cl-mixed-cffi:channel-size handle) size)
     (setf (cl-mixed-cffi:channel-encoding handle) encoding)
     (setf (cl-mixed-cffi:channel-channels handle) channels)

@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass buffer (c-object)
-  ((size :initarg :size :accessor size)))
+  ())
 
 (defmethod initialize-instance :after ((buffer buffer) &key handle size)
   (unless handle
@@ -15,7 +15,7 @@
       (unless size
         (error "Buffer SIZE required."))
       (with-error-on-failure ()
-        (cl-mixed-cffi:make-buffer (size buffer) handle)))))
+        (cl-mixed-cffi:make-buffer size handle)))))
 
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct cl-mixed-cffi:buffer)))
