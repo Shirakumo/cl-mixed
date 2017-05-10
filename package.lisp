@@ -149,6 +149,7 @@
    #:field
    #:input
    #:output
+   #:connect
    #:many-inputs-segment
    #:add
    #:withdraw
