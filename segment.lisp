@@ -157,18 +157,24 @@
   (setf (input (position buffer (inputs segment)) segment) NIL))
 
 (defclass source (segment)
-  ())
+  ((channel :initarg :channel :accessor channel)))
 
 (defmethod initialize-instance :after ((source source) &key channel)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-source (handle channel) (handle source))))
 
+(defun make-source (data size encoding channels layout samplerate)
+  (make-instance 'source :channel (make-channel data size encoding channels layout samplerate)))
+
 (defclass drain (segment)
-  ())
+  ((channel :initarg :channel :accessor channel)))
 
 (defmethod initialize-instance :after ((drain drain) &key channel)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-drain (handle channel) (handle drain))))
+
+(defun make-drain (data size encoding channels layout samplerate)
+  (make-instance 'drain :channel (make-channel data size encoding channels layout samplerate)))
 
 (defclass linear-mixer (many-inputs-segment)
   ())
