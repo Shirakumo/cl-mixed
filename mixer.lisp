@@ -28,7 +28,8 @@
 (defmethod free-handle ((mixer mixer) handle)
   (lambda ()
     (cl-mixed-cffi:free-mixer handle)
-    (cffi:foreign-free handle)))
+    (cffi:foreign-free handle)
+    (setf (pointer->object handle) NIL)))
 
 (defmethod add ((segment segment) (mixer mixer))
   (with-error-on-failure ()

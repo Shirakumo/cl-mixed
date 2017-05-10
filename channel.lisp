@@ -40,7 +40,8 @@
     (lambda ()
       (when (car own)
         (cffi:foreign-free (cdr own)))
-      (cffi:foreign-free handle))))
+      (cffi:foreign-free handle)
+      (setf (pointer->object handle) NIL))))
 
 (define-accessor data channel cl-mixed-cffi:channel-data)
 (define-accessor size channel cl-mixed-cffi:channel-size)

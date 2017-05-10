@@ -23,7 +23,8 @@
 (defmethod free-handle ((buffer buffer) handle)
   (lambda ()
     (cl-mixed-cffi:free-buffer handle)
-    (cffi:foreign-free handle)))
+    (cffi:foreign-free handle)
+    (setf (pointer->object handle) NIL)))
 
 (define-accessor data buffer cl-mixed-cffi:buffer-data)
 (define-accessor size buffer cl-mixed-cffi:buffer-size)

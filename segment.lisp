@@ -74,7 +74,8 @@
 (defmethod free-handle ((segment segment) handle)
   (lambda ()
     (cl-mixed-cffi:free-segment handle)
-    (cffi:foreign-free handle)))
+    (cffi:foreign-free handle)
+    (setf (pointer->object handle) NIL)))
 
 (defmethod (setf input-field) (value field location segment)
   (etypecase value
@@ -314,7 +315,8 @@
 
 (defmethod free-handle ((virtual virtual) handle)
   (lambda ()
-    (cffi:foreign-free handle)))
+    (cffi:foreign-free handle)
+    (setf (pointer->object handle) NIL)))
 
 (defmethod info ((virtual virtual)))
 (defmethod start ((virtual virtual)))

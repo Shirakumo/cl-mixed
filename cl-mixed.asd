@@ -16,6 +16,7 @@
   :components ((:file "package")
                (:file "low-level")
                (:file "toolkit")
+               (:file "c-object")
                (:file "buffer")
                (:file "channel")
                (:file "segment")
