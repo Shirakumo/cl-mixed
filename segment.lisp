@@ -268,7 +268,7 @@
 
 (defmethod (setf field) (value field (segment ladspa))
   (cffi:with-foreign-object (value-ptr :float)
-    (setf (cffi:mem-ref value-ptr :float) value)
+    (setf (cffi:mem-ref value-ptr :float) (coerce value 'single-float))
     (with-error-on-failure ()
       (cl-mixed-cffi:segment-get field value-ptr segment)))
   value)
