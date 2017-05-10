@@ -8,9 +8,11 @@
 
 ;; We have to keep track of the segments here in order to ensure
 ;; that they don't get GCed and thus pulled away from under our
-;; feet during the runtime of  the program. On the other hand,
+;; feet during the runtime of the program. On the other hand,
 ;; this can cause problems when another C program modifies the
-;; mixer, as we will be blind to that kind of change.
+;; mixer, as we will be blind to that kind of change. For now we
+;; settle on hoping you won't do any of that crazy nonsense, or
+;; pay for the consequences yourself if you do.
 (defclass mixer (c-object)
   ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
 
