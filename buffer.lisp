@@ -17,6 +17,9 @@
       (with-error-on-failure ()
         (cl-mixed-cffi:make-buffer size handle)))))
 
+(defun make-buffer (size)
+  (make-instance 'buffer :size size))
+
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct cl-mixed-cffi:buffer)))
 
@@ -28,3 +31,16 @@
 
 (define-accessor data buffer cl-mixed-cffi:buffer-data)
 (define-accessor size buffer cl-mixed-cffi:buffer-size)
+
+(defmacro with-buffers (size buffers &body body)
+  (let ((sizeg (gensym "SIZE")))
+    `(let ((,sizeg ,size) ,@buffers)
+       (unwind-protect
+            (progn
+              ,@(loop for buffer in buffers
+                      collect `(setf ,buffer (cl-mixed:make-buffer ,sizeg)))
+              (let ,(loop for buffer in buffers
+                          collect `(,buffer ,buffer))
+                ,@body))
+         ,@(loop for buffer in buffers
+                 collect `(when ,buffer (free ,buffer)))))))

@@ -22,6 +22,12 @@
             do (vector-push-extend (pointer->object (cffi:mem-aref ptr :pointer i))
                                    (segments mixer))))))
 
+(defun make-mixer (&rest segments)
+  (let ((mixer (make-instance 'mixer)))
+    (dolist (segment segments)
+      (add segment mixer))
+    mixer))
+
 (defmethod allocate-handle ((mixer mixer))
   (calloc '(:struct cl-mixed-cffi:mixer)))
 

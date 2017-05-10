@@ -200,25 +200,25 @@
 
 (defcfun (segment-set-in "mixed_segment_set_in") :int
   (field field)
-  (location size_t)
+  (location location)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-set-out "mixed_segment_set_out") :int
   (field field)
-  (location size_t)
+  (location location)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-get-in "mixed_segment_get_in") :int
   (field field)
-  (location size_t)
+  (location location)
   (value :pointer)
   (segment :pointer))
 
 (defcfun (segment-get-out "mixed_segment_get_out") :int
   (field field)
-  (location size_t)
+  (location location)
   (value :pointer)
   (segment :pointer))
 

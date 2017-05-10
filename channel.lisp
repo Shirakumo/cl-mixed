@@ -7,12 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass channel (c-object)
-  ((own-data :initform (cons NIL NIL) :reader own-data))
-  (:default-initargs
-   :encoding :float
-   :channels 2
-   :layout :alternating
-   :samplerate *default-samplerate*))
+  ((own-data :initform (cons NIL NIL) :reader own-data)))
 
 (defmethod initialize-instance :after ((channel channel) &key data size encoding channels layout samplerate)
   (unless data
@@ -29,6 +24,14 @@
     (setf (cl-mixed-cffi:channel-channels handle) channels)
     (setf (cl-mixed-cffi:channel-layout handle) layout)
     (setf (cl-mixed-cffi:channel-samplerate handle) samplerate)))
+
+(defun make-channel (data size encoding channels layout samplerate)
+  (make-instance 'channel :data data
+                          :size size
+                          :encoding encoding
+                          :channels channels
+                          :layout layout
+                          :samplerate samplerate))
 
 (defmethod allocate-handle ((channel channel))
   (calloc '(:struct cl-mixed-cffi:channel)))

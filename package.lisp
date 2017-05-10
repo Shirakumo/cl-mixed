@@ -99,13 +99,15 @@
 (defpackage #:cl-mixed
   (:nicknames #:org.shirakumo.fraf.mixed)
   (:use #:cl #:cffi)
-  (:import-from #:cl-mixed-cffi #:size_t)
+  (:import-from #:cl-mixed-cffi #:size_t #:samplesize)
   (:shadow #:space)
   ;; buffer.lisp
   (:export
    #:buffer
+   #:make-buffer
    #:data
-   #:size)
+   #:size
+   #:with-buffers)
   ;; c-object.lisp
   (:export
    #:handle
@@ -115,6 +117,7 @@
   ;; channel.lisp
   (:export
    #:channel
+   #:make-channel
    #:data
    #:size
    #:encoding
@@ -124,6 +127,7 @@
   ;; mixer.lisp
   (:export
    #:mixer
+   #:make-mixer
    #:segments
    #:add
    #:withdraw
@@ -149,7 +153,9 @@
    #:add
    #:withdraw
    #:source
+   #:make-source
    #:drain
+   #:make-drain
    #:linear-mixer
    #:general
    #:volume
@@ -180,4 +186,5 @@
   (:export
    #:*default-samplerate*
    #:mixed-error
-   #:error-code))
+   #:error-code
+   #:samplesize))
