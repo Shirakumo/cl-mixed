@@ -68,6 +68,9 @@
    #:buffer-from-channel
    #:buffer-to-channel
    #:copy-buffer
+   #:resample-nearest
+   #:resample-linear
+   #:resample-cubic
    #:free-segment
    #:segment-start
    #:segment-mix

@@ -62,6 +62,7 @@
 
 (defcenum field
   :buffer
+  :channel-resampler
   :general-volume
   :general-pan
   :fade-from
@@ -184,6 +185,27 @@
 (defcfun (copy-buffer "mixed_buffer_copy") :int
   (from :pointer)
   (to :pointer))
+
+(defcfun (resample-nearest "mixed_resample_nearest") :int
+  (in :pointer)
+  (in-samplerate size_t)
+  (out :pointer)
+  (out-samplerate size_t)
+  (out-samples size_t))
+
+(defcfun (resample-linear "mixed_resample_linear") :int
+  (in :pointer)
+  (in-samplerate size_t)
+  (out :pointer)
+  (out-samplerate size_t)
+  (out-samples size_t))
+
+(defcfun (resample-cubic "mixed_resample_cubic") :int
+  (in :pointer)
+  (in-samplerate size_t)
+  (out :pointer)
+  (out-samplerate size_t)
+  (out-samples size_t))
 
 (defcfun (free-segment "mixed_free_segment") :int
   (segment :pointer))
