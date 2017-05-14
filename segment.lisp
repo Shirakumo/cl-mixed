@@ -204,6 +204,9 @@
     (with-error-on-failure ()
       (cl-mixed-cffi:make-segment-mixer buflist (handle mixer)))))
 
+(defun make-linear-mixer (&rest buffers)
+  (make-instance 'linear-mixer :buffers buffers))
+
 (defclass general (segment)
   ()
   (:default-initargs
@@ -213,6 +216,10 @@
 (defmethod initialize-instance :after ((segment general) &key volume pan)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-general volume pan (handle segment))))
+
+(defun make-general (&rest args &key volume pan)
+  (declare (ignore volume pan))
+  (apply #'make-instance 'general args))
 
 (define-field-accessor volume general :float :general-volume)
 (define-field-accessor pan general :float :general-pan)
@@ -230,6 +237,10 @@
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-fade from to time type samplerate (handle segment))))
 
+(defun make-fade (&rest args &key from to time type samplerate)
+  (declare (ignore from to time type samplerate))
+  (apply #'make-instance 'fade args))
+
 (define-field-accessor from fade :float :fade-from)
 (define-field-accessor to fade :float :fade-to)
 (define-field-accessor duration fade :float :fade-time)
@@ -246,6 +257,10 @@
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-generator type frequency samplerate (handle segment))))
 
+(defun make-generator (&rest args &key type frequency samplerate)
+  (declare (ignore type frequency samplerate))
+  (apply #'make-instance 'generator args))
+
 (define-field-accessor wave-type generator cl-mixed-cffi:generator-type :generator-type)
 (define-field-accessor frequency generator :float :generator-frequency)
 
@@ -259,6 +274,13 @@
 (defmethod initialize-instance :after ((segment ladspa) &key file index samplerate)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-ladspa file index samplerate (handle segment))))
+
+(defun make-ladspa (&rest args &key file (index 0) (samplerate *default-samplerate*) &allow-other-keys)
+  (let ((instance (make-instance 'ladspa :file file :index index :samplerate samplerate))
+        (other-args (removef args :file :index :samplerate)))
+    (loop for (field value) on other-args by #'cddr
+          do (setf (field field instance) value))
+    instance))
 
 (defmethod field (field (segment ladspa))
   (cffi:with-foreign-object (value-ptr :float)
@@ -281,6 +303,14 @@
 (defmethod initialize-instance :after ((space space) &key samplerate)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-space samplerate (handle space))))
+
+(defun make-space (&rest args &key (samplerate *default-samplerate*) up soundspeed doppler-factor min-distance max-distance rolloff attenuation)
+  (declare (ignore up soundspeed doppler-factor min-distance max-distance rolloff attenuation))
+  (let ((instance (make-instance 'space :samplerate samplerate)))
+    (loop for (field value) on args by #'cddr
+          do (unless (eql field :samplerate)
+               (setf (field field instance) value)))
+    instance))
 
 (define-vector-field-accessor location space :space-location)
 (define-vector-field-accessor velocity space :space-velocity)

@@ -161,19 +161,25 @@
    #:drain
    #:make-drain
    #:linear-mixer
+   #:make-linear-mixer
    #:general
+   #:make-general
    #:volume
    #:pan
    #:fade
+   #:make-fade
    #:from
    #:to
    #:duration
    #:fade-type
    #:generator
+   #:make-generator
    #:wave-type
    #:frequency
    #:ladspa
+   #:make-ladspa
    #:space
+   #:make-space
    #:location
    #:velocity
    #:direction

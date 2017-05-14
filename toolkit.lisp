@@ -168,3 +168,9 @@
              (vector-remove-pos i vector)
              (return)))
   vector)
+
+(defun removef (plist &rest keys)
+  (loop for (k v) on plist by #'cddr
+        for found = (find k keys)
+        unless found collect k
+        unless found collect v))
