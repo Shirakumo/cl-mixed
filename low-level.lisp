@@ -28,7 +28,7 @@
 (defctype uint8_t :uint8)
 
 (defcenum error
-  :no-error
+  (:no-error 0)
   :out-of-memory
   :unknown-encoding
   :unknown-layout
@@ -45,7 +45,7 @@
   :ladspa-instantiation-failed)
 
 (defcenum encoding
-  :int8
+  (:int8 1)
   :uint8
   :int16
   :uint16
@@ -57,7 +57,7 @@
   :double)
 
 (defcenum layout
-  :alternating
+  (:alternating 1)
   :sequential)
 
 (defcenum field
@@ -83,19 +83,19 @@
   :space-attenuation)
 
 (defcenum attenuation
-  :no-attenuation
+  (:no-attenuation 1)
   :inverse-attenuation
   :linear-attenuation
   :exponential-attenuation)
 
 (defcenum fade-type
-  :linear
+  (:linear 1)
   :cubic-in
   :cubic-out
   :cubic-in-out)
 
 (defcenum generator-type
-  :sine
+  (:sine 1)
   :square
   :triangle
   :sawtooth)
