@@ -171,16 +171,6 @@
 (defcfun (free-buffer "mixed_free_buffer") :void
   (buffer :pointer))
 
-(defcfun (buffer-from-channel "mixed_buffer_from_channel") :int
-  (in :pointer)
-  (outs :pointer)
-  (samples size_t))
-
-(defcfun (buffer-to-channel "mixed_buffer_to_channel") :int
-  (ins :pointer)
-  (out :pointer)
-  (samples size_t))
-
 (defcfun (copy-buffer "mixed_buffer_copy") :int
   (from :pointer)
   (to :pointer))
