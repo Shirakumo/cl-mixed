@@ -25,7 +25,6 @@
 (use-foreign-library libmixed)
 
 (defctype size_t #+x86-64 :uint64 #+x86 :uint32)
-(defctype uint8_t :uint8)
 
 (defcenum error
   (:no-error 0)
@@ -128,7 +127,7 @@
   (data :pointer)
   (size size_t)
   (encoding encoding)
-  (channels uint8_t)
+  (channels :uint8)
   (layout layout)
   (samplerate size_t))
 
@@ -259,10 +258,12 @@
 
 (defcfun (make-segment-source "mixed_make_segment_source") :int
   (channel :pointer)
+  (samplerate size_t)
   (segment :pointer))
 
 (defcfun (make-segment-drain "mixed_make_segment_drain") :int
   (channel :pointer)
+  (samplerate size_t)
   (segment :pointer))
 
 (defcfun (make-segment-mixer "mixed_make_segment_mixer") :int
@@ -319,7 +320,7 @@
 (defcfun (mixer-end "mixed_mixer_end") :int
   (mixer :pointer))
 
-(defcfun (samplesize "mixed_samplesize") uint8_t
+(defcfun (samplesize "mixed_samplesize") :uint8
   (encoding encoding))
 
 (defcfun (error "mixed_error") error)

@@ -14,7 +14,6 @@
    #:*static*
    #:libmixed
    #:size_t
-   #:uint8_t
    #:error
    #:encoding
    #:layout

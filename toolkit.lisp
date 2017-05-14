@@ -156,10 +156,10 @@
   vector)
 
 (defun vector-insert-pos (index element vector)
-  (when (<= index (length vector))
-    (adjust-array vector (1+ index)))
+  (when (<= (length vector) index)
+    (adjust-array vector (1+ index))
+    (setf (fill-pointer vector) index))
   (setf (aref vector index) element)
-  (incf (fill-pointer vector))
   vector)
 
 (defun vector-remove (element vector)

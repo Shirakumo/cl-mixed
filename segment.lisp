@@ -173,24 +173,30 @@
   (setf (input (position buffer (inputs segment)) segment) NIL))
 
 (defclass source (segment)
-  ((channel :initarg :channel :accessor channel)))
+  ((channel :initarg :channel :accessor channel))
+  (:default-initargs
+   :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((source source) &key channel)
+(defmethod initialize-instance :after ((source source) &key channel samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-source (handle channel) (handle source))))
+    (cl-mixed-cffi:make-segment-source (handle channel) samplerate (handle source))))
 
-(defun make-source (data size encoding channels layout samplerate)
-  (make-instance 'source :channel (make-channel data size encoding channels layout samplerate)))
+(defun make-source (data size encoding channels layout source-samplerate &optional (target-samplerate source-samplerate))
+  (make-instance 'source :channel (make-channel data size encoding channels layout source-samplerate)
+                         :samplerate target-samplerate))
 
 (defclass drain (segment)
-  ((channel :initarg :channel :accessor channel)))
+  ((channel :initarg :channel :accessor channel))
+  (:default-initargs
+   :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((drain drain) &key channel)
+(defmethod initialize-instance :after ((drain drain) &key channel samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-drain (handle channel) (handle drain))))
+    (cl-mixed-cffi:make-segment-drain (handle channel) samplerate (handle drain))))
 
-(defun make-drain (data size encoding channels layout samplerate)
-  (make-instance 'drain :channel (make-channel data size encoding channels layout samplerate)))
+(defun make-drain (data size encoding channels layout source-samplerate &optional (target-samplerate source-samplerate))
+  (make-instance 'drain :channel (make-channel data size encoding channels layout source-samplerate)
+                        :samplerate target-samplerate))
 
 (defclass linear-mixer (many-inputs-segment)
   ())
