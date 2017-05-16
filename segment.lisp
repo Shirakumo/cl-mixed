@@ -354,6 +354,12 @@
       (cl-mixed-cffi:segment-get field value-ptr segment)))
   value)
 
+(defmethod attenuation ((space space))
+  (field :attenuation space))
+
+(defmethod (setf attenuation) (value (space space))
+  (setf (field :attenuation space) value))
+
 (defclass virtual (segment)
   ())
 

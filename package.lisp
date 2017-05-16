@@ -190,6 +190,7 @@
    #:min-distance
    #:max-distance
    #:rolloff
+   #:attenuation
    #:virtual)
   ;; toolkit.lisp
   (:export

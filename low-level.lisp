@@ -36,6 +36,7 @@
   :not-initialized
   :invalid-location
   :invalid-field
+  :invalid-value
   :segment-already-started
   :segment-already-ended
   :open-ladspa-failed
