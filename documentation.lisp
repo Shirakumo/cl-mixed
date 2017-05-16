@@ -590,61 +590,229 @@ See CHANNEL
 See DRAIN")
   
   (type linear-mixer
-    "")
+    "This segment linearly mixes an arbitrary number of inputs to a single output.
+
+Linear mixing means that all the inputs are summed
+up and the resulting number is divided by the number
+of inputs. This is equivalent to having all the
+inputs play as \"individual speakers\" in real life.
+
+See MANY-INPUTS-SEGMENT
+See MAKE-LINEAR-MIXER")
   
   (function make-linear-mixer
-    "")
+    "Create a new linear mixer, adding the given buffers as inputs.
+
+See LINEAR-MIXER
+See ADD
+See WITHDRAW")
   
   (type general
-    "")
+    "A \"general operations\" segment that can change the volume and pan.
+
+This is a stereo segment, and as such requires two
+input and output buffers each. You may use the
+location keywords :LEFT and :RIGHT to address them.
+
+The pan goes from -1.0 for left to 1.0 for right.
+The volume goes from 0.0 upwards. Values below zero
+result in an error, and values above 1.0 will likely
+lead to clipping and thus audio distortions.
+
+See SEGMENT
+See MAKE-GENERAL
+See VOLUME
+See PAN")
   
   (function make-general
-    "")
+    "Create a new \"general options\" segment.
+
+See GENERAL")
   
   (function volume
-    "")
+    "Accessor to the outputting volume of the general segment.
+
+Must be in the range [0, infinity[.
+
+See GENERAL")
   
   (function pan
-    "")
+    "Accessor to the outputting pan of the general segment.
+
+Must be in the range [-1,1].
+
+See GENERAL")
   
   (type fade
-    "")
+    "A volume fading segment.
+
+This allows you to smoothly fade in and out an input.
+
+The from and to are given in relative volume, meaning
+in the range of [0.0, infinity[. The duration is given
+in seconds. The fade type must be one of the following:
+:LINEAR :CUBIC-IN :CUBIC-OUT :CUBIC-IN-OUT, each
+referring to the respective easing function.
+The time is measured from the last call to START out.
+
+See SEGMENT
+See MAKE-FADE
+See FROM
+See TO
+See DURATION
+See FADE-TYPE")
   
   (function make-fade
-    "")
+    "Create a new volume fader segment.
+
+See FADE")
   
   (function from
-    "")
+    "Accessor to the starting volume of the fading segment.
+
+Must be in the range of [0.0, infinity[.
+
+See FADE")
   
   (function to
-    "")
+    "Accessor to the ending volume of the fading segment.
+
+Must be in the range of [0.0, infinity[.
+
+See FADE")
   
   (function duration
-    "")
+    "Accessor to the duration of the fade effect.
+
+Must be measured in seconds.
+
+See FADE")
   
   (function fade-type
-    "")
+    "Accessor to the type of easing function used for the fade.
+
+Must be one of :LINEAR :CUBIC-IN :CUBIC-OUT :CUBIC-IN-OUT
+
+See FADE")
   
   (type generator
-    "")
+    "A primitive tone generator segment.
+
+This segment can generate sine, square, sawtooth, and
+triangle waves at a requested frequency. You can even
+change the frequency and type on the fly.
+
+See SEGMENT
+See *DEFAULT-SAMPLERATE*
+See WAVE-TYPE
+See FREQUENCY")
   
   (function make-generator
-    "")
+    "Create a new tone generator.
+
+See GENERATOR")
   
   (function wave-type
-    "")
+    "Accessor to the wave type the generator generates.
+
+Must be one of :SINE :SQUARE :SAWTOOTH :TRIANGLE
+
+See GENERATOR")
   
   (function frequency
-    "")
+    "Accessor to the frequency of the wave.
+
+Must be in the range [0.0, samplerate].
+
+See GENERATOR")
   
   (type ladspa
-    "")
+    "This segment invokes a LADSPA plugin.
+
+LADSPA (Linux Audio Developers' Simple Plugin API)
+is a standard interface for audio effects. Such effects
+are contained in shared library files and can be loaded
+in and used with libmixed straight up.
+
+Please refer to the plugin's documentation for necessary
+configuration values, and to the libmixed documentation
+for how to set them.
+
+See SEGMENT
+See *DEFAULT-SAMPLERATE*
+See MAKE-LADSPA")
   
   (function make-ladspa
-    "")
+    "Create a new LADSPA segment.
+
+The file must point to a valid shared library and the
+index should designate the requested plugin with the
+library.
+
+Any additional keys are used to set the corresponding
+fields on the segments, allowing you to directly
+configure the LADSPA plugin in the same call.
+
+See LADSPA")
   
   (type space
-    "")
+    "A segment to simulate audio effects in a 3D space.
+
+Each input represents an individual source in space.
+Each such source can have a location and a velocity,
+both of which are vectors of three elements. If the
+velocity is non-zero, a doppler effect is applied to
+the source.
+
+The segment itself also has a :LOCATION and :VELOCITY,
+representing the listener's own properties. It has
+some additional fields to change the properties of the
+3D space. In total, the following fields are available:
+
+  :LOCATION        --- The location of the input or
+                       listener. Value should be a list
+                       of three floats.
+  :VELOCITY        --- The velocity of the input or
+                       listener. Value should be a list
+                       of three floats.
+  :DIRECTION       --- The direction the listener is
+                       facing. Value should be a list of
+                       three floats. Default is (0 0 1)
+  :UP              --- The vector pointing \"up\" in
+                       space. Value should be a list of
+                       three floats. Default is (0 1 0)
+  :SOUNDSPEED      --- The speed of sound in the medium.
+                       Default is 34330, meaning \"1\" is
+                       measured as 1cm.
+  :DOPPLER-FACTOR  --- This can be used to over- or
+                       understate the effect of the
+                       doppler. Default is 1.0.
+  :MIN-DISTANCE    --- The minimal distance under which
+                       the source has reached max volume.
+  :MAX-DISTANCE    --- The maximal distance over which
+                       the source is completely inaudible.
+  :ROLLOFF         --- The rolloff factor describing the
+                       curvature of the attenuation
+                       function.
+  :ATTENUATION     --- The attenuation function describing
+                       how volume changes over distance.
+                       Should be one of :NONE :LINEAR
+                       :INVERSE :EXPONENTIAL.
+
+See MANY-INPUTS-SEGMENT
+See MAKE-SPACE
+See LOCATION
+See INPUT-LOCATION
+See VELOCITY
+See INPUT-VELOCITY
+See DIRECTION
+See UP
+See SOUNDSPEED
+See DOPPLER-FACTOR
+See MIN-DISTANCE
+See MAX-DISTANCE
+See ROLLOFF
+See ATTENUATION")
   
   (function make-space
     "")
@@ -680,6 +848,9 @@ See DRAIN")
     "")
   
   (function rolloff
+    "")
+
+  (function attenuation
     "")
   
   (type virtual
