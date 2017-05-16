@@ -20,10 +20,12 @@
 
 (defmacro with-cleanup-on-failure (cleanup &body body)
   (let ((err (gensym "ERROR")))
-    `(handler-bind ((error (lambda (,err)
-                             (declare (ignore ,err))
-                             ,cleanup)))
-       ,@body)))
+    `(let ((,err T))
+       (unwind-protect
+            (multiple-value-prog1 (progn ,@body)
+              (setf ,err NIL))
+         (when ,err
+           ,cleanup)))))
 
 (defun calloc (type &optional (count 1))
   (let ((ptr (cffi:foreign-alloc type :count count)))
