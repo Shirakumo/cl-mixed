@@ -574,6 +574,7 @@ of the box:
 - CL-MIXED-CFFI:RESAMPLE-LINEAR
 - CL-MIXED-CFFI:RESAMPLE-CUBIC
 
+See mixed.h
 See CHANNEL
 See SEGMENT
 See MAKE-SOURCE
@@ -812,96 +813,233 @@ See DOPPLER-FACTOR
 See MIN-DISTANCE
 See MAX-DISTANCE
 See ROLLOFF
-See ATTENUATION")
+See ATTENUATION
+See *DEFAULT-SAMPLERATE*")
   
   (function make-space
-    "")
+    "Create a new space segment for 3D audio processing.
+
+See SPACE")
   
   (function location
-    "")
+    "Accessor for the location of the listener in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function velocity
-    "")
+    "Accessor for the velocity of the listener in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function direction
-    "")
+    "Accessor for the direction the listener is facing in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function up
-    "")
+    "Accessor for the vector representing \"upwards\" in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function input-location
-    "")
+    "Accessor for the location of the source in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function input-velocity
-    "")
+    "Accessor for the velocity of the source in space.
+
+The value should be a list of three floats.
+
+See SPACE")
   
   (function soundspeed
-    "")
+    "Accessor to the speed of sound in space.
+
+This value only influences the strength of
+the doppler factor.
+
+See SPACE")
   
   (function doppler-factor
-    "")
+    "Accessor to the over-/under-statement factor of the doppler effect.
+
+See SPACE")
   
   (function min-distance
-    "")
+    "Accessor to the minimal distance below which the source is at max volume.
+
+See SPACE")
   
   (function max-distance
-    "")
+    "Accessor to the maximal distance above which the source is inaudible.
+
+See SPACE")
   
   (function rolloff
-    "")
+    "Accessor to the rolloff factor that describes the curvature of the attenuation function.
+
+See SPACE")
 
   (function attenuation
-    "")
+    "Accessor to the attenuation function used to describe the distance volume falloff.
+
+The value should be one of
+
+  :NONE :LINEAR :INVERSE :EXPONENTIAL
+
+The value may also be a pointer to a C function
+of the following signature:
+  
+  float attenuation(float min,
+                    float max,
+                    float dist,
+                    float roll);
+
+See mixed.h
+See SPACE")
   
   (type virtual
-    ""))
+    "Superclass for segments implemented in Lisp.
+
+The segment should implement the following
+methods according to its need:
+
+INFO
+START
+MIX
+END
+INPUT-FIELD
+OUTPUT-FIELD
+FIELD
+
+Default methods for INPUT/OUTPUT-FIELD to
+handle the recording of the input/output
+buffers already exist. Every other method
+by default does nothing. You should in the
+very least implement a method for MIX on
+your subclass.
+
+See SEGMENT
+See INFO
+See START
+See MIX
+See END
+See INPUT-FIELD
+See OUTPUT-FIELD
+See FIELD
+See INPUTS
+See OUTPUTS"))
 
 ;; toolkit.lisp
 (docs:define-docs
   (variable *default-samplerate*
-    "")
+    "This variable holds the default sample rate used throughout.
+
+This is set to 44100 for 44.1 kHz, which is
+the standard sample rate for CD audio and should
+thus be of sufficient quality for most purposes.")
   
   (type mixed-error
-    "")
+    "Condition class for errors related to the mixed library.
+
+See ERROR-CODE")
   
   (function error-code
-    "")
+    "Accessor for the error code contained in the condition instance.
+
+See CL-MIXED-CFFI:ERROR
+See CL-MIXED-CFFI:ERROR-STRING")
   
   (function with-error-on-failure
-    "")
+    "Shorthand to handle return values of C functions.
+
+If the last form in the body returns a zero, an
+error of type MIXED-ERROR is signalled.
+
+See MIXED-ERROR")
   
   (function with-cleanup-on-failure
-    "")
+    "If the body unwinds abnormally, CLEANUP is run.")
   
   (function calloc
-    "")
+    "Allocate a region of foreign data on the heap.
+
+This is like CFFI:FOREIGN-ALLOC, except that the
+memory region is zeroed out before the pointer to it
+is returned.")
   
   (function define-accessor
-    "")
+    "Define a new accessor wrapper for a CFFI struct function.")
   
   (function define-callback
-    "")
+    "Defines a new callback that handles errors automatically.
+
+If an error occurs within BODY, the ERROR-RETURN form
+is instead evaluated and its value returned.
+
+See CFFI:DEFCALLBACK")
   
   (function define-std-callback
-    "")
+    "Define a standard callback function.
+
+Standard means that the function will return 1 on
+success and 0 on abnormal exit.
+
+See DEFINE-CALLBACK")
   
   (function define-field-accessor
-    "")
+    "Define an accessor for a segment's field.
+
+Generates the necessary methods on FIELD as well as
+convenience wrapper methods.")
   
   (function define-vector-field-accessor
-    "")
+    "Define an accessor for a segment's vector value field.
+
+Generates the necessary methods on FIELD as well as
+convenience wrapper methods. The values should be
+lists of three floats.")
   
   (function define-input-vector-field-accessor
-    "")
+    "Define an accessor for a segment's input vector value field.
+
+Generates the necessary methods on FIELD as well as
+convenience wrapper methods. The values should be
+lists of three floats.")
   
   (function vector-remove-pos
-    "")
+    "Remove the element at the specified index in the vector.
+
+Elements above it are shifted down and the vector's
+size is adjusted.")
   
   (function vector-insert-pos
-    "")
+    "Set the value at the given position in the vector.
+
+If the position is beyond the vector's length, it is
+first adjusted to that length.")
   
   (function vector-remove
-    "")
+    "Remove the element from the vector.
+
+Elements above it are shifted down and the vector's
+size is adjusted. Only the first occurrence is
+removed.
+
+See VECTOR-REMOVE-POS")
   
   (function removef
-    ""))
+    "Remove the given key/value pairs from the plist.
+
+Returns a fresh list."))
