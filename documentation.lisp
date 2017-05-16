@@ -10,11 +10,17 @@
 (docs:define-docs
   (variable *here*
     "Variable containing the path to the low-level.lisp file.")
-  
-  
+    
   (variable *static*
     "Variable containing the path to the static directory.
-That directory contains the precompiled library binaries."))
+That directory contains the precompiled library binaries.")
+
+  (function samplesize
+    "Return the number of bytes required to represent a sample in the given format.
+
+Acceptable values are
+  :INT8 :UINT8 :INT16 :UINT16 :INT24 :UINT24 :INT32 :UINT32
+  :FLOAT :DOUBLE"))
 
 (in-package #:org.shirakumo.fraf.mixed)
 
