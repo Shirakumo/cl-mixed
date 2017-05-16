@@ -173,7 +173,7 @@
   (setf (input (position buffer (inputs segment)) segment) NIL))
 
 (defclass source (segment)
-  ((channel :initarg :channel :accessor channel))
+  ((channel :initarg :channel :reader channel))
   (:default-initargs
    :samplerate *default-samplerate*))
 
@@ -186,7 +186,7 @@
                          :samplerate target-samplerate))
 
 (defclass drain (segment)
-  ((channel :initarg :channel :accessor channel))
+  ((channel :initarg :channel :reader channel))
   (:default-initargs
    :samplerate *default-samplerate*))
 
