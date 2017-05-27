@@ -62,6 +62,7 @@
 
 (defcenum field
   :buffer
+  :bypass
   :channel-resampler
   :general-volume
   :general-pan
