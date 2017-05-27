@@ -399,11 +399,11 @@
 (defmethod output-field ((field (eql :buffer)) location (segment virtual))
   (aref (outputs segment) location))
 
-(defmethod (setf input-field) (value (field (eql :buffer)) location (segment virtual))
+(defmethod (setf input-field) ((value buffer) (field (eql :buffer)) location (segment virtual))
   (vector-insert-pos location value (inputs segment))
   value)
 
-(defmethod (setf output-field) (value (field (eql :buffer)) location (segment virtual))
+(defmethod (setf output-field) ((value buffer) (field (eql :buffer)) location (segment virtual))
   (vector-insert-pos location value (outputs segment))
   value)
 
