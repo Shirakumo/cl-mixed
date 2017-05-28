@@ -29,6 +29,9 @@
     (cffi:foreign-free handle)
     (setf (pointer->object handle) NIL)))
 
+(defmethod clear ((buffer buffer))
+  (cl-mixed-cffi:clear-buffer buffer))
+
 (define-accessor data buffer cl-mixed-cffi:buffer-data)
 (define-accessor size buffer cl-mixed-cffi:buffer-size)
 

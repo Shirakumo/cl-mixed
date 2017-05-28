@@ -67,6 +67,7 @@
    #:buffer-from-channel
    #:buffer-to-channel
    #:copy-buffer
+   #:clear-buffer
    #:resample-nearest
    #:resample-linear
    #:resample-cubic
@@ -109,6 +110,7 @@
    #:make-buffer
    #:data
    #:size
+   #:clear
    #:with-buffers)
   ;; c-object.lisp
   (:export

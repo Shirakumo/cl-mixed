@@ -177,6 +177,9 @@
   (from :pointer)
   (to :pointer))
 
+(defcfun (clear-buffer "mixed_buffer_clear") :int
+  (buffer :pointer))
+
 (defcfun (resample-nearest "mixed_resample_nearest") :int
   (in :pointer)
   (in-samplerate size_t)
