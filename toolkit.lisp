@@ -160,7 +160,7 @@
 (defun vector-insert-pos (index element vector)
   (when (<= (length vector) index)
     (adjust-array vector (1+ index))
-    (setf (fill-pointer vector) index))
+    (setf (fill-pointer vector) (1+ index)))
   (setf (aref vector index) element)
   vector)
 
