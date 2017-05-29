@@ -177,9 +177,9 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((source source) &key channel samplerate)
+(defmethod initialize-instance :after ((source source) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-source (handle channel) samplerate (handle source))))
+    (cl-mixed-cffi:make-segment-source (handle (channel source)) samplerate (handle source))))
 
 (defun make-source (data size encoding channels layout source-samplerate &optional (target-samplerate source-samplerate))
   (make-instance 'source :channel (make-channel data size encoding channels layout source-samplerate)
@@ -190,9 +190,9 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((drain drain) &key channel samplerate)
+(defmethod initialize-instance :after ((drain drain) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-drain (handle channel) samplerate (handle drain))))
+    (cl-mixed-cffi:make-segment-drain (handle (channel drain)) samplerate (handle drain))))
 
 (defun make-drain (data size encoding channels layout source-samplerate &optional (target-samplerate source-samplerate))
   (make-instance 'drain :channel (make-channel data size encoding channels layout source-samplerate)
