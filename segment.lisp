@@ -27,7 +27,7 @@
   (loop for field = (cffi:foreign-slot-pointer info '(:struct cl-mixed-cffi:segment-info) 'cl-mixed-cffi::fields)
         then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct cl-mixed-cffi:field-info)))
         repeat 32
-        until (cffi:null-pointer-p (cl-mixed-cffi:field-info-description field))
+        until (cl-mixed-cffi:field-info-flags field)
         collect (list :field (cl-mixed-cffi:field-info-field field)
                       :description (cl-mixed-cffi:field-info-description field)
                       :flags (decode-flags
