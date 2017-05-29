@@ -29,7 +29,7 @@
         (call-next-method))))
 
 (defmethod free ((object c-object))
-  (let ((handle (handle object)))
+  (let ((handle (when (slot-boundp object 'handle) (handle object))))
     (when handle
       (tg:cancel-finalization object)
       (setf (handle object) NIL)
