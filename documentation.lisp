@@ -1023,6 +1023,12 @@ lists of three floats.")
 Generates the necessary methods on FIELD as well as
 convenience wrapper methods. The values should be
 lists of three floats.")
+
+  (function define-delegated-slot-accessor
+    "Define an accessor that delegates its call to a slot of the instance.
+
+Generates the necessary accessor methods to wrap
+the access.")
   
   (function vector-remove-pos
     "Remove the element at the specified index in the vector.

@@ -150,6 +150,15 @@
        (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
          (setf (input-field ,field ,location ,segment) ,value)))))
 
+(defmacro define-delegated-slot-accessor (name class accessor)
+  (let ((value (gensym "VALUE")))
+    `(progn
+       (defmethod ,name ((,class ,class))
+         (,name (,accessor ,class)))
+
+       (defmethod (setf ,name) (,value (,class ,class))
+         (setf (,name (,accessor ,class)) ,value)))))
+
 (defun vector-remove-pos (index vector)
   (loop for i from (1+ index) below (length vector)
         do (setf (aref vector (1- i)) (aref vector i)))

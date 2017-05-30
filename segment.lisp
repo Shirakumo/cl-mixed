@@ -185,6 +185,12 @@
   (make-instance 'source :channel (make-channel data size encoding channels layout source-samplerate)
                          :samplerate target-samplerate))
 
+(define-delegated-slot-accessor data source channel)
+(define-delegated-slot-accessor size source channel)
+(define-delegated-slot-accessor encoding source channel)
+(define-delegated-slot-accessor channels source channel)
+(define-delegated-slot-accessor layout source channel)
+(define-delegated-slot-accessor samplerate source channel)
 (define-field-accessor volume source :float :volume)
 (define-field-accessor bypass source :bool :bypass)
 
@@ -201,6 +207,12 @@
   (make-instance 'drain :channel (make-channel data size encoding channels layout source-samplerate)
                         :samplerate target-samplerate))
 
+(define-delegated-slot-accessor data drain channel)
+(define-delegated-slot-accessor size drain channel)
+(define-delegated-slot-accessor encoding drain channel)
+(define-delegated-slot-accessor channels drain channel)
+(define-delegated-slot-accessor layout drain channel)
+(define-delegated-slot-accessor samplerate drain channel)
 (define-field-accessor volume drain :float :volume)
 (define-field-accessor bypass drain :bool :bypass)
 
