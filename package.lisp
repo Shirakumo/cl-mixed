@@ -159,6 +159,7 @@
    #:withdraw
    #:source
    #:make-source
+   #:bypass
    #:drain
    #:make-drain
    #:linear-mixer

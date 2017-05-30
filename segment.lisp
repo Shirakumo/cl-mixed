@@ -185,6 +185,9 @@
   (make-instance 'source :channel (make-channel data size encoding channels layout source-samplerate)
                          :samplerate target-samplerate))
 
+(define-field-accessor volume source :float :volume)
+(define-field-accessor bypass source :bool :bypass)
+
 (defclass drain (segment)
   ((channel :initarg :channel :reader channel))
   (:default-initargs
@@ -198,6 +201,9 @@
   (make-instance 'drain :channel (make-channel data size encoding channels layout source-samplerate)
                         :samplerate target-samplerate))
 
+(define-field-accessor volume drain :float :volume)
+(define-field-accessor bypass drain :bool :bypass)
+
 (defclass linear-mixer (many-inputs-segment)
   ())
 
@@ -207,6 +213,8 @@
 
 (defun make-linear-mixer (channels)
   (make-instance 'linear-mixer :channels channels))
+
+(define-field-accessor volume linear-mixer :float :volume)
 
 (defclass general (segment)
   ()
@@ -222,8 +230,9 @@
   (declare (ignore volume pan))
   (apply #'make-instance 'general args))
 
-(define-field-accessor volume general :float :general-volume)
+(define-field-accessor volume general :float :volume)
 (define-field-accessor pan general :float :general-pan)
+(define-field-accessor bypass general :bool :bypass)
 
 (defclass fade (segment)
   ()
@@ -246,6 +255,7 @@
 (define-field-accessor to fade :float :fade-to)
 (define-field-accessor duration fade :float :fade-time)
 (define-field-accessor fade-type fade cl-mixed-cffi:fade-type)
+(define-field-accessor bypass fade :bool :bypass)
 
 (defclass generator (segment)
   ()
@@ -262,6 +272,7 @@
   (declare (ignore type frequency samplerate))
   (apply #'make-instance 'generator args))
 
+(define-field-accessor volume generator :float :volume)
 (define-field-accessor wave-type generator cl-mixed-cffi:generator-type :generator-type)
 (define-field-accessor frequency generator :float :generator-frequency)
 
@@ -326,6 +337,7 @@
 (define-field-accessor min-distance space :float :space-min-distance)
 (define-field-accessor max-distance space :float :space-max-distance)
 (define-field-accessor rolloff space :float :space-rolloff)
+(define-field-accessor volume space :float :volume)
 
 (defmethod field ((field (eql :attenuation)) (segment space))
   (cffi:with-foreign-object (value-ptr :pointer)
