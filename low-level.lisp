@@ -63,8 +63,8 @@
 (defcenum field
   :buffer
   :bypass
+  :volume
   :channel-resampler
-  :general-volume
   :general-pan
   :fade-from
   :fade-to
@@ -176,12 +176,14 @@
 (defcfun (buffer-from-channel "mixed_buffer_from_channel") :int
   (channel :pointer)
   (buffers :pointer)
-  (samples size_t))
+  (samples size_t)
+  (volume :float))
 
 (defcfun (buffer-to-channel "mixed_buffer_to_channel") :int
   (buffers :pointer)
   (channel :pointer)
-  (samples size_t))
+  (samples size_t)
+  (volume :float))
 
 (defcfun (copy-buffer "mixed_buffer_copy") :int
   (from :pointer)
@@ -272,7 +274,7 @@
   (segment :pointer))
 
 (defcfun (make-segment-mixer "mixed_make_segment_mixer") :int
-  (buffers :pointer)
+  (channels size_t)
   (segment :pointer))
 
 (defcfun (make-segment-general "mixed_make_segment_general") :int

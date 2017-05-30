@@ -201,17 +201,12 @@
 (defclass linear-mixer (many-inputs-segment)
   ())
 
-(defmethod initialize-instance :after ((mixer linear-mixer) &key buffers)
-  (cffi:with-foreign-object (buflist :pointer (1+ (length buffers)))
-    (loop for buffer in buffers
-          for i from 0
-          do (setf (cffi:mem-aref buflist :pointer i) (handle buffer)))
-    (setf (cffi:mem-aref buflist :pointer (length buffers)) (cffi:null-pointer))
-    (with-error-on-failure ()
-      (cl-mixed-cffi:make-segment-mixer buflist (handle mixer)))))
+(defmethod initialize-instance :after ((mixer linear-mixer) &key (channels 1))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:make-segment-mixer channels (handle mixer))))
 
-(defun make-linear-mixer (&rest buffers)
-  (make-instance 'linear-mixer :buffers buffers))
+(defun make-linear-mixer (channels)
+  (make-instance 'linear-mixer :channels channels))
 
 (defclass general (segment)
   ()
