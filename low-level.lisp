@@ -62,6 +62,7 @@
 
 (defcenum field
   :buffer
+  :source
   :bypass
   :volume
   :channel-resampler

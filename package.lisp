@@ -157,6 +157,8 @@
    #:many-inputs-segment
    #:add
    #:withdraw
+   #:sources
+   #:source
    #:source
    #:make-source
    #:bypass

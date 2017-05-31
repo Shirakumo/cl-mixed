@@ -164,13 +164,41 @@
   (setf (input drain-location drain) buffer))
 
 (defclass many-inputs-segment (segment)
-  ())
+  ((sources :initform (make-hash-table) :accessor sources)))
 
 (defmethod add ((buffer buffer) (segment many-inputs-segment))
   (setf (input (length (inputs segment)) segment) buffer))
 
 (defmethod withdraw ((buffer buffer) (segment many-inputs-segment))
   (setf (input (position buffer (inputs segment)) segment) NIL))
+
+(defmethod input-field ((field (eql :source)) location (segment many-inputs-segment))
+  (cffi:with-foreign-object (ptr :pointer)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get-in field location ptr segment))
+    (or (pointer->object (cffi:mem-ref ptr :pointer))
+        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
+
+(defmethod (setf input-field) ((value segment) (field (eql :source)) location (segment many-inputs-segment))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:segment-set-in field location (handle value) segment))
+  (setf (gethash location (sources segment)) value)
+  value)
+
+(defmethod (setf input-field) :after ((value null) (field (eql :buffer)) location (segment many-inputs-segment))
+  (remhash location (sources segment)))
+
+(defmethod source ((location integer) (segment many-inputs-segment))
+  (input-field :source location segment))
+
+(defmethod source ((buffer buffer) (segment many-inputs-segment))
+  (input-field :source (position buffer (inputs segment)) segment))
+
+(defmethod (setf source) ((value segment) (location integer) (segment many-inputs-segment))
+  (setf (input-field :source location segment) value))
+
+(defmethod (setf source) ((value segment) (buffer buffer) (segment many-inputs-segment))
+  (setf (input-field :source (position buffer (inputs segment)) segment) value))
 
 (defclass source (segment)
   ((channel :initarg :channel :reader channel))
