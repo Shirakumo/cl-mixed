@@ -249,16 +249,31 @@
 (define-field-accessor bypass drain :bool :bypass)
 
 (defclass linear-mixer (many-inputs-segment)
-  ())
+  ((channels :initarg :channels :accessor channels))
+  (:default-initargs :channels 1))
 
-(defmethod initialize-instance :after ((mixer linear-mixer) &key (channels 1))
+(defmethod initialize-instance :after ((mixer linear-mixer) &key)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-mixer channels (handle mixer))))
+    (cl-mixed-cffi:make-segment-mixer (channels mixer) (handle mixer))))
 
 (defun make-linear-mixer (channels)
   (make-instance 'linear-mixer :channels channels))
 
 (define-field-accessor volume linear-mixer :float :volume)
+
+(defmethod add ((new segment) (segment linear-mixer))
+  (let ((buffer (aref (outputs new) 0))
+        (location (length (inputs segment))))
+    (add buffer segment)
+    (setf (input-field :source location segment) new)
+    (loop for i from 1 below (length (outputs new))
+          do (add (aref (outputs new) i) segment))
+    new))
+
+(defmethod withdraw ((old segment) (segment linear-mixer))
+  (loop for i from 0 below (length (outputs old))
+        do (withdraw (aref (outputs old) i) segment))
+  old)
 
 (defclass general (segment)
   ()
@@ -410,6 +425,18 @@
 
 (defmethod (setf attenuation) (value (space space))
   (setf (field :attenuation space) value))
+
+(defmethod add ((new segment) (segment space))
+  (let ((buffer (aref (outputs new) 0))
+        (location (length (inputs segment))))
+    (add buffer segment)
+    (setf (input-field :source location segment) new)
+    new))
+
+(defmethod withdraw ((old segment) (segment space))
+  (let ((buffer (aref (outputs old) 0)))
+    (withdraw buffer segment)
+    old))
 
 (defclass virtual (segment)
   ())
