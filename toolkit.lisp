@@ -82,27 +82,40 @@
        (defmethod (setf ,name) (,value (,segment ,class))
          (setf (field ,field ,segment) ,value)))))
 
+(defun ptr->vec (value-ptr)
+  (let ((value (make-array 3 :initial-element 0.0f0 :element-type 'single-float)))
+    (setf (aref value 0) (cffi:mem-aref value-ptr :float 0))
+    (setf (aref value 1) (cffi:mem-aref value-ptr :float 1))
+    (setf (aref value 2) (cffi:mem-aref value-ptr :float 2))
+    value))
+
+(defun vec->ptr (value value-ptr)
+  (etypecase value
+    (cons
+     (destructuring-bind (x y z) value
+       (setf (cffi:mem-aref value-ptr :float 0) (coerce x 'single-float))
+       (setf (cffi:mem-aref value-ptr :float 1) (coerce y 'single-float))
+       (setf (cffi:mem-aref value-ptr :float 2) (coerce z 'single-float))))
+    (vector
+     (setf (cffi:mem-aref value-ptr :float 0) (coerce (aref value 0) 'single-float))
+     (setf (cffi:mem-aref value-ptr :float 1) (coerce (aref value 1) 'single-float))
+     (setf (cffi:mem-aref value-ptr :float 2) (coerce (aref value 2) 'single-float)))))
+
 (defmacro define-vector-field-accessor (name class enum)
   (let ((value-ptr (gensym "VALUE-PTR"))
         (value (gensym "VALUE"))
         (segment (gensym  "SEGMENT"))
-        (x (gensym "X")) (y (gensym "Y")) (z (gensym "Z"))
         (field (intern (string name) "KEYWORD")))
     `(progn
        (defmethod field ((field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (with-error-on-failure ()
              (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
-           (list (cffi:mem-aref ,value-ptr :float 0)
-                 (cffi:mem-aref ,value-ptr :float 1)
-                 (cffi:mem-aref ,value-ptr :float 2))))
+           (ptr->vec ,value-ptr)))
 
        (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
-           (destructuring-bind (,x ,y ,z) ,value
-             (setf (cffi:mem-aref ,value-ptr :float 0) (coerce ,x 'single-float))
-             (setf (cffi:mem-aref ,value-ptr :float 1) (coerce ,y 'single-float))
-             (setf (cffi:mem-aref ,value-ptr :float 2) (coerce ,z 'single-float)))
+           (vec->ptr ,value ,value-ptr)
            (with-error-on-failure ()
              (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
@@ -117,23 +130,17 @@
   (let ((value-ptr (gensym "VALUE-PTR"))
         (value (gensym "VALUE"))
         (location (gensym "LOCATION"))
-        (segment (gensym  "SEGMENT"))
-        (x (gensym "X")) (y (gensym "Y")) (z (gensym "Z")))
+        (segment (gensym  "SEGMENT")))
     `(progn
        (defmethod input-field ((field (eql ,field)) ,location (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (with-error-on-failure ()
              (cl-mixed-cffi:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
-           (list (cffi:mem-aref ,value-ptr :float 0)
-                 (cffi:mem-aref ,value-ptr :float 1)
-                 (cffi:mem-aref ,value-ptr :float 2))))
+           (ptr->vec ,value-ptr)))
 
        (defmethod (setf input-field) (,value (field (eql ,field)) ,location (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
-           (destructuring-bind (,x ,y ,z) ,value
-             (setf (cffi:mem-aref ,value-ptr :float 0) (coerce ,x 'single-float))
-             (setf (cffi:mem-aref ,value-ptr :float 1) (coerce ,y 'single-float))
-             (setf (cffi:mem-aref ,value-ptr :float 2) (coerce ,z 'single-float)))
+           (vec->ptr ,value ,value-ptr)
            (with-error-on-failure ()
              (cl-mixed-cffi:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
          ,value)
@@ -145,7 +152,7 @@
          (input-field ,field ,location ,segment))
 
        (defmethod (setf ,name) (,value (,location buffer) (,segment ,class))
-         (setf (input-field ,field (find ,location (inputs ,segment)) ,segment) ,value))
+         (setf (input-field ,field (position ,location (inputs ,segment)) ,segment) ,value))
 
        (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
          (setf (input-field ,field ,location ,segment) ,value)))))
