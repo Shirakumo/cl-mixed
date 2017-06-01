@@ -179,13 +179,13 @@
 (defmethod input-field ((field (eql :source)) location (segment many-inputs-segment))
   (cffi:with-foreign-object (ptr :pointer)
     (with-error-on-failure ()
-      (cl-mixed-cffi:segment-get-in field location ptr segment))
+      (cl-mixed-cffi:segment-get-in field location ptr (handle segment)))
     (or (pointer->object (cffi:mem-ref ptr :pointer))
         (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
 (defmethod (setf input-field) ((value segment) (field (eql :source)) location (segment many-inputs-segment))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-set-in field location (handle value) segment))
+    (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment)))
   (setf (gethash location (sources segment)) value)
   value)
 
