@@ -38,7 +38,8 @@ allocated based on the given size.
 
 See C-OBJECT
 See DATA
-See SIZE")
+See SIZE
+See CLEAR")
   
   (function make-buffer
     "Create a new buffer capable of storing SIZE floats.
@@ -59,6 +60,11 @@ For raw data buffers this number is in bytes.
 See BUFFER
 See CHANNEL
 See MIXER")
+
+  (function clear
+    "Clears the buffer to fill its data array with just zeroes.
+
+See BUFFER")
   
   (function with-buffers
     "Create a number of buffers for the duration of the body.
@@ -398,6 +404,12 @@ make sure to go through OUTPUT
 
 See SEGMENT
 See OUTPUT")
+
+  (function direct-info
+    "Direct accessor to the info slot on the segment.
+
+See SEGMENT
+See INFO")
   
   (function info
     "Fetch metadata information about the segment.
@@ -438,7 +450,26 @@ Returns a plist with the following entries:
     :SET          --- This field may be written to.
     :GET          --- This field may be read.
 
+Note that this value is cached after the first
+retrieval. You are thus not allowed to modify the
+return value.
+
 See SEGMENT")
+
+  (function bypass
+    "Accessor to whether the segment is bypassed or not.
+
+A bypassed segment does not perform any operations when
+mixed. The exact effects of this varies per segment, but
+usually for a segment that transforms its inputs
+somehow this will mean that it just copies the input to
+the output verbatim.
+
+Note that not all segments support bypassing. Check the
+:FIELDS value in the field's info plist.
+
+See SEGMENT
+See INFO")
   
   (function input-field
     "Access the field of an input of the segment.
@@ -501,7 +532,32 @@ See SEGMENT")
 
 See SEGMENT
 See ADD
-See WITHDRAW")
+See WITHDRAW
+See SOURCES
+See SOURCE")
+
+  (function sources
+    "Accessor to the hash table mapping input locations to segments.
+
+This map holds which locations have segments attached.
+You should use the INPUT-FIELD or SOURCE accessors to
+actually attach or detach source segments.
+
+See MANY-INPUTS-SEGMENT
+See SOURCE
+See INPUT-FIELD")
+
+  (function source
+    "Accessor to the source segment attached to an input buffer or location.
+
+Some many-inputs-segments support attaching a source
+segment to an input buffer. The effect being that the
+segment is mixed before the corresponding buffer is
+used, allowing for dynamic addition and removal of
+segments without the need to alter the pipeline.
+
+See MANY-INPUTS-SEGMENT
+See SOURCES")
   
   (type source
     "This segment converts data from a channel to individual sample buffers.
@@ -830,42 +886,54 @@ See SPACE")
   (function location
     "Accessor for the location of the listener in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
   (function velocity
     "Accessor for the velocity of the listener in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
   (function direction
     "Accessor for the direction the listener is facing in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
   (function up
     "Accessor for the vector representing \"upwards\" in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
   (function input-location
     "Accessor for the location of the source in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
   (function input-velocity
     "Accessor for the velocity of the source in space.
 
-The value should be a list of three floats.
+To set a vector, the value should be a list or a vector
+of three floats. When reading, the returned value is
+always a vector of three floats.
 
 See SPACE")
   
@@ -1009,20 +1077,26 @@ See DEFINE-CALLBACK")
 
 Generates the necessary methods on FIELD as well as
 convenience wrapper methods.")
+
+  (function ptr->vec
+    "Convert a pointer to a C array of three floats to a vector.")
+
+  (function vec->ptr
+    "Convert the vector into a C array of three floats")
   
   (function define-vector-field-accessor
     "Define an accessor for a segment's vector value field.
 
 Generates the necessary methods on FIELD as well as
 convenience wrapper methods. The values should be
-lists of three floats.")
+lists or vectors of three floats.")
   
   (function define-input-vector-field-accessor
     "Define an accessor for a segment's input vector value field.
 
 Generates the necessary methods on FIELD as well as
 convenience wrapper methods. The values should be
-lists of three floats.")
+lists or vectors of three floats.")
 
   (function define-delegated-slot-accessor
     "Define an accessor that delegates its call to a slot of the instance.
