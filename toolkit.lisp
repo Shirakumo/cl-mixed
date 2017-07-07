@@ -146,16 +146,22 @@
          ,value)
 
        (defmethod ,name ((,location buffer) (,segment ,class))
-         (input-field ,field (find ,location (inputs ,segment)) ,segment))
+         (input-field ,field (position ,location (inputs ,segment)) ,segment))
 
        (defmethod ,name ((,location integer) (,segment ,class))
          (input-field ,field ,location ,segment))
+
+       (defmethod ,name ((,location source) (,segment ,class))
+         (input-field ,field (position ,location (sources ,segment)) ,segment))
 
        (defmethod (setf ,name) (,value (,location buffer) (,segment ,class))
          (setf (input-field ,field (position ,location (inputs ,segment)) ,segment) ,value))
 
        (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
-         (setf (input-field ,field ,location ,segment) ,value)))))
+         (setf (input-field ,field ,location ,segment) ,value))
+
+       (defmethod (setf ,name) (,value (,location source) (,segment ,class))
+         (setf (input-field ,field (position ,location (sources ,segment)) ,segment) ,value)))))
 
 (defmacro define-delegated-slot-accessor (name class accessor)
   (let ((value (gensym "VALUE")))

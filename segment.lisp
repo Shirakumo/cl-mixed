@@ -169,7 +169,7 @@
   (setf (input drain-location drain) buffer))
 
 (defclass many-inputs-segment (segment)
-  ((sources :initform (make-hash-table) :accessor sources)))
+  ((sources :initform (make-array 0 :adjustable T :fill-pointer T) :accessor sources)))
 
 (defmethod add ((buffer buffer) (segment many-inputs-segment))
   (setf (input (length (inputs segment)) segment) buffer))
@@ -187,11 +187,11 @@
 (defmethod (setf input-field) ((value segment) (field (eql :source)) location (segment many-inputs-segment))
   (with-error-on-failure ()
     (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment)))
-  (setf (gethash location (sources segment)) value)
+  (vector-insert-pos location value (sources segment))
   value)
 
 (defmethod (setf input-field) :after ((value null) (field (eql :buffer)) location (segment many-inputs-segment))
-  (remhash location (sources segment)))
+  (vector-remove-pos location (sources segment)))
 
 (defmethod source ((location integer) (segment many-inputs-segment))
   (input-field :source location segment))
