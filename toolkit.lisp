@@ -57,6 +57,14 @@
      (prog1 1
        ,@body)))
 
+(defun coerce-ctype (value type)
+  (case type
+    (:float (coerce value 'single-float))
+    (:double (coerce value 'double-float))
+    (:int (round value))
+    (:uint (max 0 (round value)))
+    (T value)))
+
 (defmacro define-field-accessor (name class type &optional (enum (intern (string name) "KEYWORD")))
   (let ((value-ptr (gensym "VALUE-PTR"))
         (value (gensym "VALUE"))
@@ -71,7 +79,7 @@
 
        (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr ',type)
-           (setf (cffi:mem-ref ,value-ptr ',type) ,value)
+           (setf (cffi:mem-ref ,value-ptr ',type) (coerce-ctype ,value ',type))
            (with-error-on-failure ()
              (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
