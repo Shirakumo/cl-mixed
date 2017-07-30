@@ -190,7 +190,7 @@
   (vector-insert-pos location value (sources segment))
   value)
 
-(defmethod (setf input-field) :after ((value null) (field (eql :buffer)) location (segment many-inputs-segment))
+(defmethod (setf input-field) :after ((value null) (field (eql :source)) location (segment many-inputs-segment))
   (vector-remove-pos location (sources segment)))
 
 (defmethod source ((location integer) (segment many-inputs-segment))
