@@ -65,8 +65,8 @@
   :source
   :bypass
   :volume
-  :channel-resampler
-  :general-pan
+  :packed-audio-resampler
+  :volume-control-pan
   :fade-from
   :fade-to
   :fade-time
@@ -126,7 +126,7 @@
   (data :pointer)
   (size size_t))
 
-(defcstruct (channel :class channel :conc-name channel-)
+(defcstruct (packed-audio :class packed-audio :conc-name packed-audio-)
   (data :pointer)
   (size size_t)
   (encoding encoding)
@@ -162,7 +162,7 @@
   (get :pointer)
   (data :pointer))
 
-(defcstruct (mixer :class mixer :conc-name mixer-)
+(defcstruct (segment-sequence :class segment-sequence :conc-name segment-sequence-)
   (segments :pointer)
   (count size_t)
   (size size_t))
@@ -174,13 +174,13 @@
 (defcfun (free-buffer "mixed_free_buffer") :void
   (buffer :pointer))
 
-(defcfun (buffer-from-channel "mixed_buffer_from_channel") :int
+(defcfun (buffer-from-channel "mixed_buffer_from_packed_audio") :int
   (channel :pointer)
   (buffers :pointer)
   (samples size_t)
   (volume :float))
 
-(defcfun (buffer-to-channel "mixed_buffer_to_channel") :int
+(defcfun (buffer-to-channel "mixed_buffer_to_packed_audio") :int
   (buffers :pointer)
   (channel :pointer)
   (samples size_t)
@@ -264,21 +264,21 @@
   (value :pointer)
   (segment :pointer))
 
-(defcfun (make-segment-source "mixed_make_segment_source") :int
-  (channel :pointer)
+(defcfun (make-segment-source "mixed_make_segment_unpacker") :int
+  (packed :pointer)
   (samplerate size_t)
   (segment :pointer))
 
-(defcfun (make-segment-drain "mixed_make_segment_drain") :int
-  (channel :pointer)
+(defcfun (make-segment-drain "mixed_make_segment_packer") :int
+  (packed :pointer)
   (samplerate size_t)
   (segment :pointer))
 
-(defcfun (make-segment-mixer "mixed_make_segment_mixer") :int
+(defcfun (make-segment-mixer "mixed_make_segment_basic_mixer") :int
   (channels size_t)
   (segment :pointer))
 
-(defcfun (make-segment-general "mixed_make_segment_general") :int
+(defcfun (make-segment-general "mixed_make_segment_volume_control") :int
   (volume :float)
   (pan :float)
   (segment :pointer))
@@ -303,29 +303,29 @@
   (samplerate size_t)
   (segment :pointer))
 
-(defcfun (make-segment-space "mixed_make_segment_space") :int
+(defcfun (make-segment-space "mixed_make_segment_space_mixer") :int
   (samplerate size_t)
   (segment :pointer))
 
-(defcfun (free-mixer "mixed_free_mixer") :void
+(defcfun (free-mixer "mixed_free_segment_sequence") :void
   (segment :pointer))
 
-(defcfun (mixer-add "mixed_mixer_add") :int
+(defcfun (mixer-add "mixed_segment_sequence_add") :int
   (segment :pointer)
   (mixer :pointer))
 
-(defcfun (mixer-remove "mixed_mixer_remove") :int
+(defcfun (mixer-remove "mixed_segment_sequence_remove") :int
   (segment :pointer)
   (mixer :pointer))
 
-(defcfun (mixer-start "mixed_mixer_start") :int
+(defcfun (mixer-start "mixed_segment_sequence_start") :int
   (mixer :pointer))
 
-(defcfun (mixer-mix "mixed_mixer_mix") :int
+(defcfun (mixer-mix "mixed_segment_sequence_mix") :int
   (samples size_t)
   (mixer :pointer))
 
-(defcfun (mixer-end "mixed_mixer_end") :int
+(defcfun (mixer-end "mixed_segment_sequence_end") :int
   (mixer :pointer))
 
 (defcfun (samplesize "mixed_samplesize") :uint8

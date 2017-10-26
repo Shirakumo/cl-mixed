@@ -26,13 +26,13 @@
    #:buffer
    #:buffer-data
    #:buffer-size
-   #:channel
-   #:channel-data
-   #:channel-size
-   #:channel-encoding
-   #:channel-channels
-   #:channel-layout
-   #:channel-samplerate
+   #:packed-audio
+   #:packed-audio-data
+   #:packed-audio-size
+   #:packed-audio-encoding
+   #:packed-audio-channels
+   #:packed-audio-layout
+   #:packed-audio-samplerate
    #:field-info
    #:field-info-field
    #:field-info-description
@@ -58,14 +58,14 @@
    #:direct-segment-set
    #:direct-segment-get
    #:direct-segment-data
-   #:mixer
-   #:mixer-segments
-   #:mixer-count
-   #:mixer-size
+   #:segment-sequence
+   #:segment-sequence-segments
+   #:segment-sequence-count
+   #:segment-sequence-size
    #:make-buffer
    #:free-buffer
-   #:buffer-from-channel
-   #:buffer-to-channel
+   #:buffer-from-packed-audio
+   #:buffer-to-packed-audio
    #:copy-buffer
    #:clear-buffer
    #:resample-nearest
@@ -81,20 +81,20 @@
    #:segment-get-out
    #:segment-set
    #:segment-get
-   #:make-segment-source
-   #:make-segment-drain
-   #:make-segment-mixer
-   #:make-segment-general
+   #:make-segment-unpacker
+   #:make-segment-packer
+   #:make-segment-basic-mixer
+   #:make-segment-volume-control
    #:make-segment-fade
    #:make-segment-generator
    #:make-segment-ladspa
-   #:make-segment-space
-   #:free-mixer
-   #:mixer-add
-   #:mixer-remove
-   #:mixer-start
-   #:mixer-mix
-   #:mixer-end
+   #:make-segment-space-mixer
+   #:free-segment-sequence
+   #:segment-sequence-add
+   #:segment-sequence-remove
+   #:segment-sequence-start
+   #:segment-sequence-mix
+   #:segment-sequence-end
    #:samplesize
    #:error
    #:error-string))
