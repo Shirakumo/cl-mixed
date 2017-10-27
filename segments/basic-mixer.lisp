@@ -12,7 +12,7 @@
 
 (defmethod initialize-instance :after ((mixer basic-mixer) &key)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-mixer (channels mixer) (handle mixer))))
+    (cl-mixed-cffi:make-segment-basic-mixer (channels mixer) (handle mixer))))
 
 (defun make-basic-mixer (channels)
   (make-instance 'basic-mixer :channels channels))

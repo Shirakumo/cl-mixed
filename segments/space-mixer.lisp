@@ -13,7 +13,7 @@
 
 (defmethod initialize-instance :after ((space space-mixer) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-space samplerate (handle space))))
+    (cl-mixed-cffi:make-segment-space-mixer samplerate (handle space))))
 
 (defun make-space-mixer (&rest args &key (samplerate *default-samplerate*) up soundspeed doppler-factor min-distance max-distance rolloff attenuation)
   (declare (ignore up soundspeed doppler-factor min-distance max-distance rolloff attenuation))

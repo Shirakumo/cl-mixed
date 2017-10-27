@@ -159,7 +159,7 @@
        (defmethod ,name ((,location integer) (,segment ,class))
          (input-field ,field ,location ,segment))
 
-       (defmethod ,name ((,location source) (,segment ,class))
+       (defmethod ,name ((,location segment) (,segment ,class))
          (input-field ,field (position ,location (sources ,segment)) ,segment))
 
        (defmethod (setf ,name) (,value (,location buffer) (,segment ,class))
@@ -168,7 +168,7 @@
        (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
          (setf (input-field ,field ,location ,segment) ,value))
 
-       (defmethod (setf ,name) (,value (,location source) (,segment ,class))
+       (defmethod (setf ,name) (,value (,location segment) (,segment ,class))
          (setf (input-field ,field (position ,location (sources ,segment)) ,segment) ,value)))))
 
 (defmacro define-delegated-slot-accessor (name class accessor)

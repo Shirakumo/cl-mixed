@@ -22,7 +22,7 @@
     (let ((ptr (cl-mixed-cffi:segment-sequence-segments handle)))
       (loop for i from 0 below (size sequence)
             do (vector-push-extend (pointer->object (cffi:mem-aref ptr :pointer i))
-                                   (segments segment-sequence))))))
+                                   (segments sequence))))))
 
 (defun make-segment-sequence (&rest segments)
   (let ((sequence (make-instance 'segment-sequence)))
