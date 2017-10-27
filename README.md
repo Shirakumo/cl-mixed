@@ -10,46 +10,46 @@ Load the system through ASDF or Quicklisp:
 
     (ql:quickload :cl-mixed)
 
-Now you'll need to integrate your inputs and outputs with the Mixed system. In order to do that, you'll want a source and a drain segment. Both of those create a "channel", which holds all the information about how the raw audio data is encoded in a byte buffer.
+Now you'll need to integrate your inputs and outputs with the Mixed system. In order to do that, you'll want an unpacker and a packer segment. Both of those create "packed-audio", which holds all the information about how the raw audio data is encoded in a byte buffer.
 
-    (cl-mixed:make-source c-buffer bytes sample-encoding channel-count channel-layout samplerate)
+    (cl-mixed:make-unpacker c-buffer bytes sample-encoding channel-count channel-layout samplerate)
 
 If you don't already have a byte buffer from your input or output implementation, passing NIL for the `c-buffer` will automatically create one for you, which you can then access with `data`. An example call might look like this:
 
-    (cl-mixed:make-source NIL 4096 :int16 2 :alternating 44100)
+    (cl-mixed:make-unpacker NIL 4096 :int16 2 :alternating 44100)
 
-An optional third parameter designates the sample rate of the buffers that the source converts to or the drain converts from. This "buffer sample rate" has to be the same across all segments in a mixer pipeline. It defaults to 44100. Creating a drain looks and works exactly the same as a source.
+An optional third parameter designates the sample rate of the buffers that the source converts to or the drain converts from. This "buffer sample rate" has to be the same across all segments in a mixer pipeline. It defaults to 44100. Creating a packer looks and works exactly the same as an unpacker.
 
-Next you'll want to create the segments that'll do the actual audio processing you want. For this example, let's create a 3D audio segment (`space`) and a fade effect (`fade`).
+Next you'll want to create the segments that'll do the actual audio processing you want. For this example, let's create a 3D audio segment (`space-mixer`) and a fade effect (`fade`).
 
-    (cl-mixed:make-space)
+    (cl-mixed:make-space-mixer)
     (cl-mixed:make-fade :duration 5.0)
 
 Next we'll need to create the buffers that are used to manipulate the audio internally and bind them to the appropriate inputs and outputs of our segments.
 
     (cl-mixed:with-buffers 500 (input left right)
-      (cl-mixed:connect source :left fade :mono input)
-      (setf (cl-mixed:output :right source) right)
-      (cl-mixed:connect fade :mono space 0 input)
-      (cl-mixed:connect space :left drain :left left)
-      (cl-mixed:connect space :right drain :right right)
+      (cl-mixed:connect unpacker :left fade :mono input)
+      (setf (cl-mixed:output :right unpacker) right)
+      (cl-mixed:connect fade :mono space-mixer 0 input)
+      (cl-mixed:connect space-mixer :left packer :left left)
+      (cl-mixed:connect space-mixer :right packer :right right)
       ...)
 
-This here means we create three buffers, `input`, `left`, and `right`, each with a size capable of holding 500 samples. We then connect the source's left output to the fade's single input. Then we connect the right buffer to the source's right output, just so that it has both outputs set. If your source only has one channel, you can leave that out. If it has more, you'll have to repeat it for the other channels as well. Next we connect the fade's output as the space's first input. Finally we connect the left and right outputs of the space segment to the left and right inputs of the drain respectively. For the fade segment we can connect the same buffer to both input and output, as it is declared to work "in place". For the space segment we need distinct buffers, hence the extra `input` buffer.
+This here means we create three buffers, `input`, `left`, and `right`, each with a size capable of holding 500 samples. We then connect the source's left output to the fade's single input. Then we connect the right buffer to the unpacker's right output, just so that it has both outputs set. If your unpacker only has one channel, you can leave that out. If it has more, you'll have to repeat it for the other channels as well. Next we connect the fade's output as the space-mixer's first input. Finally we connect the left and right outputs of the space-mixer segment to the left and right inputs of the packer respectively. For the fade segment we can connect the same buffer to both input and output, as it is declared to work "in place". For the space-mixer segment we need distinct buffers, hence the extra `input` buffer.
 
-Now we can create our mixer object, which keeps the order in which to process each segment.
+Now we can create our segment-sequence object, which keeps the order in which to process each segment.
 
-    (cl-mixed:make-mixer source fade space drain)
+    (cl-mixed:make-segment-sequence source fade space drain)
 
 Finally we can move to the main processing loop, which should look as follows:
 
-    (cl-mixed:start mixer)
+    (cl-mixed:start segment-sequence)
     (unwind-protect
         (loop while has-more
               do (process-source)
-                 (cl-mixed:mix 500 mixer)
+                 (cl-mixed:mix 500 segment-sequence)
                  (process-drain))
-      (cl-mixed:end mixer))
+      (cl-mixed:end segment-sequence))
 
 Where `process-source` and `process-drain` are functions that will cause your source to put samples into its buffer and drain to read out the samples from its buffer. Running this now will just give you a fade in effect, which isn't too exciting. Since we haven't actually set or changed any of the 3D audio parameters, that effect remains inaudible. Changing the loop body to read something like the following
 
@@ -58,22 +58,22 @@ Where `process-source` and `process-drain` are functions that will cause your so
     for dz = 0 then (- (* 50 (cos tt)) z)
     for x = (* 100 (sin tt)) then (+ x dx)
     for z = (* 50 (cos tt)) then (+ z dz)
-    do (setf (cl-mixed:input-field :location 0 space) (list x 0 z))
-       (setf (cl-mixed:input-field :velocity 0 space) (list dx 0 dz))
+    do (setf (cl-mixed:input-field :location 0 space-mixer) (list x 0 z))
+       (setf (cl-mixed:input-field :velocity 0 space-mixer) (list dx 0 dz))
        (process-source)
-       (cl-mixed:mix 500 mixer)
+       (cl-mixed:mix 500 segment-sequence)
        (process-drain)
 
 Should cause the source to now also circle around the listener as it is fading in. If you change the `tt` change factor from `0.001` to something higher, it will circle faster, and the doppler effect should become more noticeable.
 
 The following segments are included with the standard libmixed distribution:
 
+* `basic-mixer` Linearly mix multiple inputs.
 * `fade` Fade the volume of a source in or out.
-* `general` Adapt the volume and pan of a stereo signal.
 * `generator` Generate simple wave forms.
 * `ladspa` Use a LADSPA plugin.
-* `linear-mixer` Linearly mix multiple inputs.
-* `space` Mix multiple inputs as if they were in 3D space.
+* `space-mixer` Mix multiple inputs as if they were in 3D space.
+* `volume-control` Adapt the volume and pan of a stereo signal.
 
 See the next section on how to make custom segments.
 

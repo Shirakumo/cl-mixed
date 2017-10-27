@@ -118,20 +118,25 @@
    #:c-object
    #:free
    #:pointer->object)
-  ;; channel.lisp
+  ;; mixer.lisp
   (:export
-   #:channel
-   #:make-channel
+   #:mixer
+   #:sources
+   #:source)
+  ;; packed-audio.lisp
+  (:export
+   #:packed-audio
+   #:make-packed-audio
    #:data
    #:size
    #:encoding
    #:channels
    #:layout
    #:samplerate)
-  ;; mixer.lisp
+  ;; segment-sequence.lisp
   (:export
-   #:mixer
-   #:make-mixer
+   #:segment-sequence
+   #:make-segment-sequence
    #:segments
    #:add
    #:withdraw
@@ -153,37 +158,57 @@
    #:field
    #:input
    #:output
-   #:connect
-   #:many-inputs-segment
-   #:add
-   #:withdraw
-   #:sources
-   #:source
-   #:source
-   #:make-source
-   #:bypass
-   #:drain
-   #:make-drain
-   #:linear-mixer
-   #:make-linear-mixer
-   #:general
-   #:make-general
-   #:volume
-   #:pan
+   #:connect)
+  ;; toolkit.lisp
+  (:export
+   #:*default-samplerate*
+   #:mixed-error
+   #:error-code
+   #:samplesize)
+  ;; segments/basic-mixer.lisp
+  (:export
+   #:basic-mixer
+   #:channels
+   #:make-basic-mixer
+   #:volume)
+  ;; segments/fade.lisp
+  (:export
    #:fade
    #:make-fade
    #:from
    #:to
    #:duration
    #:fade-type
+   #:bypass)
+  ;; segments/generator.lisp
+  (:export
    #:generator
    #:make-generator
+   #:volume
    #:wave-type
-   #:frequency
+   #:frequency)
+  ;; segments/ladspa.lisp
+  (:export
    #:ladspa
    #:make-ladspa
-   #:space
-   #:make-space
+   #:field)
+  ;; segments/packer.lisp
+  (:export
+   #:packer
+   #:packed-audio
+   #:make-packer
+   #:data
+   #:size
+   #:encoding
+   #:channels
+   #:layout
+   #:samplerate
+   #:volume
+   #:bypass)
+  ;; segments/space-mixer.lisp
+  (:export
+   #:space-mixer
+   #:make-space-mixer
    #:location
    #:velocity
    #:direction
@@ -195,11 +220,36 @@
    #:min-distance
    #:max-distance
    #:rolloff
-   #:attenuation
-   #:virtual)
-  ;; toolkit.lisp
+   #:volume
+   #:field
+   #:attenutation)
+  ;; segments/unpacker.lisp
   (:export
-   #:*default-samplerate*
-   #:mixed-error
-   #:error-code
-   #:samplesize))
+   #:unpacker
+   #:packed-audio
+   #:make-unpacker
+   #:data
+   #:size
+   #:encoding
+   #:channels
+   #:layout
+   #:samplerate
+   #:volume
+   #:bypass)
+  ;; segments/virtual.lisp
+  (:export
+   #:virtual
+   #:info
+   #:start
+   #:mix
+   #:end
+   #:input-field
+   #:output-field
+   #:field)
+  ;; segments/volume-control.lisp
+  (:export
+   #:volume-control
+   #:make-volume-control
+   #:volume
+   #:pan
+   #:bypass))

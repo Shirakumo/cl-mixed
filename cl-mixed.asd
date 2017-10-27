@@ -17,9 +17,20 @@
                (:file "toolkit")
                (:file "c-object")
                (:file "buffer")
-               (:file "channel")
+               (:file "packed-audio")
                (:file "segment")
                (:file "mixer")
+               (:file "segment-sequence")
+               (:module "segments"
+                :components ((:file "basic-mixer")
+                             (:file "fade")
+                             (:file "generator")
+                             (:file "ladspa")
+                             (:file "packer")
+                             (:file "space-mixer")
+                             (:file "unpacker")
+                             (:file "virtual")
+                             (:file "volume-control")))
                (:file "documentation"))
   :depends-on (:alexandria
                :cffi

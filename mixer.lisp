@@ -6,62 +6,39 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-;; We have to keep track of the segments here in order to ensure
-;; that they don't get GCed and thus pulled away from under our
-;; feet during the runtime of the program. On the other hand,
-;; this can cause problems when another C program modifies the
-;; mixer, as we will be blind to that kind of change. For now we
-;; settle on hoping you won't do any of that crazy nonsense, or
-;; pay for the consequences yourself if you do.
-(defclass mixer (c-object)
-  ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
+(defclass mixer (segment)
+  ((sources :initform (make-array 0 :adjustable T :fill-pointer T) :accessor sources)))
 
-(defmethod initialize-instance :after ((mixer mixer) &key handle)
-  (when handle
-    ;; Attempt to back-fill.
-    (let ((ptr (cl-mixed-cffi:mixer-segments handle)))
-      (loop for i from 0 below (size mixer)
-            do (vector-push-extend (pointer->object (cffi:mem-aref ptr :pointer i))
-                                   (segments mixer))))))
+(defmethod add ((buffer buffer) (segment mixer))
+  (setf (input (length (inputs segment)) segment) buffer))
 
-(defun make-mixer (&rest segments)
-  (let ((mixer (make-instance 'mixer)))
-    (dolist (segment segments)
-      (add segment mixer))
-    mixer))
+(defmethod withdraw ((buffer buffer) (segment mixer))
+  (setf (input (position buffer (inputs segment)) segment) NIL))
 
-(defmethod allocate-handle ((mixer mixer))
-  (calloc '(:struct cl-mixed-cffi:mixer)))
+(defmethod input-field ((field (eql :source)) location (segment mixer))
+  (cffi:with-foreign-object (ptr :pointer)
+    (with-error-on-failure ()
+      (cl-mixed-cffi:segment-get-in field location ptr (handle segment)))
+    (or (pointer->object (cffi:mem-ref ptr :pointer))
+        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
 
-(defmethod free-handle ((mixer mixer) handle)
-  (lambda ()
-    (cl-mixed-cffi:free-mixer handle)
-    (cffi:foreign-free handle)
-    (setf (pointer->object handle) NIL)))
-
-(defmethod add ((segment segment) (mixer mixer))
+(defmethod (setf input-field) ((value segment) (field (eql :source)) location (segment mixer))
   (with-error-on-failure ()
-    (cl-mixed-cffi:mixer-add (handle segment) (handle mixer)))
-  (vector-push-extend segment (segments mixer))
-  segment)
+    (cl-mixed-cffi:segment-set-in field location (handle value) (handle segment)))
+  (vector-insert-pos location value (sources segment))
+  value)
 
-(defmethod withdraw ((segment segment) (mixer mixer))
-  (with-error-on-failure ()
-    (cl-mixed-cffi:mixer-remove (handle segment) (handle mixer)))
-  (vector-remove segment (segments mixer))
-  segment)
+(defmethod (setf input-field) :after ((value null) (field (eql :source)) location (segment mixer))
+  (vector-remove-pos location (sources segment)))
 
-(defmethod start ((mixer mixer))
-  (with-error-on-failure ()
-    (cl-mixed-cffi:mixer-start (handle mixer))))
+(defmethod source ((location integer) (segment mixer))
+  (input-field :source location segment))
 
-(defmethod mix (samples (mixer mixer))
-  (cl-mixed-cffi:mixer-mix samples (handle mixer))
-  (unless (eql :no-error (cl-mixed-cffi:error))
-    (error 'mixed-error)))
+(defmethod source ((buffer buffer) (segment mixer))
+  (input-field :source (position buffer (inputs segment)) segment))
 
-(defmethod end ((mixer mixer))
-  (with-error-on-failure ()
-    (cl-mixed-cffi:mixer-end (handle mixer))))
+(defmethod (setf source) ((value segment) (location integer) (segment mixer))
+  (setf (input-field :source location segment) value))
 
-(define-accessor size mixer cl-mixed-cffi:mixer-count)
+(defmethod (setf source) ((value segment) (buffer buffer) (segment mixer))
+  (setf (input-field :source (position buffer (inputs segment)) segment) value))
