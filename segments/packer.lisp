@@ -16,8 +16,8 @@
     (cl-mixed-cffi:make-segment-packer (handle (packed-audio packer)) samplerate (handle packer))))
 
 (defun make-packer (data size encoding channels layout source-samplerate &optional (target-samplerate source-samplerate))
-  (make-instance 'packer :channel (make-packed-audio data size encoding channels layout source-samplerate)
-                        :samplerate target-samplerate))
+  (make-instance 'packer :packed-audio (make-packed-audio data size encoding channels layout source-samplerate)
+                         :samplerate target-samplerate))
 
 (define-delegated-slot-accessor data packer packed-audio)
 (define-delegated-slot-accessor size packer packed-audio)
