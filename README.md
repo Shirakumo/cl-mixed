@@ -110,6 +110,26 @@ In order to create a segment in Lisp, you must subclass `virtual` and in the ver
 
 In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fader` segment from the above introductory code.
 
+## Concepts
+### Buffer
+A buffer holds an array of float-encoded audio samples. Everything within libmixed deals in float samples and reads from these buffers and/or writes to these buffers. This means everything that processes audio will be able to work within the same constraints of 32-bit float encoded samples, without having to worry about different sample rates, sample encodings, or channel layouts. Buffers have a fixed number of samples that they can hold, which should typically be consistent throughout the entire system.
+
+### Packed-Audio
+The packed-audio is a representation of audio data that is packed into a single array and isn't in the standard buffer format. Many libraries that decode or encode audio files, play audio back, or process audio in some other way expect a single audio sample array of a particular samplerate, sample encoding, and channel layout, rather than the standardised sample buffers that libmixed uses. The packed-audio allows you to handle the conversion from this single array, encoded format, to the buffer format of libmixed and back.
+
+Particularly relevant are the `unpacker` and `packer` segments, which you can use to handle the edges of the pipeline where other libraries interact with libmixed.
+
+### Segment
+Libmixed allows you to define a pipeline to process audio in. This pipeline -- or graph, if you will -- is pieced together by segments that exchange data between each other through buffers. Each segment has a number of inputs, outputs, and fields that you can set and get. Every input and output can also have a differing amount of applicable fields, but each must have at least the buffer field, which designates the buffer that is connected at that point. You can retrieve information about how many inputs and outputs the segment expects or supports as well as information about the fields it understands by using the `info` function on a segment.
+
+Aside from the inputs, outputs, and fields, each segment has three methods that are central to the mixing of audio: `start`, `mix`, and `end`. `start` and `end` allow you to prepare and clean up work shortly before and after mixing has been done. This can be important for real-time audio processing that cannot afford long pauses. The `mix` method performs the actual mixing operation and should cause new samples to appear in the outputs' buffers.
+
+#### Mixer
+Mixers are segments that take a run-time variable number of inputs and mix them together to a single output per channel. Libmixed provides two standard mixers out of the box, `basic-mixer` and `space-mixer`, which should serve most needs.
+
+### Segment-Sequence
+A segment-sequence simply ties together a number of segments and performs the `start`, `mix`, and `end` operations in the order the segments were added to the sequence. This is mostly for convenience, in order to quickly perform the actual mixing, once the pipeline has been completely assembled already.
+
 ## Also See
 
 * [CFFI](https://common-lisp.net/project/cffi/manual/cffi-manual.html)
