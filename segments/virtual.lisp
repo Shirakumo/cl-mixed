@@ -39,25 +39,25 @@
 (defmethod field (field (virtual virtual)))
 (defmethod (setf field) (value field (virtual virtual)))
 
-(defmethod input-field ((field (eql :buffer)) location (segment virtual))
+(defmethod input-field ((field (eql :buffer)) (location integer) (segment virtual))
   (aref (inputs segment) location))
 
-(defmethod output-field ((field (eql :buffer)) location (segment virtual))
+(defmethod output-field ((field (eql :buffer)) (location integer) (segment virtual))
   (aref (outputs segment) location))
 
-(defmethod (setf input-field) ((value buffer) (field (eql :buffer)) location (segment virtual))
+(defmethod (setf input-field) ((value buffer) (field (eql :buffer)) (location integer) (segment virtual))
   (vector-insert-pos location value (inputs segment))
   value)
 
-(defmethod (setf output-field) ((value buffer) (field (eql :buffer)) location (segment virtual))
+(defmethod (setf output-field) ((value buffer) (field (eql :buffer)) (location integer) (segment virtual))
   (vector-insert-pos location value (outputs segment))
   value)
 
-(defmethod (setf input-field) ((value null) (field (eql :buffer)) location (segment virtual))
+(defmethod (setf input-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
   (vector-remove-pos location (inputs segment))
   value)
 
-(defmethod (setf output-field) ((value null) (field (eql :buffer)) location (segment virtual))
+(defmethod (setf output-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
   (vector-remove-pos location (outputs segment))
   value)
 
