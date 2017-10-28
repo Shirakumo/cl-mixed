@@ -20,26 +20,26 @@ If you don't already have a byte buffer from your input or output implementation
 
 An optional third parameter designates the sample rate of the buffers that the source converts to or the drain converts from. This "buffer sample rate" has to be the same across all segments in a mixer pipeline. It defaults to 44100. Creating a packer looks and works exactly the same as an unpacker.
 
-Next you'll want to create the segments that'll do the actual audio processing you want. For this example, let's create a 3D audio segment (`space-mixer`) and a fade effect (`fade`).
+Next you'll want to create the segments that'll do the actual audio processing you want. For this example, let's create a 3D audio segment (`space-mixer`) and a fade effect (`fader`).
 
     (cl-mixed:make-space-mixer)
-    (cl-mixed:make-fade :duration 5.0)
+    (cl-mixed:make-fader :duration 5.0)
 
 Next we'll need to create the buffers that are used to manipulate the audio internally and bind them to the appropriate inputs and outputs of our segments.
 
     (cl-mixed:with-buffers 500 (input left right)
-      (cl-mixed:connect unpacker :left fade :mono input)
+      (cl-mixed:connect unpacker :left fader :mono input)
       (setf (cl-mixed:output :right unpacker) right)
-      (cl-mixed:connect fade :mono space-mixer 0 input)
+      (cl-mixed:connect fader :mono space-mixer 0 input)
       (cl-mixed:connect space-mixer :left packer :left left)
       (cl-mixed:connect space-mixer :right packer :right right)
       ...)
 
-This here means we create three buffers, `input`, `left`, and `right`, each with a size capable of holding 500 samples. We then connect the source's left output to the fade's single input. Then we connect the right buffer to the unpacker's right output, just so that it has both outputs set. If your unpacker only has one channel, you can leave that out. If it has more, you'll have to repeat it for the other channels as well. Next we connect the fade's output as the space-mixer's first input. Finally we connect the left and right outputs of the space-mixer segment to the left and right inputs of the packer respectively. For the fade segment we can connect the same buffer to both input and output, as it is declared to work "in place". For the space-mixer segment we need distinct buffers, hence the extra `input` buffer.
+This here means we create three buffers, `input`, `left`, and `right`, each with a size capable of holding 500 samples. We then connect the source's left output to the fader's single input. Then we connect the right buffer to the unpacker's right output, just so that it has both outputs set. If your unpacker only has one channel, you can leave that out. If it has more, you'll have to repeat it for the other channels as well. Next we connect the fader's output as the space-mixer's first input. Finally we connect the left and right outputs of the space-mixer segment to the left and right inputs of the packer respectively. For the fader segment we can connect the same buffer to both input and output, as it is declared to work "in place". For the space-mixer segment we need distinct buffers, hence the extra `input` buffer.
 
 Now we can create our segment-sequence object, which keeps the order in which to process each segment.
 
-    (cl-mixed:make-segment-sequence source fade space drain)
+    (cl-mixed:make-segment-sequence source fader space drain)
 
 Finally we can move to the main processing loop, which should look as follows:
 
@@ -69,7 +69,7 @@ Should cause the source to now also circle around the listener as it is fading i
 The following segments are included with the standard libmixed distribution:
 
 * `basic-mixer` Linearly mix multiple inputs.
-* `fade` Fade the volume of a source in or out.
+* `fader` Fade the volume of a source in or out.
 * `generator` Generate simple wave forms.
 * `ladspa` Use a LADSPA plugin.
 * `space-mixer` Mix multiple inputs as if they were in 3D space.
@@ -108,7 +108,7 @@ In order to create a segment in Lisp, you must subclass `virtual` and in the ver
                  (setf offset (mod (1+ offset) (length buf))))
         (setf (offset echo) offset)))
 
-In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fade` segment from the above introductory code.
+In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fader` segment from the above introductory code.
 
 ## Also See
 

@@ -23,7 +23,7 @@
                (:file "segment-sequence")
                (:module "segments"
                 :components ((:file "basic-mixer")
-                             (:file "fade")
+                             (:file "fader")
                              (:file "generator")
                              (:file "ladspa")
                              (:file "packer")

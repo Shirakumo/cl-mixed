@@ -171,10 +171,10 @@
    #:channels
    #:make-basic-mixer
    #:volume)
-  ;; segments/fade.lisp
+  ;; segments/fader.lisp
   (:export
-   #:fade
-   #:make-fade
+   #:fader
+   #:make-fader
    #:from
    #:to
    #:duration
