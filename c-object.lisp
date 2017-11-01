@@ -15,7 +15,8 @@
 (defclass c-object ()
   ((handle :initarg :handle :initform NIL :accessor handle)))
 
-(defmethod initialize-instance :after ((object c-object) &key)
+(defmethod initialize-instance ((object c-object) &key)
+  (call-next-method)
   (unless (handle object)
     (let ((handle (allocate-handle object)))
       (setf (handle object) handle)
