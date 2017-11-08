@@ -50,3 +50,9 @@
 (define-accessor channels packed-audio cl-mixed-cffi:packed-audio-channels)
 (define-accessor layout packed-audio cl-mixed-cffi:packed-audio-layout)
 (define-accessor samplerate packed-audio cl-mixed-cffi:packed-audio-samplerate)
+
+(defmethod (setf size) :before (size (pack packed-audio))
+  (when (car (own-data pack))
+    (cffi:foreign-free (cdr (own-data pack)))
+    (setf (cl-mixed-cffi:packed-audio-data (handle pack))
+          (setf (cdr (own-data pack)) (calloc :uchar size)))))
