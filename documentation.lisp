@@ -50,15 +50,19 @@ See BUFFER")
     "Accessor to the raw data array contained in the object.
 
 See BUFFER
-See CHANNEL")
+See PACKED-AUDIO")
   
   (function size
     "Accessor to the size of the data contained in the object.
 
-For raw data buffers this number is in bytes.
+For packed-audio this number is in bytes.
+For buffers this number is in floats.
+
+When the size is set on a buffer, the buffer's data array is
+resized to fit the requested size.
 
 See BUFFER
-See CHANNEL
+See PACKED-AUDIO
 See SEGMENT-SEQUENCE")
 
   (function clear

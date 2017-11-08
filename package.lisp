@@ -68,6 +68,7 @@
    #:buffer-to-packed-audio
    #:copy-buffer
    #:clear-buffer
+   #:resize-buffer
    #:resample-nearest
    #:resample-linear
    #:resample-cubic

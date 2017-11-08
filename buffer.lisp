@@ -35,6 +35,10 @@
 (define-accessor data buffer cl-mixed-cffi:buffer-data)
 (define-accessor size buffer cl-mixed-cffi:buffer-size)
 
+(defmethod (setf size) (new (buffer buffer))
+  (with-error-on-failure ()
+    (cl-mixed-cffi:resize-buffer new (handle buffer))))
+
 (defmacro with-buffers (size buffers &body body)
   (let ((sizeg (gensym "SIZE")))
     `(let ((,sizeg ,size) ,@buffers)
