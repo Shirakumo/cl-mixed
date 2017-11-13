@@ -55,7 +55,9 @@
 (define-accessor samplerate packed-audio cl-mixed-cffi:packed-audio-samplerate)
 
 (defmethod (setf size) :before (size (pack packed-audio))
-  (when (car (own-data pack))
-    (cffi:foreign-free (cdr (own-data pack)))
-    (setf (cl-mixed-cffi:packed-audio-data (handle pack))
-          (setf (cdr (own-data pack)) (calloc :uchar size)))))
+  (cond ((car (own-data pack))
+         (cffi:foreign-free (cdr (own-data pack))))
+        ((= 0 (size pack))
+         (setf (car (own-data pack)) T)))
+  (setf (cl-mixed-cffi:packed-audio-data (handle pack))
+        (setf (cdr (own-data pack)) (calloc :uchar size))))
