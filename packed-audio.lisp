@@ -11,12 +11,15 @@
 
 (defmethod initialize-instance :after ((pack packed-audio) &key data size encoding channels layout samplerate)
   (unless data
-    (setf data (calloc :uchar size))
-    ;; We need to use a cons here because otherwise we would have to keep a
-    ;; reference to the channel object in the freeing function, making it
-    ;; impossible to GC. Using a cons to keep track that circumvents this.
-    (setf (car (own-data pack)) T)
-    (setf (cdr (own-data pack)) data))
+    (cond ((= 0 size)
+           (setf data (null-pointer)))
+          (T
+           (setf data (calloc :uchar size))
+           ;; We need to use a cons here because otherwise we would have to keep a
+           ;; reference to the channel object in the freeing function, making it
+           ;; impossible to GC. Using a cons to keep track that circumvents this.
+           (setf (car (own-data pack)) T)
+           (setf (cdr (own-data pack)) data))))
   (let ((handle (handle pack)))
     (setf (cl-mixed-cffi:packed-audio-data handle) data)
     (setf (cl-mixed-cffi:packed-audio-size handle) size)
