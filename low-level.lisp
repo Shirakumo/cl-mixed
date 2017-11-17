@@ -64,6 +64,7 @@
   :buffer
   :source
   :bypass
+  :samplerate
   :volume
   :packed-audio-resampler
   :volume-control-pan
@@ -82,7 +83,19 @@
   :space-min-distance
   :space-max-distance
   :space-rolloff
-  :space-attenuation)
+  :space-attenuation
+  :delay-time
+  :pitch-shift
+  :gate-open-threshold
+  :gate-close-threshold
+  :gate-attack
+  :gate-hold
+  :gate-release
+  :noise-type
+  :repeat-time
+  :repeat-mode
+  :frequency-cutoff
+  :frequency-pass)
 
 (defcenum attenuation
   (:no-attenuation 1)
@@ -101,6 +114,19 @@
   :square
   :triangle
   :sawtooth)
+
+(defcenum noise-type
+  (:white-noise 1)
+  :pink-noise
+  :brown-noise)
+
+(defcenum repeat-mode
+  (:record 1)
+  :play)
+
+(defcenum frequency-pass
+  (:low 1)
+  :high)
 
 (defcenum info-flags
   (:inplace #x1)
@@ -122,6 +148,38 @@
   (:center 4)
   (:subwoofer 5))
 
+(defcenum field-type
+  (:unknown 0)
+  :int8
+  :uint8
+  :int16
+  :uint16
+  :int24
+  :uint24
+  :int32
+  :uint32
+  :float
+  :double
+  :bool
+  :size_t
+  :string
+  :function
+  :pointer
+  :segment-pointer
+  :buffer-pointer
+  :packed-audio-pointer
+  :segment-sequence-pointer
+  :location-enum
+  :frequency-pass-enum
+  :repeat-mode-enum
+  :noise-type-enum
+  :generator-type-enum
+  :fade-type-enum
+  :attenuation-enum
+  :layout-enum
+  :encoding-enum
+  :error-enum)
+
 (defcstruct (buffer :class buffer :conc-name buffer-)
   (data :pointer)
   (size size_t))
@@ -137,7 +195,9 @@
 (defcstruct (field-info :class field-info :conc-name field-info-)
   (field size_t)
   (description :string)
-  (flags :int))
+  (flags :int)
+  (type field-type)
+  (type-count size_t))
 
 (defcstruct (segment-info :class segment-info :conc-name segment-info-)
   (name :string)
@@ -308,6 +368,31 @@
   (segment :pointer))
 
 (defcfun (make-segment-space-mixer "mixed_make_segment_space_mixer") :int
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-delay "mixed_make_segment_delay") :int
+  (time :float)
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-repeat "mixed_make_segment_repeat") :int
+  (time :float)
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-pitch "mixed_make_segment_pitch") :int
+  (pitch :float)
+  (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-noise "mixed_make_segment_noise") :int
+  (type noise-type)
+  (segment :pointer))
+
+(defcfun (make-segment-frequency-pass "mixed_make_segment_frequency_pass") :int
+  (pass frequency-pass)
+  (cutoff size_t)
   (samplerate size_t)
   (segment :pointer))
 

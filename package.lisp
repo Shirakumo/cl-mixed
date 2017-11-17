@@ -21,6 +21,10 @@
    #:attenuation
    #:fade-type
    #:generator-type
+   #:noise-type
+   #:repeat-mode
+   #:frequency-pass
+   #:field-type
    #:info-flags
    #:location
    #:buffer
@@ -37,6 +41,8 @@
    #:field-info-field
    #:field-info-description
    #:field-info-flags
+   #:field-info-type
+   #:field-info-type-count
    #:segment-info
    #:segment-info-name
    #:segment-info-description
@@ -90,6 +96,11 @@
    #:make-segment-generator
    #:make-segment-ladspa
    #:make-segment-space-mixer
+   #:make-segment-delay
+   #:make-segment-repeat
+   #:make-segment-pitch
+   #:make-segment-noise
+   #:make-segment-frequency-pass
    #:free-segment-sequence
    #:segment-sequence-add
    #:segment-sequence-remove
