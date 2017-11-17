@@ -31,16 +31,20 @@
         collect (list :field (cl-mixed-cffi:field-info-field field)
                       :description (cl-mixed-cffi:field-info-description field)
                       :flags (decode-flags
-                              (cl-mixed-cffi:field-info-flags field)))))
+                              (cl-mixed-cffi:field-info-flags field))
+                      :type (cl-mixed-cffi:field-info-type field)
+                      :type-count (cl-mixed-cffi:field-info-type-count field))))
 
 (defun encode-field-info (fields info)
   (loop for field = (cffi:foreign-slot-pointer info '(:struct cl-mixed-cffi:segment-info) 'cl-mixed-cffi::fields)
         then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct cl-mixed-cffi:field-info)))
         for fieldspec in fields
-        do (destructuring-bind (&key fieldno description flags) fieldspec
+        do (destructuring-bind (&key fieldno description flags type type-count) fieldspec
              (setf (cl-mixed-cffi:field-info-field field) fieldno)
              (setf (cl-mixed-cffi:field-info-description field) description)
-             (setf (cl-mixed-cffi:field-info-flags field) (encode-flags flags)))))
+             (setf (cl-mixed-cffi:field-info-flags field) (encode-flags flags))
+             (setf (cl-mixed-cffi:field-info-type field) (or type :unknown))
+             (setf (cl-mixed-cffi:field-info-type-count field) (or type-count 1)))))
 
 ;; See the comment on the segment-sequence class for an explanation on the arrays.
 (defclass segment (c-object)

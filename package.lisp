@@ -183,6 +183,13 @@
    #:channels
    #:make-basic-mixer
    #:volume)
+  ;; segments/delay.lisp
+  (:export
+   #:delay
+   #:make-delay
+   #:duration
+   #:samplerate
+   #:bypass)
   ;; segments/fader.lisp
   (:export
    #:fader
@@ -191,6 +198,14 @@
    #:to
    #:duration
    #:fade-type
+   #:bypass)
+  ;; segments/frequency-pass.lisp
+  (:export
+   #:frequency-pass
+   #:make-frequency-pass
+   #:cutoff
+   #:frequency-pass
+   #:samplerate
    #:bypass)
   ;; segments/generator.lisp
   (:export
@@ -204,6 +219,12 @@
    #:ladspa
    #:make-ladspa
    #:field)
+  ;; segments/noise.lisp
+  (:export
+   #:noise
+   #:make-noise
+   #:volume
+   #:noise-type)
   ;; segments/packer.lisp
   (:export
    #:packer
@@ -216,6 +237,21 @@
    #:layout
    #:samplerate
    #:volume
+   #:bypass)
+  ;; segments/pitch.lisp
+  (:export
+   #:pitch
+   #:make-pitch
+   #:pitch
+   #:samplerate
+   #:bypass)
+  ;; segments/repeat.lisp
+  (:export
+   #:repeat
+   #:make-repeat
+   #:duration
+   #:repeat-mode
+   #:samplerate
    #:bypass)
   ;; segments/space-mixer.lisp
   (:export
