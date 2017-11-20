@@ -69,9 +69,14 @@ Should cause the source to now also circle around the listener as it is fading i
 The following segments are included with the standard libmixed distribution:
 
 * `basic-mixer` Linearly mix multiple inputs.
+* `delay` Delay the input by a given amount of time.
 * `fader` Fade the volume of a source in or out.
+* `frequency-pass` Filter out low or high frequencies.
 * `generator` Generate simple wave forms.
 * `ladspa` Use a LADSPA plugin.
+* `noise` Generate noise.
+* `pitch` Shift the pitch.
+* `repeat` Record an input and then repeat it back.
 * `space-mixer` Mix multiple inputs as if they were in 3D space.
 * `volume-control` Adapt the volume and pan of a stereo signal.
 
