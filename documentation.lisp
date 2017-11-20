@@ -250,7 +250,13 @@ See PACKED-AUDIO")
 
 The sample rate is in Hz.
 
-See PACKED-AUDIO"))
+See PACKED-AUDIO
+See DELAY
+See FADER
+See FREQUENCY-PASS
+See PITCH
+See REPEAT
+See SPACE-MIXER"))
 
 ;; segment-sequence.lisp
 (docs:define-docs
@@ -689,7 +695,7 @@ See VECTOR-REMOVE-POS")
 
 Returns a fresh list."))
 
-;; segments/basic-mixer
+;; segments/basic-mixer.lisp
 (docs:define-docs
   (type basic-mixer
     "This segment additively mixes an arbitrary number of inputs to a single output.
@@ -709,7 +715,29 @@ See BASIC-MIXER
 See ADD
 See WITHDRAW"))
 
-;; segments/fader
+;; segments/delay.lisp
+(docs:define-docs
+  (type delay
+    "A simple delay segment.
+
+This just delays the input to the output by a given
+number of seconds. Note that it will require an
+internal buffer to hold the samples for the required
+length of time, which might become expensive for very
+long durations.
+
+See SEGMENT
+See MAKE-DELAY
+See DURATION
+See SAMPLERATE
+See BYPASS")
+
+  (function make-delay
+    "Create a new delay segment.
+
+See DELAY"))
+
+;; segments/fader.lisp
 (docs:define-docs
   (type fader
     "A volume fading segment.
@@ -750,11 +778,13 @@ Must be in the range of [0.0, infinity[.
 See FADER")
   
   (function duration
-    "Accessor to the duration of the fade effect.
+    "Accessor to the duration of the segment's effect.
 
 Must be measured in seconds.
 
-See FADER")
+See FADER
+See DELAY
+See REPEAT")
   
   (function fade-type
     "Accessor to the type of easing function used for the fade.
@@ -763,7 +793,43 @@ Must be one of :LINEAR :CUBIC-IN :CUBIC-OUT :CUBIC-IN-OUT
 
 See FADER"))
 
-;; segments/generator
+;; segments/frequency-pass.lisp
+(docs:define-docs
+  (type frequency-pass
+    "A frequency low or high pass filter.
+
+This filters out frequencies below or above a given
+cutoff frequency.
+
+See SEGMENT
+See MAKE-FREQUENCY-PASS
+See CUTOFF
+See FREQUENCY-PASS
+See SAMPLERATE
+See BYPASS")
+
+  (function make-frequency-pass
+    "Create a new frequency pass segment.
+
+PASS can be either :high or :low, which will cause
+high and low frequencies to pass through the filter
+respectively.
+
+See FREQUENCY-PASS")
+
+  (function cutoff
+    "Accessor to the cutoff frequency of the frequency-pass segment.
+
+See FREQUENCY-PASS")
+
+  (function frequency-pass
+    "Accessor to whether the frequency-pass segment passes high or low frequencies.
+
+Value must be either :HIGH or :LOW.
+
+See FREQUENCY-PASS"))
+
+;; segments/generator.lisp
 (docs:define-docs
   (type generator
     "A primitive tone generator segment.
@@ -796,7 +862,7 @@ Must be in the range [0.0, samplerate].
 
 See GENERATOR"))
 
-;; segments/ladspa
+;; segments/ladspa.lisp
 (docs:define-docs
   (type ladspa
     "This segment invokes a LADSPA plugin.
@@ -827,7 +893,34 @@ configure the LADSPA plugin in the same call.
 
 See LADSPA"))
 
-;; segments/packer
+;; segments/noise.lisp
+(docs:define-docs
+  (type noise
+    "A noise generator segment.
+
+This segment produces a single channel of noise,
+either white, pink, or brownian noise.
+
+See SEGMENT
+See MAKE-NOISE
+See VOLUME
+See NOISE-TYPE")
+
+  (function make-noise
+    "Create a new noise segment.
+
+The type can be one of :WHITE, :PINK, :BROWN.
+
+See NOISE")
+
+  (function noise-type
+    "Accessor to the type of noise being generated.
+
+The value must be one of :WHITE, :PINK, :BROWN.
+
+See NOISE"))
+
+;; segments/packer.lisp
 (docs:define-docs
   (type packer
     "This segment converts data from individual sample buffers to data for packed-audio.
@@ -873,7 +966,78 @@ yourself, simply use MAKE-INSTANCE instead.
 See PACKED-AUDIO
 See PACKER"))
 
-;; segments/space-mixer
+;; segments/pitch.lisp
+(docs:define-docs
+  (type pitch
+    "A pitch shifting segment.
+
+This segment allows you to change the pitch of the
+incoming audio.
+
+See MAKE-PITCH
+See PITCH
+See SAMPLERATE
+See BYPASS")
+
+  (function make-pitch
+    "Create a new pitch shifting segment.
+
+See PITCH")
+
+  (function pitch
+    "Accessor to the current pitch shifting value.
+
+The pitch shift is denoted as a float in the range
+of ]0,infinity[, where 1 is no change, 0.5 halves the
+pitch, and 2 doubles the pitch.
+
+Note that extreme values on either side will result
+in heavy distortions and quality loss. Anything
+outside the range of [0.5,2.0] will already result in
+audible artefacts.
+
+See PITCH"))
+
+;; segments/repeat.lisp
+(docs:define-docs
+  (type repeat
+    "This segment repeats a recorded bit of its input sequence.
+
+The segment is first in record mode when created.
+Once you have the bit you want to repeat back, you
+can switch the repeat-mode to :PLAY. It will then
+ignore the input and instead continuously output the
+recorded input bit.
+
+See MAKE-REPEAT
+See DURATION
+See REPEAT-MODE
+See SAMPLERATE
+See BYPASS")
+
+  (function make-repeat
+    "Create a new repeat segment.
+
+The time designates the size of the internal buffer
+that it can repeat to the output.
+
+See REPEAT")
+
+  (function repeat-mode
+    "Accessor to the mode the repeat segment is currently in.
+
+The value must be either :RECORD or :PLAY.
+When in record mode, the segment will fill its internal
+buffer with the samples from the input buffer, and copy
+them to the output buffer. While in this mode it is thus
+\"transparent\" and does not change anything.
+When in play mode, the segment continuously plays back
+its internal buffer to the output buffer, ignoring all
+samples on the input buffer.
+
+See REPEAT"))
+
+;; segments/space-mixer.lisp
 (docs:define-docs
   (type space-mixer
     "A segment to simulate audio effects in 3D space.
@@ -1040,7 +1204,7 @@ of the following signature:
 See mixed.h
 See SPACE-MIXER"))
 
-;; segments/unpacker
+;; segments/unpacker.lisp
 (docs:define-docs
   (type unpacker
     "This segment converts data from packed-audio to individual sample buffers.
@@ -1092,7 +1256,7 @@ instead.
 See PACKED-AUDIO
 See UNPACKER"))
 
-;; segments/virtual
+;; segments/virtual.lisp
 (docs:define-docs
   (type virtual
     "Superclass for segments implemented in Lisp.
@@ -1128,7 +1292,7 @@ See FIELD
 See INPUTS
 See OUTPUTS"))
 
-;; segments/volume-control
+;; segments/volume-control.lisp
 (docs:define-docs
   (type volume-control
     "A volume control segment that can change the volume and pan.
@@ -1153,11 +1317,13 @@ See PAN")
 See VOLUME-CONTROL")
   
   (function volume
-    "Accessor to the outputting volume of the volume control segment.
+    "Accessor to the outputting volume of the segment.
 
 Must be in the range [0, infinity[.
 
-See VOLUME-CONTROL")
+See VOLUME-CONTROL
+See NOISE
+See GENERATOR")
   
   (function pan
     "Accessor to the outputting pan of the volume control segment.
