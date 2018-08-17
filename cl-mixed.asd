@@ -10,7 +10,9 @@
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
   :description "Bindings to libmixed, a sound mixing and processing library."
-  :homepage "https://github.com/Shirakumo/cl-mixed"
+  :homepage "https://Shirakumo.github.io/cl-mixed/"
+  :bug-tracker "https://github.com/Shirakumo/cl-mixed/issues"
+  :source-control (:git "https://github.com/Shirakumo/cl-mixed.git")
   :serial T
   :components ((:file "package")
                (:file "low-level")
