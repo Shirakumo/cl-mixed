@@ -54,8 +54,8 @@
 
 (defmethod info ((segment segment))
   (unless (direct-info segment)
-    (let ((info (cl-mixed-cffi:segment-info (handle segment))))
-      (when (cffi:null-pointer-p info)
+    (cffi:with-foreign-object (info '(:struct cl-mixed-cffi:segment-info))
+      (when (= 0 (cl-mixed-cffi:segment-info info (handle segment)))
         (error "Failed to retrieve information about ~a" segment))
       (setf (direct-info segment)
             (list :name (cl-mixed-cffi:segment-info-name info)
@@ -64,8 +64,7 @@
                   :min-inputs (cl-mixed-cffi:segment-info-min-inputs info)
                   :max-inputs (cl-mixed-cffi:segment-info-max-inputs info)
                   :outputs (cl-mixed-cffi:segment-info-outputs info)
-                  :fields (decode-field-info info)))
-      (cffi:foreign-free info)))
+                  :fields (decode-field-info info)))))
   (direct-info segment))
 
 (defmethod start ((segment segment))
