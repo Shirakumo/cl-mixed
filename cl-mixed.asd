@@ -33,6 +33,7 @@
                              (:file "noise")
                              (:file "packer")
                              (:file "pitch")
+                             (:file "queue")
                              (:file "repeat")
                              (:file "space-mixer")
                              (:file "unpacker")

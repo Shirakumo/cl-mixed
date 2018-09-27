@@ -95,7 +95,10 @@
   :repeat-time
   :repeat-mode
   :frequency-cutoff
-  :frequency-pass)
+  :frequency-pass
+  :in-count
+  :out-count
+  :current-segment)
 
 (defcenum attenuation
   (:no-attenuation 1)
@@ -397,6 +400,24 @@
   (samplerate size_t)
   (segment :pointer))
 
+(defcfun (make-segment-queue "mixed_make_segment_queue") :int
+  (segment :pointer))
+
+(defcfun (queue-add "mixed_queue_add") :int
+  (new :pointer)
+  (queue :pointer))
+
+(defcfun (queue-remove "mixed_queue_remove") :int
+  (old :pointer)
+  (queue :pointer))
+
+(defcfun (queue-remove-at "mixed_queue_remove_at") :int
+  (pos size_t)
+  (queue :pointer))
+
+(defcfun (queue-clear "mixed_queue_clear") :int
+  (queue :pointer))
+
 (defcfun (free-segment-sequence "mixed_free_segment_sequence") :void
   (segment :pointer))
 
@@ -425,3 +446,5 @@
 
 (defcfun (error-string "mixed_error_string") :string
   (error error))
+
+(defcfun (version "mixed_version") :string)

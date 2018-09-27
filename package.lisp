@@ -101,6 +101,11 @@
    #:make-segment-pitch
    #:make-segment-noise
    #:make-segment-frequency-pass
+   #:make-segment-queue
+   #:queue-add
+   #:queue-remove
+   #:queue-remove-at
+   #:queue-clear
    #:free-segment-sequence
    #:segment-sequence-add
    #:segment-sequence-remove
@@ -109,7 +114,8 @@
    #:segment-sequence-end
    #:samplesize
    #:error
-   #:error-string))
+   #:error-string
+   #:version))
 
 (defpackage #:cl-mixed
   (:nicknames #:org.shirakumo.fraf.mixed)
@@ -245,6 +251,16 @@
    #:pitch
    #:samplerate
    #:bypass)
+  ;; segments/queue.lisp
+  (:export
+   #:queue
+   #:current-segment
+   #:in-count
+   #:out-count
+   #:bypass
+   #:add
+   #:withdraw
+   #:clear)
   ;; segments/repeat.lisp
   (:export
    #:repeat

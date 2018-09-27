@@ -65,9 +65,8 @@
     (:uint (max 0 (round value)))
     (T value)))
 
-(defmacro define-field-accessor (name class type &optional (enum (intern (string name) "KEYWORD")))
+(defmacro define-field-reader (name class type &optional (enum (intern (string name) "KEYWORD")))
   (let ((value-ptr (gensym "VALUE-PTR"))
-        (value (gensym "VALUE"))
         (segment (gensym  "SEGMENT"))
         (field (intern (string name) "KEYWORD")))
     `(progn
@@ -77,6 +76,15 @@
              (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
            (cffi:mem-ref ,value-ptr ',type)))
 
+       (defmethod ,name ((,segment ,class))
+         (field ,field ,segment)))))
+
+(defmacro define-field-writer (name class type &optional (enum (intern (string name) "KEYWORD")))
+  (let ((value-ptr (gensym "VALUE-PTR"))
+        (value (gensym "VALUE"))
+        (segment (gensym  "SEGMENT"))
+        (field (intern (string name) "KEYWORD")))
+    `(progn
        (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr ',type)
            (setf (cffi:mem-ref ,value-ptr ',type) (coerce-ctype ,value ',type))
@@ -84,11 +92,13 @@
              (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
 
-       (defmethod ,name ((,segment ,class))
-         (field ,field ,segment))
-
        (defmethod (setf ,name) (,value (,segment ,class))
          (setf (field ,field ,segment) ,value)))))
+
+(defmacro define-field-accessor (name class type &optional (enum (intern (string name) "KEYWORD")))
+  `(progn
+     (define-field-reader ,name ,class ,type ,enum)
+     (define-field-writer ,name ,class ,type ,enum)))
 
 (defun ptr->vec (value-ptr)
   (let ((value (make-array 3 :initial-element 0.0f0 :element-type 'single-float)))
