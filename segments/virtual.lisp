@@ -82,9 +82,10 @@
 (define-std-callback virtual-start ((segment :pointer))
   (start (pointer->object segment)))
 
-(define-callback virtual-mix :void ((samples size_t) (segment :pointer))
-  NIL
-  (mix samples (pointer->object segment)))
+(define-callback virtual-mix :int ((samples size_t) (segment :pointer)) 0
+  (if (mix samples (pointer->object segment))
+      1
+      0))
 
 (define-std-callback virtual-end ((segment :pointer))
   (end (pointer->object segment)))

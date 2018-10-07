@@ -151,7 +151,8 @@
           do (setf (cffi:mem-aref out :float i) (+ sample echo))
              (setf (aref buf offset) (* (+ sample echo) falloff))
              (setf offset (mod (1+ offset) (length buf))))
-    (setf (offset echo) offset)))
+    (setf (offset echo) offset)
+    T))
 
 (defun test-echo (mp3 &key (samples 500) (delay 0.2) (falloff 0.8))
   (with-edge-setup (file out samplerate :pathname mp3 :samples samples)

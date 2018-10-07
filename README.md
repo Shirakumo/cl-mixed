@@ -111,7 +111,8 @@ In order to create a segment in Lisp, you must subclass `virtual` and in the ver
               do (setf (cffi:mem-aref out :float i) (+ sample echo))
                  (setf (aref buf offset) (* (+ sample echo) falloff))
                  (setf offset (mod (1+ offset) (length buf))))
-        (setf (offset echo) offset)))
+        (setf (offset echo) offset)
+        T))
 
 In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fader` segment from the above introductory code.
 
