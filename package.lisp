@@ -254,6 +254,7 @@
   ;; segments/queue.lisp
   (:export
    #:queue
+   #:make-queue
    #:current-segment
    #:in-count
    #:out-count

@@ -9,12 +9,12 @@
 (defclass queue (segment)
   ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
 
-(defmethod initialize-instance :after ((segment fader) &key)
+(defmethod initialize-instance :after ((segment queue) &key)
   (with-error-on-failure ()
     (cl-mixed-cffi:make-segment-queue (handle segment))))
 
 (defun make-queue (&rest args)
-  (apply #'make-instance 'fader args))
+  (apply #'make-instance 'queue args))
 
 (defmethod field ((field (eql :current-segment)) (segment queue))
   (with-foreign-object (handle :pointer)
