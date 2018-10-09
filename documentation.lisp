@@ -351,6 +351,11 @@ If you want to ensure that the sequence is complete
 and able to process the requested number of samples,
 you should call CHECK-COMPLETE after running START.
 
+When adding methods to MIX for virtual segments, you
+should make sure to return true, unless your segment
+has somehow ended and exhausted the samples it wants
+to process, in which case you should return NIL.
+
 See SEGMENT-SEQUENCE
 See SEGMENT
 See START

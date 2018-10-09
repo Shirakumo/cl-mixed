@@ -76,6 +76,7 @@ The following segments are included with the standard libmixed distribution:
 * `ladspa` Use a LADSPA plugin.
 * `noise` Generate noise.
 * `pitch` Shift the pitch.
+* `queue` Queue multiple segments one after the other.
 * `repeat` Record an input and then repeat it back.
 * `space-mixer` Mix multiple inputs as if they were in 3D space.
 * `volume-control` Adapt the volume and pan of a stereo signal.
@@ -114,7 +115,7 @@ In order to create a segment in Lisp, you must subclass `virtual` and in the ver
         (setf (offset echo) offset)
         T))
 
-In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fader` segment from the above introductory code.
+In order to achieve the echo effect we keep samples of a given duration around in a ring buffer and then decrease their potency with each iteration while adding the new samples on top. Of course, a more natural sounding echo effect would need more complicated processing than this. Regardless, this segment can now be integrated just the same as the `fader` segment from the above introductory code. The `T` at the end of the `mix` method signals that we're still producing samples. For segments that can end, the return value should become `NIL` once they're exhausted.
 
 ## Concepts
 ### Buffer
