@@ -135,7 +135,7 @@
 (defmethod cl-mixed:start ((echo echo))
   (setf (buffer echo) (make-array (ceiling (* (delay echo) (samplerate echo)))
                                   :element-type 'single-float
-                                  :initial-element 0.0s0)))
+                                  :initial-element 0.0f0)))
 
 (defmethod cl-mixed:mix (samples (echo echo))
   (let ((out (cl-mixed:data (aref (cl-mixed:outputs echo) 0)))
