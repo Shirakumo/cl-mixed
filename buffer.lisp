@@ -9,16 +9,28 @@
 (defclass buffer (c-object)
   ())
 
-(defmethod initialize-instance :after ((buffer buffer) &key handle size)
+(defmethod initialize-instance :after ((buffer buffer) &key handle size initial-contents)
+  (when initial-contents
+    (check-type initial-contents (vector single-float)))
+  (when (and initial-contents (null size))
+    (setf size (length initial-contents)))
   (unless handle
     (let ((handle (handle buffer)))
       (unless size
         (error "Buffer SIZE required."))
       (with-error-on-failure ()
-        (cl-mixed-cffi:make-buffer size handle)))))
+        (cl-mixed-cffi:make-buffer size handle))))
+  (when initial-contents
+    (loop with ptr = (data buffer)
+          for i from 0 below (min size (length initial-contents))
+          do (setf (cffi:mem-aref ptr :float i) (aref initial-contents i)))))
 
-(defun make-buffer (size)
-  (make-instance 'buffer :size size))
+(defun make-buffer (size/initial-contents)
+  (etypecase size/initial-contents
+    ((integer 1)
+     (make-instance 'buffer :size size/initial-contents))
+    ((vector single-float)
+     (make-instance 'buffer :initial-contents size/initial-contents))))
 
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct cl-mixed-cffi:buffer)))

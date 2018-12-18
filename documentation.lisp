@@ -42,7 +42,11 @@ See SIZE
 See CLEAR")
   
   (function make-buffer
-    "Create a new buffer capable of storing SIZE floats.
+    "Create a new buffer.
+
+You may pass either an integer denoting the length of the
+buffer in samples, or a vector of single-floats denoting the
+buffers' initial contents.
 
 See BUFFER")
   
