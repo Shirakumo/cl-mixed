@@ -42,7 +42,15 @@
   :open-ladspa-failed
   :bad-ladspa-library
   :no-ladspa-plugin-at-index
-  :ladspa-instantiation-failed)
+  :ladspa-instantiation-failed
+  :resample-failed
+  :buffer-empty
+  :buffer-full
+  :buffer-overcommit
+  :bad-resample-factor
+  :bad-channel-configuration
+  :buffer-allocated
+  :buffer-missing)
 
 (defcenum encoding
   (:int8 1)
@@ -56,17 +64,12 @@
   :float
   :double)
 
-(defcenum layout
-  (:alternating 1)
-  :sequential)
-
 (defcenum field
   :buffer
-  :source
   :bypass
   :samplerate
   :volume
-  :packed-audio-resampler
+  :resample-type
   :volume-control-pan
   :fade-from
   :fade-to
@@ -98,7 +101,15 @@
   :frequency-pass
   :in-count
   :out-count
-  :current-segment)
+  :current-segment
+  :speed-factor)
+
+(defcenum resample-type
+  (:sinc-best-quality 0)
+  :sinc-medium-quality
+  :sinc-fastest
+  :zero-order-hold
+  :linear-interpolation)
 
 (defcenum attenuation
   (:no-attenuation 1)
@@ -131,7 +142,7 @@
   (:low 1)
   :high)
 
-(defcenum info-flags
+(defbitfield info-flags
   (:inplace #x1)
   (:modifies-input #x2)
   (:in #x1)
@@ -170,7 +181,7 @@
   :pointer
   :segment-pointer
   :buffer-pointer
-  :packed-audio-pointer
+  :pack-pointer
   :segment-sequence-pointer
   :location-enum
   :frequency-pass-enum
@@ -179,21 +190,33 @@
   :generator-type-enum
   :fade-type-enum
   :attenuation-enum
-  :layout-enum
   :encoding-enum
-  :error-enum)
+  :error-enum
+  :resample-type-enum)
 
 (defcstruct (buffer :class buffer :conc-name buffer-)
   (data :pointer)
-  (size size_t))
-
-(defcstruct (packed-audio :class packed-audio :conc-name packed-audio-)
-  (data :pointer)
   (size size_t)
+  (r1-start size_t)
+  (r1-size size_t)
+  (r2-start size_t)
+  (r2-size size_t)
+  (reserved-start size_t)
+  (reserved-size size_t)
+  (virtual-p :char))
+
+(defcstruct (pack :class pack :conc-name pack-)
   (encoding encoding)
   (channels :uint8)
-  (layout layout)
-  (samplerate size_t))
+  (samplerate size_t)
+  (data :pointer)
+  (size size_t)
+  (r1-start size_t)
+  (r1-size size_t)
+  (r2-start size_t)
+  (r2-size size_t)
+  (reserved-start size_t)
+  (reserved-size size_t))
 
 (defcstruct (field-info :class field-info :conc-name field-info-)
   (field size_t)
@@ -230,6 +253,40 @@
   (count size_t)
   (size size_t))
 
+(defcfun (make-pack "mixed_make_pack") :int
+  (frames size_t)
+  (pack :pointer))
+
+(defcfun (free-pack "mixed_free_pack") :void
+  (pack :pointer))
+
+(defcfun (clear-pack "mixed_pack_clear") :int
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_available_write") size_t
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_available_read") size_t
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_request_write") :int
+  (area :pointer)
+  (size :pointer)
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_finish_write") :int
+  (size size_t)
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_request_read") :int
+  (area :pointer)
+  (size :pointer)
+  (pack :pointer))
+
+(defcfun (pack-available-write "mixed_pack_finish_read") :int
+  (size size_t)
+  (pack :pointer))
+
 (defcfun (make-buffer "mixed_make_buffer") :int
   (size size_t)
   (buffer :pointer))
@@ -237,17 +294,21 @@
 (defcfun (free-buffer "mixed_free_buffer") :void
   (buffer :pointer))
 
-(defcfun (buffer-from-packed-audio "mixed_buffer_from_packed_audio") :int
-  (channel :pointer)
+(defcfun (buffer-from-pack "mixed_buffer_from_pack") :int
+  (pack :pointer)
   (buffers :pointer)
   (samples size_t)
   (volume :float))
 
-(defcfun (buffer-to-packed-audio "mixed_buffer_to_packed_audio") :int
+(defcfun (buffer-to-pack "mixed_buffer_to_pack") :int
   (buffers :pointer)
-  (channel :pointer)
+  (pack :pointer)
   (samples size_t)
   (volume :float))
+
+(defcfun (transfer-buffer "mixed_buffer_transfer") :int
+  (from :pointer)
+  (to :pointer))
 
 (defcfun (copy-buffer "mixed_buffer_copy") :int
   (from :pointer)
@@ -256,30 +317,33 @@
 (defcfun (clear-buffer "mixed_buffer_clear") :int
   (buffer :pointer))
 
-(defcfun (resize-buffer "mixed_buffer_resize") :int
+(defcfun (buffer-available-write "mixed_buffer_available_write") size_t
+  (buffer :pointer))
+
+(defcfun (buffer-available-write "mixed_buffer_available_read") size_t
+  (buffer :pointer))
+
+(defcfun (buffer-available-write "mixed_buffer_request_write") :int
+  (area :pointer)
+  (size :pointer)
+  (buffer :pointer))
+
+(defcfun (buffer-available-write "mixed_buffer_finish_write") :int
   (size size_t)
   (buffer :pointer))
 
-(defcfun (resample-nearest "mixed_resample_nearest") :int
-  (in :pointer)
-  (in-samplerate size_t)
-  (out :pointer)
-  (out-samplerate size_t)
-  (out-samples size_t))
+(defcfun (buffer-available-write "mixed_buffer_request_read") :int
+  (area :pointer)
+  (size :pointer)
+  (buffer :pointer))
 
-(defcfun (resample-linear "mixed_resample_linear") :int
-  (in :pointer)
-  (in-samplerate size_t)
-  (out :pointer)
-  (out-samplerate size_t)
-  (out-samples size_t))
+(defcfun (buffer-available-write "mixed_buffer_finish_read") :int
+  (size size_t)
+  (buffer :pointer))
 
-(defcfun (resample-cubic "mixed_resample_cubic") :int
-  (in :pointer)
-  (in-samplerate size_t)
-  (out :pointer)
-  (out-samplerate size_t)
-  (out-samples size_t))
+(defcfun (resize-buffer "mixed_buffer_resize") :int
+  (size size_t)
+  (buffer :pointer))
 
 (defcfun (free-segment "mixed_free_segment") :int
   (segment :pointer))
@@ -333,12 +397,12 @@
   (segment :pointer))
 
 (defcfun (make-segment-unpacker "mixed_make_segment_unpacker") :int
-  (packed :pointer)
+  (pack :pointer)
   (samplerate size_t)
   (segment :pointer))
 
 (defcfun (make-segment-packer "mixed_make_segment_packer") :int
-  (packed :pointer)
+  (pack :pointer)
   (samplerate size_t)
   (segment :pointer))
 
@@ -390,6 +454,10 @@
   (samplerate size_t)
   (segment :pointer))
 
+(defcfun (make-segment-gate "mixed_make_segment_gate") :int
+  (samplerate size_t)
+  (segment :pointer))
+
 (defcfun (make-segment-noise "mixed_make_segment_noise") :int
   (type noise-type)
   (segment :pointer))
@@ -398,6 +466,13 @@
   (pass frequency-pass)
   (cutoff size_t)
   (samplerate size_t)
+  (segment :pointer))
+
+(defcfun (make-segment-speed-change "mixed_make_segment_speed_change") :int
+  (speed :double)
+  (segment :pointer))
+
+(defcfun (make-segment-distribute "mixed_make_segment_distribute") :int
   (segment :pointer))
 
 (defcfun (make-segment-queue "mixed_make_segment_queue") :int
@@ -417,6 +492,17 @@
 
 (defcfun (queue-clear "mixed_queue_clear") :int
   (queue :pointer))
+
+(defcfun (make-segment-void "mixed_make_segment_void") :int
+  (segment :pointer))
+
+(defcfun (make-segment-zero "mixed_make_segment_zero") :int
+  (segment :pointer))
+
+(defcfun (make-segment-noise "mixed_make_segment_channel_convert") :int
+  (in :uint8)
+  (out :uint8)
+  (segment :pointer))
 
 (defcfun (free-segment-sequence "mixed_free_segment_sequence") :void
   (segment :pointer))
@@ -440,6 +526,12 @@
   (mixer :pointer))
 
 (defcfun (samplesize "mixed_samplesize") :uint8
+  (encoding encoding))
+
+(defcfun (translator-from "mixed_translator_from") :pointer
+  (encoding encoding))
+
+(defcfun (translator-to "mixed_translator_to") :pointer
   (encoding encoding))
 
 (defcfun (error "mixed_error") error)
