@@ -11,13 +11,13 @@
 (pushnew *static* cffi:*foreign-library-directories*)
 
 (define-foreign-library libmixed
-  (:darwin (:or "libmixed.dylib" "libmixed.so"
+  (:darwin (:or "libmixed2.dylib" "libmixed.dylib"
                 #+X86 "mac32-libmixed.dylib"
                 #+X86-64 "mac64-libmixed.dylib"))
-  (:unix (:or "libmixed.so"
+  (:unix (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
               #+X86 "lin32-libmixed.so"
               #+X86-64 "lin64-libmixed.so"))
-  (:windows (:or "out123.dll"
+  (:windows (:or "libmixed2.dll" "libmixed.dll"
                  #+X86 "win32-libmixed.dll"
                  #+X86-64 "win64-libmixed.dll"))
   (t (:default "mixed")))
