@@ -19,7 +19,7 @@
                (:file "toolkit")
                (:file "c-object")
                (:file "buffer")
-               (:file "packed-audio")
+               (:file "pack")
                (:file "segment")
                (:file "mixer")
                (:file "segment-sequence")

@@ -6,10 +6,10 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass packed-audio (c-object)
+(defclass pack (c-object)
   ((own-data :initform (cons NIL NIL) :reader own-data)))
 
-(defmethod initialize-instance :after ((pack packed-audio) &key data size encoding channels layout samplerate)
+(defmethod initialize-instance :after ((pack pack) &key data size encoding channels samplerate)
   (unless data
     (cond ((= 0 size)
            (setf data (null-pointer)))
@@ -21,25 +21,23 @@
            (setf (car (own-data pack)) T)
            (setf (cdr (own-data pack)) data))))
   (let ((handle (handle pack)))
-    (setf (cl-mixed-cffi:packed-audio-data handle) data)
-    (setf (cl-mixed-cffi:packed-audio-size handle) size)
-    (setf (cl-mixed-cffi:packed-audio-encoding handle) encoding)
-    (setf (cl-mixed-cffi:packed-audio-channels handle) channels)
-    (setf (cl-mixed-cffi:packed-audio-layout handle) layout)
-    (setf (cl-mixed-cffi:packed-audio-samplerate handle) samplerate)))
+    (setf (cl-mixed-cffi:pack-data handle) data)
+    (setf (cl-mixed-cffi:pack-size handle) size)
+    (setf (cl-mixed-cffi:pack-encoding handle) encoding)
+    (setf (cl-mixed-cffi:pack-channels handle) channels)
+    (setf (cl-mixed-cffi:pack-samplerate handle) samplerate)))
 
-(defun make-packed-audio (data size encoding channels layout samplerate)
-  (make-instance 'packed-audio :data data
-                               :size size
-                               :encoding encoding
-                               :channels channels
-                               :layout layout
-                               :samplerate samplerate))
+(defun make-pack (data size encoding channels samplerate)
+  (make-instance 'pack :data data
+                       :size size
+                       :encoding encoding
+                       :channels channels
+                       :samplerate samplerate))
 
-(defmethod allocate-handle ((pack packed-audio))
-  (calloc '(:struct cl-mixed-cffi:packed-audio)))
+(defmethod allocate-handle ((pack pack))
+  (calloc '(:struct cl-mixed-cffi:pack)))
 
-(defmethod free-handle ((pack packed-audio) handle)
+(defmethod free-handle ((pack pack) handle)
   (let ((own (own-data pack)))
     (lambda ()
       (when (car own)
@@ -47,18 +45,37 @@
       (cffi:foreign-free handle)
       (setf (pointer->object handle) NIL))))
 
-(define-accessor data packed-audio cl-mixed-cffi:packed-audio-data)
-(define-accessor size packed-audio cl-mixed-cffi:packed-audio-size)
-(define-accessor encoding packed-audio cl-mixed-cffi:packed-audio-encoding)
-(define-accessor channels packed-audio cl-mixed-cffi:packed-audio-channels)
-(define-accessor layout packed-audio cl-mixed-cffi:packed-audio-layout)
-(define-accessor samplerate packed-audio cl-mixed-cffi:packed-audio-samplerate)
+(define-accessor data pack cl-mixed-cffi:pack-data)
+(define-accessor size pack cl-mixed-cffi:pack-size)
+(define-accessor encoding pack cl-mixed-cffi:pack-encoding)
+(define-accessor channels pack cl-mixed-cffi:pack-channels)
+(define-accessor samplerate pack cl-mixed-cffi:pack-samplerate)
 
-(defmethod (setf size) :before (size (pack packed-audio))
+(defmethod (setf size) :before (size (pack pack))
   (unless (= size (size pack))
     (cond ((car (own-data pack))
            (cffi:foreign-free (cdr (own-data pack))))
           ((= 0 (size pack))
            (setf (car (own-data pack)) T)))
-    (setf (cl-mixed-cffi:packed-audio-data (handle pack))
+    (setf (cl-mixed-cffi:pack-data (handle pack))
           (setf (cdr (own-data pack)) (calloc :uchar size)))))
+
+(defmacro with-pack-tx ((data start end pack &key (direction :read) (size #xFFFFFFFF)) &body body)
+  (let ((packg (gensym "BUFFER"))
+        (sizeg (gensym "SIZE"))
+        (handle (gensym "HANDLE")))
+    `(let* ((,packg ,pack)
+            (,data (data ,packg)))
+       (ecase ,direction
+         (:read
+          (multiple-value-bind (,start ,end) (request-read ,packg ,size)
+            (flet ((finish (,sizeg) (finish-read ,packg ,sizeg)))
+              ,@body)))
+         (:write
+          (multiple-value-bind (,start ,end) (request-write ,packg ,size)
+            (flet ((finish (,sizeg) (finish-write ,packg ,sizeg)))
+              (unwind-protect
+                   (progn ,@body)
+                (let ((,handle (handle ,pack)))
+                  (setf (mixed:pack-reserved-size ,handle) 0)
+                  (setf (mixed:pack-reserved-start ,handle) 0))))))))))

@@ -26,11 +26,11 @@
   (calloc '(:struct cl-mixed-cffi:buffer)))
 
 (defmethod free-handle ((buffer buffer) handle)
-  ;; FIXME: free static vector
-  (lambda ()
-    (cl-mixed-cffi:free-buffer handle)
-    (cffi:foreign-free handle)
-    (setf (pointer->object handle) NIL)))
+  (let ((data (data buffer)))
+    (lambda ()
+      (static-vectors:free-static-vector data)
+      (cffi:foreign-free handle)
+      (setf (pointer->object handle) NIL))))
 
 (defmethod clear ((buffer buffer))
   (cl-mixed-cffi:clear-buffer (handle buffer)))
@@ -47,7 +47,9 @@
     (setf (slot-value buffer 'data) new)
     (setf (mixed:buffer-data (handle buffer)) (static-vectors:static-vector-pointer new))
     (setf (mixed:buffer-size (handle buffer)) (length new))
-    (static-vectors:free-static-vector old))
+    (static-vectors:free-static-vector old)
+    (tg:cancel-finalization buffer)
+    (tg:finalize buffer (free-handle buffer (handle buffer))))
   new)
 
 (defmacro with-buffers (size buffers &body body)
