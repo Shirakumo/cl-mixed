@@ -50,7 +50,9 @@
   :bad-resample-factor
   :bad-channel-configuration
   :buffer-allocated
-  :buffer-missing)
+  :buffer-missing
+  :duplicate-segment
+  :bad-segment)
 
 (defcenum encoding
   (:int8 1)
@@ -266,24 +268,24 @@
 (defcfun (pack-available-write "mixed_pack_available_write") size_t
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_available_read") size_t
+(defcfun (pack-available-read "mixed_pack_available_read") size_t
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_request_write") :int
+(defcfun (pack-request-write "mixed_pack_request_write") :int
   (area :pointer)
   (size :pointer)
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_finish_write") :int
+(defcfun (pack-finish-write "mixed_pack_finish_write") :int
   (size size_t)
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_request_read") :int
+(defcfun (pack-request-read "mixed_pack_request_read") :int
   (area :pointer)
   (size :pointer)
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_finish_read") :int
+(defcfun (pack-finish-read "mixed_pack_finish_read") :int
   (size size_t)
   (pack :pointer))
 
@@ -317,31 +319,31 @@
 (defcfun (clear-buffer "mixed_buffer_clear") :int
   (buffer :pointer))
 
+(defcfun (resize-buffer "mixed_buffer_resize") :int
+  (size size_t)
+  (buffer :pointer))
+
 (defcfun (buffer-available-write "mixed_buffer_available_write") size_t
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_available_read") size_t
+(defcfun (buffer-available-read "mixed_buffer_available_read") size_t
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_request_write") :int
+(defcfun (buffer-request-write "mixed_buffer_request_write") :int
   (area :pointer)
   (size :pointer)
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_finish_write") :int
+(defcfun (buffer-finish-write "mixed_buffer_finish_write") :int
   (size size_t)
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_request_read") :int
+(defcfun (buffer-request-read "mixed_buffer_request_read") :int
   (area :pointer)
   (size :pointer)
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_finish_read") :int
-  (size size_t)
-  (buffer :pointer))
-
-(defcfun (resize-buffer "mixed_buffer_resize") :int
+(defcfun (buffer-finish-read "mixed_buffer_finish_read") :int
   (size size_t)
   (buffer :pointer))
 
@@ -525,6 +527,35 @@
 (defcfun (segment-sequence-end "mixed_segment_sequence_end") :int
   (mixer :pointer))
 
+(defcfun (load-plugin "mixed_load_plugin") :int
+  (file :string))
+
+(defcfun (close-plugin "mixed_close_plugin") :int
+  (file :string))
+
+(defcfun (register-segment "mixed_register_segment") :int
+  (name :string)
+  (argc size_t)
+  (args :pointer)
+  (function :pointer))
+
+(defcfun (deregister-segment "mixed_deregister_segment") :int
+  (name :string))
+
+(defcfun (list-segments "mixed_list_segments") :int
+  (count :pointer)
+  (names :pointer))
+
+(defcfun (make-segment-info "mixed_make_segment_info") :int
+  (name :string)
+  (argc :pointer)
+  (args :pointer))
+
+(defcfun (make-segment "mixed_make_segment") :int
+  (name :string)
+  (args :pointer)
+  (segment :pointer))
+
 (defcfun (samplesize "mixed_samplesize") :uint8
   (encoding encoding))
 
@@ -538,5 +569,8 @@
 
 (defcfun (error-string "mixed_error_string") :string
   (error error))
+
+(defcfun (type-string "mixed_type_string") :string
+  (type field-type))
 
 (defcfun (version "mixed_version") :string)

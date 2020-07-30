@@ -5,8 +5,7 @@
 |#
 
 (in-package #:cl-user)
-(defpackage #:cl-mixed-cffi
-  (:nicknames #:org.shirakumo.fraf.mixed.cffi)
+(defpackage #:org.shirakumo.fraf.mixed.cffi
   (:use #:cl #:cffi)
   (:shadow #:error)
   ;; low-level.lisp
@@ -30,13 +29,25 @@
    #:buffer
    #:buffer-data
    #:buffer-size
-   #:packed-audio
-   #:packed-audio-data
-   #:packed-audio-size
-   #:packed-audio-encoding
-   #:packed-audio-channels
-   #:packed-audio-layout
-   #:packed-audio-samplerate
+   #:buffer-r1-start
+   #:buffer-r1-size
+   #:buffer-r2-start
+   #:buffer-r2-size
+   #:buffer-reserved-start
+   #:buffer-reserved-size
+   #:buffer-virtual-p
+   #:pack
+   #:pack-data
+   #:pack-size
+   #:pack-encoding
+   #:pack-channels
+   #:pack-samplerate
+   #:pack-r1-start
+   #:pack-r1-size
+   #:pack-r2-start
+   #:pack-r2-size
+   #:pack-reserved-start
+   #:pack-reserved-size
    #:field-info
    #:field-info-field
    #:field-info-description
@@ -68,13 +79,29 @@
    #:segment-sequence-segments
    #:segment-sequence-count
    #:segment-sequence-size
+   #:make-pack
+   #:free-pack
+   #:clear-pack
+   #:pack-available-write
+   #:pack-available-read
+   #:pack-request-write
+   #:pack-finish-write
+   #:pack-request-read
+   #:pack-finish-read
    #:make-buffer
    #:free-buffer
-   #:buffer-from-packed-audio
-   #:buffer-to-packed-audio
+   #:buffer-from-pack
+   #:buffer-to-pack
+   #:transfer-buffer
    #:copy-buffer
    #:clear-buffer
    #:resize-buffer
+   #:buffer-available-write
+   #:buffer-available-read
+   #:buffer-request-write
+   #:buffer-finish-write
+   #:buffer-request-read
+   #:buffer-finish-read
    #:resample-nearest
    #:resample-linear
    #:resample-cubic
@@ -99,8 +126,11 @@
    #:make-segment-delay
    #:make-segment-repeat
    #:make-segment-pitch
+   #:make-segment-gate
    #:make-segment-noise
    #:make-segment-frequency-pass
+   #:make-segment-speed-change
+   #:make-segment-distribute
    #:make-segment-queue
    #:queue-add
    #:queue-remove
@@ -112,16 +142,27 @@
    #:segment-sequence-start
    #:segment-sequence-mix
    #:segment-sequence-end
+   #:load-plugin
+   #:close-plugin
+   #:register-segment
+   #:deregister-segment
+   #:list-segments
+   #:make-segment-info
+   #:make-segment
    #:samplesize
+   #:translator-from
+   #:translator-to
    #:error
    #:error-string
+   #:type-string
    #:version))
 
-(defpackage #:cl-mixed
-  (:nicknames #:org.shirakumo.fraf.mixed)
+(defpackage #:org.shirakumo.fraf.mixed
   (:use #:cl #:cffi)
-  (:import-from #:cl-mixed-cffi #:size_t #:samplesize)
+  (:import-from ##:org.shirakumo.fraf.mixed.cffi #:size_t #:samplesize)
   (:shadow #:space)
+  (:local-nicknames
+   (#:mixed #:org.shirakumo.fraf.mixed.cffi))
   ;; buffer.lisp
   (:export
    #:buffer
