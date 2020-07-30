@@ -41,6 +41,7 @@
                              (:file "volume-control")))
                (:file "documentation"))
   :depends-on (:alexandria
+               :static-vectors
                :cffi
                :trivial-features
                :trivial-garbage

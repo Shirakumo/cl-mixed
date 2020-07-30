@@ -7,35 +7,26 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass buffer (c-object)
-  ())
+  ((data :reader data)))
 
-(defmethod initialize-instance :after ((buffer buffer) &key handle size initial-contents)
-  (when initial-contents
-    (check-type initial-contents (vector single-float)))
-  (when (and initial-contents (null size))
-    (setf size (length initial-contents)))
-  (unless handle
-    (let ((handle (handle buffer)))
-      (unless size
-        (error "Buffer SIZE required."))
-      (with-error-on-failure ()
-        (cl-mixed-cffi:make-buffer size handle))))
-  (when initial-contents
-    (loop with ptr = (data buffer)
-          for i from 0 below (min size (length initial-contents))
-          do (setf (cffi:mem-aref ptr :float i) (aref initial-contents i)))))
+(defmethod initialize-instance :after ((buffer buffer) &key size)
+  (unless size (error "Buffer SIZE required."))
+  (let ((data (static-vectors:make-static-vector size :element-type 'float))
+        (handle (handle buffer)))
+    (setf (mixed:buffer-size handle) size)
+    (setf (mixed:buffer-data handle) (static-vectors:static-vector-pointer data))
+    (setf (mixed:buffer-virtual-p handle) 1)))
 
-(defun make-buffer (size/initial-contents)
-  (etypecase size/initial-contents
+(defun make-buffer (size)
+  (etypecase size
     ((integer 1)
-     (make-instance 'buffer :size size/initial-contents))
-    ((vector single-float)
-     (make-instance 'buffer :initial-contents size/initial-contents))))
+     (make-instance 'buffer :size size))))
 
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct cl-mixed-cffi:buffer)))
 
 (defmethod free-handle ((buffer buffer) handle)
+  ;; FIXME: free static vector
   (lambda ()
     (cl-mixed-cffi:free-buffer handle)
     (cffi:foreign-free handle)
@@ -44,12 +35,20 @@
 (defmethod clear ((buffer buffer))
   (cl-mixed-cffi:clear-buffer (handle buffer)))
 
-(define-accessor data buffer cl-mixed-cffi:buffer-data)
-(define-accessor size buffer cl-mixed-cffi:buffer-size)
+(defmethod size ((buffer buffer))
+  (length (data buffer)))
 
 (defmethod (setf size) (new (buffer buffer))
-  (with-error-on-failure ()
-    (cl-mixed-cffi:resize-buffer new (handle buffer))))
+  (let ((old (data buffer))
+        (new (static-vectors:make-static-vector new :element-type 'float)))
+    (static-vectors:replace-foreign-memory
+     (static-vectors:static-vector-pointer new) (static-vectors:static-vector-pointer old)
+     (* (cffi:foreign-type-size :float) (length old)))
+    (setf (slot-value buffer 'data) new)
+    (setf (mixed:buffer-data (handle buffer)) (static-vectors:static-vector-pointer new))
+    (setf (mixed:buffer-size (handle buffer)) (length new))
+    (static-vectors:free-static-vector old))
+  new)
 
 (defmacro with-buffers (size buffers &body body)
   (let ((sizeg (gensym "SIZE")))
@@ -63,3 +62,112 @@
                 ,@body))
          ,@(loop for buffer in buffers
                  collect `(when ,buffer (free ,buffer)))))))
+
+(declaim (inline free-for-r2 free-after-r1))
+(defun free-for-r2 (handle)
+  (- (mixed:buffer-r1-start handle)
+     (mixed:buffer-r2-start handle)
+     (mixed:buffer-r2-size handle)))
+
+(defun free-after-r1 (handle)
+  (- (mixed:buffer-size handle)
+     (mixed:buffer-r1-start handle)
+     (mixed:buffer-r1-size handle)))
+
+(defmethod available-read ((buffer buffer))
+  (declare (optimize speed))
+  (mixed:buffer-r1-size (handle buffer)))
+
+(defmethod available-write ((buffer buffer))
+  (declare (optimize speed))
+  (let ((buffer (handle buffer)))
+    (if (< 0 (mixed:buffer-r2-size buffer))
+        (free-for-r2 buffer)
+        (free-after-r1 buffer))))
+
+(defmethod request-write ((buffer buffer) size)
+  (declare (optimize speed))
+  (let ((buffer (handle buffer)))
+    (cond ((< 0 (mixed:buffer-r2-size buffer))
+           (let ((free (min size (free-for-r2 buffer)))
+                 (start (+ (mixed:buffer-r2-start buffer) (mixed:buffer-r2-size buffer))))
+             (setf (mixed:buffer-reserved-size buffer) free)
+             (setf (mixed:buffer-reserved-start buffer) start)
+             (values start (+ free start))))
+          ((<= (mixed:buffer-r1-start buffer) (free-after-r1 buffer))
+           (let ((free (min size (free-after-r1 buffer)))
+                 (start (+ (mixed:buffer-r1-start buffer) (mixed:buffer-r1-size buffer))))
+             (setf (mixed:buffer-reserved-size buffer) free)
+             (setf (mixed:buffer-reserved-start buffer) start)
+             (values start (+ start free))))
+          (T
+           (let ((free (min size (mixed:buffer-r1-start buffer))))
+             (values (setf (mixed:buffer-reserved-start buffer) 0)
+                     free))))))
+
+(defmethod finish-write ((buffer buffer) size)
+  (declare (optimize speed))
+  (let ((buffer (handle buffer)))
+    (when (< size (mixed:buffer-reserved-size buffer))
+      (error "Cannot commit more than was allocated."))
+    (cond ((= 0 size))
+          ((and (= 0 (mixed:buffer-r1-size buffer))
+                (= 0 (mixed:buffer-r2-size buffer)))
+           (setf (mixed:buffer-r1-start buffer) (mixed:buffer-r2-start buffer))
+           (setf (mixed:buffer-r1-size buffer) size))
+          ((= (mixed:buffer-reserved-start buffer) (+ (mixed:buffer-r1-start buffer) (mixed:buffer-r1-size buffer)))
+           (incf (mixed:buffer-r1-size buffer) size))
+          (T
+           (incf (mixed:buffer-r2-size buffer) size)))
+    (setf (mixed:buffer-reserved-size buffer) 0)
+    (setf (mixed:buffer-reserved-start buffer) 0)))
+
+(defmethod request-read ((buffer buffer) size)
+  (declare (optimize speed))
+  (let ((buffer (handle buffer)))
+    (values (mixed:buffer-r1-start buffer)
+            (min size (mixed:buffer-r1-size buffer)))))
+
+(defmethod finish-read ((buffer buffer) size)
+  (declare (optimize speed))
+  (let ((buffer (handle buffer)))
+    (when (< (mixed:buffer-r1-size buffer) size)
+      (error "Cannot commit more than was available."))
+    (cond ((= (mixed:buffer-r1-size buffer) size)
+           (shiftf (mixed:buffer-r1-start buffer) (mixed:buffer-r2-start) 0)
+           (shiftf (mixed:buffer-r1-size buffer) (mixed:buffer-r2-size) 0))
+          (T
+           (decf (mixed:buffer-r1-size buffer) size)
+           (incf (mixed:buffer-r1-start buffer) size)))))
+
+(defmacro with-buffer-tx ((data start end buffer &key (direction :read) (size #xFFFFFFFF)) &body body)
+  (let ((bufferg (gensym "BUFFER"))
+        (sizeg (gensym "SIZE"))
+        (handle (gensym "HANDLE")))
+    `(let* ((,bufferg ,buffer)
+            (,data (data ,bufferg)))
+       (ecase ,direction
+         (:read
+          (multiple-value-bind (,start ,end) (request-read ,bufferg ,size)
+            (flet ((finish (,sizeg) (finish-read ,bufferg ,sizeg)))
+              ,@body)))
+         (:write
+          (multiple-value-bind (,start ,end) (request-write ,bufferg ,size)
+            (flet ((finish (,sizeg) (finish-write ,bufferg ,sizeg)))
+              (unwind-protect
+                   (progn ,@body)
+                (let ((,handle (handle ,buffer)))
+                  (setf (mixed:buffer-reserved-size ,handle) 0)
+                  (setf (mixed:buffer-reserved-start ,handle) 0))))))))))
+
+(defmacro with-buffer-transfer ((fdata fstart fend from &optional (size #xFFFFFFFF)) (tdata tstart tend to) &body body)
+  `(let* ((,fromg ,from)
+          (,tog ,to))
+     (if (eq ,fromg ,tog)
+         (multiple-value-bind (,fstart ,fend) (request-read ,fromg ,size)
+           (let* ((,tstart ,fstart) (,tend ,fend)
+                  (,fdata (data ,fromg)) (,tdata ,fdata))
+             ,@body))
+         (with-buffer-tx (,fdata ,fstart ,fend ,fromg :direction :read :size ,size)
+           (with-buffer-tx (,tdata ,tstart ,tend ,tog :direction :write :size (min (- ,fend ,fstart) ,size))
+             ,@body)))))
