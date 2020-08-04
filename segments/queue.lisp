@@ -11,7 +11,7 @@
 
 (defmethod initialize-instance :after ((segment queue) &key inputs outputs)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-queue (handle segment)))
+    (mixed:make-segment-queue (handle segment)))
   (when inputs (setf (in-count segment) inputs))
   (when outputs (setf (in-count segment) outputs)))
 
@@ -21,7 +21,7 @@
 (defmethod field ((field (eql :current-segment)) (segment queue))
   (with-foreign-object (handle :pointer)
     (with-error-on-failure ()
-      (cl-mixed-cffi:segment-get :current-segment handle (handle segment)))
+      (mixed:segment-get :current-segment handle (handle segment)))
     (pointer->object (mem-ref handle :pointer))))
 
 (defmethod current-segment ((segment queue))
@@ -33,24 +33,24 @@
 
 (defmethod add ((segment segment) (queue queue))
   (with-error-on-failure ()
-    (cl-mixed-cffi:queue-add (handle segment) (handle queue)))
+    (mixed:queue-add (handle segment) (handle queue)))
   (vector-push-extend segment (segments queue))
   segment)
 
 (defmethod withdraw ((segment segment) (queue queue))
   (with-error-on-failure ()
-    (cl-mixed-cffi:queue-remove (handle segment) (handle queue)))
+    (mixed:queue-remove (handle segment) (handle queue)))
   (vector-remove segment (segments queue))
   segment)
 
 (defmethod withdraw ((position integer) (queue queue))
   (with-error-on-failure ()
-    (cl-mixed-cffi:queue-remove-at position (handle queue)))
+    (mixed:queue-remove-at position (handle queue)))
   (vector-remove-pos position (segments queue)))
 
 (defmethod clear ((queue queue))
   (with-error-on-failure ()
-    (cl-mixed-cffi:queue-clear (handle queue)))
+    (mixed:queue-clear (handle queue)))
   (loop for i from 0 below (length (segments queue))
         do (setf (aref (segments queue) i) NIL))
   (setf (fill-pointer (segments queue)) 0)

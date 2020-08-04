@@ -19,7 +19,7 @@
 (defmethod initialize-instance :after ((sequence segment-sequence) &key handle)
   (when handle
     ;; Attempt to back-fill.
-    (let ((ptr (cl-mixed-cffi:segment-sequence-segments handle)))
+    (let ((ptr (mixed:segment-sequence-segments handle)))
       (loop for i from 0 below (size sequence)
             do (vector-push-extend (pointer->object (cffi:mem-aref ptr :pointer i))
                                    (segments sequence))))))
@@ -31,37 +31,37 @@
     sequence))
 
 (defmethod allocate-handle ((sequence segment-sequence))
-  (calloc '(:struct cl-mixed-cffi:segment-sequence)))
+  (calloc '(:struct mixed:segment-sequence)))
 
 (defmethod free-handle ((sequence segment-sequence) handle)
   (lambda ()
-    (cl-mixed-cffi:free-segment-sequence handle)
+    (mixed:free-segment-sequence handle)
     (cffi:foreign-free handle)
     (setf (pointer->object handle) NIL)))
 
 (defmethod add ((segment segment) (sequence segment-sequence))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-sequence-add (handle segment) (handle sequence)))
+    (mixed:segment-sequence-add (handle segment) (handle sequence)))
   (vector-push-extend segment (segments sequence))
   segment)
 
 (defmethod withdraw ((segment segment) (sequence segment-sequence))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-sequence-remove (handle segment) (handle sequence)))
+    (mixed:segment-sequence-remove (handle segment) (handle sequence)))
   (vector-remove segment (segments sequence))
   segment)
 
 (defmethod start ((sequence segment-sequence))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-sequence-start (handle sequence))))
+    (mixed:segment-sequence-start (handle sequence))))
 
 (defmethod mix (samples (sequence segment-sequence))
-  (cl-mixed-cffi:segment-sequence-mix samples (handle sequence))
-  (unless (eql :no-error (cl-mixed-cffi:error))
+  (mixed:segment-sequence-mix samples (handle sequence))
+  (unless (eql :no-error (mixed:error))
     (error 'mixed-error)))
 
 (defmethod end ((sequence segment-sequence))
   (with-error-on-failure ()
-    (cl-mixed-cffi:segment-sequence-end (handle sequence))))
+    (mixed:segment-sequence-end (handle sequence))))
 
-(define-accessor size segment-sequence cl-mixed-cffi:segment-sequence-count)
+(define-accessor size segment-sequence mixed:segment-sequence-count)

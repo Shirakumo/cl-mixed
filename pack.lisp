@@ -6,59 +6,54 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass packed-audio (c-object)
-  ((own-data :initform (cons NIL NIL) :reader own-data)))
+(defclass pack (bip-buffer c-object)
+  ((data :reader data)))
 
-(defmethod initialize-instance :after ((pack packed-audio) &key data size encoding channels layout samplerate)
-  (unless data
-    (cond ((= 0 size)
-           (setf data (null-pointer)))
-          (T
-           (setf data (calloc :uchar size))
-           ;; We need to use a cons here because otherwise we would have to keep a
-           ;; reference to the channel object in the freeing function, making it
-           ;; impossible to GC. Using a cons to keep track that circumvents this.
-           (setf (car (own-data pack)) T)
-           (setf (cdr (own-data pack)) data))))
-  (let ((handle (handle pack)))
-    (setf (cl-mixed-cffi:packed-audio-data handle) data)
-    (setf (cl-mixed-cffi:packed-audio-size handle) size)
-    (setf (cl-mixed-cffi:packed-audio-encoding handle) encoding)
-    (setf (cl-mixed-cffi:packed-audio-channels handle) channels)
-    (setf (cl-mixed-cffi:packed-audio-layout handle) layout)
-    (setf (cl-mixed-cffi:packed-audio-samplerate handle) samplerate)))
+(defmethod initialize-instance :after ((pack pack) &key frames encoding channels samplerate)
+  (let* ((size (* frames channels (samplesize encoding)))
+         (data (static-vectors:make-static-vector size :element-type '(unsigned-byte 8))))
+    (setf (data pack) data)
+    (let ((handle (handle pack)))
+      (setf (mixed:pack-data handle) (static-vectors:static-vector-pointer data))
+      (setf (mixed:pack-size handle) size)
+      (setf (mixed:pack-encoding handle) encoding)
+      (setf (mixed:pack-channels handle) channels)
+      (setf (mixed:pack-samplerate handle) samplerate))))
 
-(defun make-packed-audio (data size encoding channels layout samplerate)
-  (make-instance 'packed-audio :data data
+(defun make-pack (data size encoding channels layout samplerate)
+  (make-instance 'pack :data data
                                :size size
                                :encoding encoding
                                :channels channels
                                :layout layout
                                :samplerate samplerate))
 
-(defmethod allocate-handle ((pack packed-audio))
-  (calloc '(:struct cl-mixed-cffi:packed-audio)))
+(defmethod allocate-handle ((pack pack))
+  (calloc '(:struct mixed:pack)))
 
-(defmethod free-handle ((pack packed-audio) handle)
-  (let ((own (own-data pack)))
+(defmethod free-handle ((pack pack) handle)
+  (let ((data (data pack)))
     (lambda ()
-      (when (car own)
-        (cffi:foreign-free (cdr own)))
+      (static-vectors:free-static-vector data)
       (cffi:foreign-free handle)
       (setf (pointer->object handle) NIL))))
 
-(define-accessor data packed-audio cl-mixed-cffi:packed-audio-data)
-(define-accessor size packed-audio cl-mixed-cffi:packed-audio-size)
-(define-accessor encoding packed-audio cl-mixed-cffi:packed-audio-encoding)
-(define-accessor channels packed-audio cl-mixed-cffi:packed-audio-channels)
-(define-accessor layout packed-audio cl-mixed-cffi:packed-audio-layout)
-(define-accessor samplerate packed-audio cl-mixed-cffi:packed-audio-samplerate)
+(define-accessor size pack mixed:pack-size)
+(define-accessor encoding pack mixed:pack-encoding)
+(define-accessor channels pack mixed:pack-channels)
+(define-accessor samplerate pack mixed:pack-samplerate)
 
-(defmethod (setf size) :before (size (pack packed-audio))
+(defmethod (setf size) :before (size (pack pack))
   (unless (= size (size pack))
-    (cond ((car (own-data pack))
-           (cffi:foreign-free (cdr (own-data pack))))
-          ((= 0 (size pack))
-           (setf (car (own-data pack)) T)))
-    (setf (cl-mixed-cffi:packed-audio-data (handle pack))
-          (setf (cdr (own-data pack)) (calloc :uchar size)))))
+    (let ((old (data pack))
+          (new (static-vectors:make-static-vector size :element-type '(unsigned-byte 8))))
+      (static-vectors:replace-foreign-memory
+       (static-vectors:static-vector-pointer new) (static-vectors:static-vector-pointer old)
+       (size pack))
+      (setf (slot-value pack 'data) new)
+      (setf (mixed:pack-data (handle pack)) (static-vectors:static-vector-pointer new))
+      (setf (mixed:pack-size (handle pack)) (length new))
+      (tg:cancel-finalization pack)
+      (tg:finalize pack (free-handle pack (handle pack)))
+      (static-vectors:free-static-vector old)))
+  size)

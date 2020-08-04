@@ -159,7 +159,7 @@
 
 (defpackage #:org.shirakumo.fraf.mixed
   (:use #:cl #:cffi)
-  (:import-from ##:org.shirakumo.fraf.mixed.cffi #:size_t #:samplesize)
+  (:import-from #:org.shirakumo.fraf.mixed.cffi #:size_t)
   (:shadow #:space)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed.cffi))

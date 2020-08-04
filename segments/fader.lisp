@@ -17,7 +17,7 @@
 
 (defmethod initialize-instance :after ((segment fader) &key from to time type samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-fade from to time type samplerate (handle segment))))
+    (mixed:make-segment-fade from to time type samplerate (handle segment))))
 
 (defun make-fader (&rest args &key from to time type samplerate)
   (declare (ignore from to time type samplerate))
@@ -26,5 +26,5 @@
 (define-field-accessor from fader :float :fade-from)
 (define-field-accessor to fader :float :fade-to)
 (define-field-accessor duration fader :float :fade-time)
-(define-field-accessor fade-type fader cl-mixed-cffi:fade-type)
+(define-field-accessor fade-type fader mixed:fade-type)
 (define-field-accessor bypass fader :bool :bypass)

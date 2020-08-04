@@ -10,9 +10,9 @@
 
 (define-condition mixed-error (error)
   ((error-code :initarg :error-code :accessor error-code))
-  (:default-initargs :error-code (cl-mixed-cffi:error))
+  (:default-initargs :error-code (mixed:error))
   (:report (lambda (c s) (format s "Mixed error: ~a"
-                                 (cl-mixed-cffi:error-string (error-code c))))))
+                                 (mixed:error-string (error-code c))))))
 
 (defmacro with-error-on-failure ((&optional (datum ''mixed-error) &rest args) &body body)
   `(when (= 0 (progn ,@body))
@@ -73,7 +73,7 @@
        (defmethod field ((field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr ',type)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
+             (mixed:segment-get ,enum ,value-ptr (handle ,segment)))
            (cffi:mem-ref ,value-ptr ',type)))
 
        (defmethod ,name ((,segment ,class))
@@ -89,7 +89,7 @@
          (cffi:with-foreign-object (,value-ptr ',type)
            (setf (cffi:mem-ref ,value-ptr ',type) (coerce-ctype ,value ',type))
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
+             (mixed:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
 
        (defmethod (setf ,name) (,value (,segment ,class))
@@ -128,14 +128,14 @@
        (defmethod field ((field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-get ,enum ,value-ptr (handle ,segment)))
+             (mixed:segment-get ,enum ,value-ptr (handle ,segment)))
            (ptr->vec ,value-ptr)))
 
        (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (vec->ptr ,value ,value-ptr)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-set ,enum ,value-ptr (handle ,segment))))
+             (mixed:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
 
        (defmethod ,name ((,segment ,class))
@@ -153,14 +153,14 @@
        (defmethod input-field ((field (eql ,field)) ,location (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
+             (mixed:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
            (ptr->vec ,value-ptr)))
 
        (defmethod (setf input-field) (,value (field (eql ,field)) ,location (,segment ,class))
          (cffi:with-foreign-object (,value-ptr :float 3)
            (vec->ptr ,value ,value-ptr)
            (with-error-on-failure ()
-             (cl-mixed-cffi:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
+             (mixed:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
          ,value)
 
        (defmethod ,name ((,location buffer) (,segment ,class))
@@ -216,3 +216,12 @@
         for found = (find k keys)
         unless found collect k
         unless found collect v))
+
+(defun samplesize (type)
+  (ecase type
+    ((:int8 :uint8) 1)
+    ((:int16 :uint16) 2)
+    ((:int24 :uint24) 3)
+    ((:int32 :uint32) 4)
+    (:float 4)
+    (:double 8)))

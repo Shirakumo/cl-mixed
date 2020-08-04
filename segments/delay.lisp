@@ -13,7 +13,7 @@
 
 (defmethod initialize-instance :after ((segment delay) &key time samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-delay time samplerate (handle segment))))
+    (mixed:make-segment-delay time samplerate (handle segment))))
 
 (defun make-delay (&rest args &key time samplerate)
   (declare (ignore time samplerate))

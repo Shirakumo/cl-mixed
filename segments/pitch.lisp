@@ -14,7 +14,7 @@
 
 (defmethod initialize-instance :after ((segment pitch) &key pitch samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-pitch pitch samplerate (handle segment))))
+    (mixed:make-segment-pitch pitch samplerate (handle segment))))
 
 (defun make-pitch (&rest args &key pitch samplerate)
   (declare (ignore pitch samplerate))

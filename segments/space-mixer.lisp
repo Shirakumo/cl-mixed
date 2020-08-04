@@ -6,14 +6,14 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass space-mixer (mixer)
+(defclass space-mixer (c-object)
   ()
   (:default-initargs
    :samplerate *default-samplerate*))
 
 (defmethod initialize-instance :after ((space space-mixer) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-space-mixer samplerate (handle space))))
+    (mixed:make-segment-space-mixer samplerate (handle space))))
 
 (defun make-space-mixer (&rest args &key (samplerate *default-samplerate*) up soundspeed doppler-factor min-distance max-distance rolloff attenuation)
   (declare (ignore up soundspeed doppler-factor min-distance max-distance rolloff attenuation))
@@ -41,10 +41,10 @@
 (defmethod field ((field (eql :attenuation)) (segment space-mixer))
   (cffi:with-foreign-object (value-ptr :pointer)
     (with-error-on-failure ()
-      (cl-mixed-cffi:segment-get field value-ptr segment))
+      (mixed:segment-get field value-ptr segment))
     (loop with int = (cffi:mem-ref value-ptr :int)
-          for keyword in (cffi:foreign-enum-keyword-list 'cl-mixed-cffi:attenuation)
-          do (when (= int (cffi:foreign-enum-value 'cl-mixed-cffi:attenuation keyword))
+          for keyword in (cffi:foreign-enum-keyword-list 'mixed:attenuation)
+          do (when (= int (cffi:foreign-enum-value 'mixed:attenuation keyword))
                (return keyword))
           finally (return (cffi:mem-ref value-ptr :pointer)))))
 
@@ -53,11 +53,11 @@
     (etypecase value
       (keyword
        (setf (cffi:mem-ref value-ptr :int)
-             (cffi:foreign-enum-value 'cl-mixed-cffi:attenuation value)))
+             (cffi:foreign-enum-value 'mixed:attenuation value)))
       (cffi:foreign-pointer
        (setf (cffi:mem-ref value-ptr :pointer) value)))
     (with-error-on-failure ()
-      (cl-mixed-cffi:segment-get field value-ptr segment)))
+      (mixed:segment-get field value-ptr segment)))
   value)
 
 (defmethod attenuation ((space space-mixer))
@@ -70,7 +70,6 @@
   (let ((buffer (aref (outputs new) 0))
         (location (length (inputs segment))))
     (add buffer segment)
-    (setf (input-field :source location segment) new)
     new))
 
 (defmethod withdraw ((old segment) (segment space-mixer))

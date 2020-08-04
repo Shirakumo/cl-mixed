@@ -18,11 +18,12 @@
                (:file "low-level")
                (:file "toolkit")
                (:file "c-object")
+               (:file "bip-buffer")
                (:file "buffer")
                (:file "pack")
                (:file "segment")
-               (:file "mixer")
                (:file "segment-sequence")
+               (:file "generic")
                (:module "segments"
                 :components ((:file "basic-mixer")
                              (:file "delay")

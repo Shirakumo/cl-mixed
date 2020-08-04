@@ -385,24 +385,24 @@ See MIX"))
   (function decode-flags
     "Decode an OR combined integer of INFO-FLAGS to a list of keywords for the flags.
 
-See CL-MIXED-CFFI:INFO-FLAGS")
+See MIXED:INFO-FLAGS")
   
   (function encode-flags
     "Encode the list of keywords for the INFO-FLAGS to a an OR combined integer.
 
-See CL-MIXED-CFFI:INFO-FLAGS")
+See MIXED:INFO-FLAGS")
   
   (function decode-field-info
     "Decode the field info contained in the pointer to a segment-info struct.
 
-See CL-MIXED-CFFI:SEGMENT-INFO
-See CL-MIXED-CFFI:FIELD-INFO")
+See MIXED:SEGMENT-INFO
+See MIXED:FIELD-INFO")
   
   (function encode-field-info
     "Encode the field info into the segment-info struct pointed to by the pointer.
 
-See CL-MIXED-CFFI:SEGMENT-INFO
-See CL-MIXED-CFFI:FIELD-INFO")
+See MIXED:SEGMENT-INFO
+See MIXED:FIELD-INFO")
   
   (type segment
     "Superclass for all mixing pipeline segments.
@@ -597,8 +597,8 @@ See ERROR-CODE")
   (function error-code
     "Accessor for the error code contained in the condition instance.
 
-See CL-MIXED-CFFI:ERROR
-See CL-MIXED-CFFI:ERROR-STRING")
+See MIXED:ERROR
+See MIXED:ERROR-STRING")
   
   (function with-error-on-failure
     "Shorthand to handle return values of C functions.
@@ -955,9 +955,9 @@ pointer to a C function of the following signature:
 Three such resampling functions are available out
 of the box:
 
-- CL-MIXED-CFFI:RESAMPLE-NEAREST
-- CL-MIXED-CFFI:RESAMPLE-LINEAR
-- CL-MIXED-CFFI:RESAMPLE-CUBIC
+- MIXED:RESAMPLE-NEAREST
+- MIXED:RESAMPLE-LINEAR
+- MIXED:RESAMPLE-CUBIC
 
 See mixed.h
 See PACKED-AUDIO
@@ -1238,9 +1238,9 @@ pointer to a C function of the following signature:
 Three such resampling functions are available out
 of the box:
 
-- CL-MIXED-CFFI:RESAMPLE-NEAREST
-- CL-MIXED-CFFI:RESAMPLE-LINEAR
-- CL-MIXED-CFFI:RESAMPLE-CUBIC
+- MIXED:RESAMPLE-NEAREST
+- MIXED:RESAMPLE-LINEAR
+- MIXED:RESAMPLE-CUBIC
 
 See PACKED-AUDIO
 See SEGMENT

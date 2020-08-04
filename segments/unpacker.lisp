@@ -13,7 +13,7 @@
 
 (defmethod initialize-instance :after ((unpacker unpacker) &key samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-unpacker (handle (packed-audio unpacker)) samplerate (handle unpacker))))
+    (mixed:make-segment-unpacker (handle (packed-audio unpacker)) samplerate (handle unpacker))))
 
 (defun make-unpacker (data size encoding channels layout unpacker-samplerate &optional (target-samplerate unpacker-samplerate))
   (make-instance 'unpacker :packed-audio (make-packed-audio data size encoding channels layout unpacker-samplerate)

@@ -14,7 +14,7 @@
 
 (defmethod initialize-instance :after ((segment volume-control) &key volume pan)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-volume-control volume pan (handle segment))))
+    (mixed:make-segment-volume-control volume pan (handle segment))))
 
 (defun make-volume-control (&rest args &key volume pan)
   (declare (ignore volume pan))

@@ -6,13 +6,13 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass basic-mixer (mixer)
+(defclass basic-mixer (c-object)
   ((channels :initarg :channels :accessor channels))
   (:default-initargs :channels 1))
 
 (defmethod initialize-instance :after ((mixer basic-mixer) &key)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-basic-mixer (channels mixer) (handle mixer))))
+    (mixed:make-segment-basic-mixer (channels mixer) (handle mixer))))
 
 (defun make-basic-mixer (channels)
   (make-instance 'basic-mixer :channels channels))
@@ -25,7 +25,6 @@
     (loop for i from 0 below (channels segment)
           do (setf (input-field :buffer (+ i location) segment)
                    (aref buffers i)))
-    (setf (input-field :source location segment) new)
     new))
 
 (defmethod withdraw ((old segment) (segment basic-mixer))

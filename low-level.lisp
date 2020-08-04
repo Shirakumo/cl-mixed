@@ -208,9 +208,6 @@
   (virtual-p :char))
 
 (defcstruct (pack :class pack :conc-name pack-)
-  (encoding encoding)
-  (channels :uint8)
-  (samplerate size_t)
   (data :pointer)
   (size size_t)
   (r1-start size_t)
@@ -218,7 +215,10 @@
   (r2-start size_t)
   (r2-size size_t)
   (reserved-start size_t)
-  (reserved-size size_t))
+  (reserved-size size_t)
+  (encoding encoding)
+  (channels :uint8)
+  (samplerate size_t))
 
 (defcstruct (field-info :class field-info :conc-name field-info-)
   (field size_t)

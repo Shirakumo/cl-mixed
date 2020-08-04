@@ -14,13 +14,13 @@
 
 (defmethod initialize-instance :after ((segment frequency-pass) &key pass cutoff samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-frequency-pass pass cutoff samplerate (handle segment))))
+    (mixed:make-segment-frequency-pass pass cutoff samplerate (handle segment))))
 
 (defun make-frequency-pass (&rest args &key pass cutoff samplerate)
   (declare (ignore pass cutoff samplerate))
   (apply #'make-instance 'frequency-pass args))
 
 (define-field-accessor cutoff frequency-pass :float :frequency-cutoff)
-(define-field-accessor frequency-pass frequency-pass cl-mixed-cffi:frequency-pass :frequency-pass)
+(define-field-accessor frequency-pass frequency-pass mixed:frequency-pass :frequency-pass)
 (define-field-accessor samplerate frequency-pass :float :samplerate)
 (define-field-accessor bypass frequency-pass :bool :bypass)

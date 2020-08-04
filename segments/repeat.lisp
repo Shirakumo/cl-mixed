@@ -13,13 +13,13 @@
 
 (defmethod initialize-instance :after ((segment repeat) &key time samplerate)
   (with-error-on-failure ()
-    (cl-mixed-cffi:make-segment-repeat time samplerate (handle segment))))
+    (mixed:make-segment-repeat time samplerate (handle segment))))
 
 (defun make-repeat (&rest args &key time samplerate)
   (declare (ignore time samplerate))
   (apply #'make-instance 'repeat args))
 
 (define-field-accessor duration repeat :float :repeat-time)
-(define-field-accessor repeat-mode repeat cl-mixed-cffi:repeat-mode :repeat-mode)
+(define-field-accessor repeat-mode repeat mixed:repeat-mode :repeat-mode)
 (define-field-accessor samplerate repeat :float :samplerate)
 (define-field-accessor bypass repeat :bool :bypass)
