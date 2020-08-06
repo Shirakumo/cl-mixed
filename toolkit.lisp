@@ -194,11 +194,15 @@
   (loop for i from (1+ index) below (length vector)
         do (setf (aref vector (1- i)) (aref vector i)))
   (setf (aref vector (1- (length vector))) NIL)
-  (decf (fill-pointer vector))
+  (when (array-has-fill-pointer-p vector)
+    (decf (fill-pointer vector)))
   vector)
 
 (defun vector-insert-pos (index element vector)
   (when (<= (length vector) index)
+    (unless (adjustable-array-p vector)
+      (error "Cannot insert element at position ~d:~%Index is out of range, and vector is not adjustable."
+             index))
     (adjust-array vector (1+ index))
     (setf (fill-pointer vector) (1+ index)))
   (setf (aref vector index) element)

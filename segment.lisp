@@ -48,9 +48,18 @@
 
 ;; See the comment on the segment-sequence class for an explanation on the arrays.
 (defclass segment (c-object)
-  ((inputs :initform (make-array 0 :adjustable T :fill-pointer T) :reader inputs)
-   (outputs :initform (make-array 0 :adjustable T :fill-pointer T) :reader outputs)
+  ((inputs :reader inputs)
+   (outputs :reader outputs)
    (info :initform NIL :accessor direct-info)))
+
+(defmethod initialize-instance :after ((segment segment) &key)
+  (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
+    (flet ((marr (count)
+             (if (< 128 count)
+                 (make-array 0 :adjustable T :fill-pointer T)
+                 (make-array count))))
+      (setf (slot-value segment 'outputs) (marr outputs))
+      (setf (slot-value segment 'inputs) (marr max-inputs)))))
 
 (defmethod info ((segment segment))
   (unless (direct-info segment)
