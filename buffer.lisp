@@ -65,3 +65,7 @@
                 ,@body))
          ,@(loop for buffer in buffers
                  collect `(when ,buffer (free ,buffer)))))))
+
+(defmethod transfer ((from buffer) (to buffer))
+  (with-error-on-failure ()
+    (mixed:transfer-buffer (handle from) (handle to))))

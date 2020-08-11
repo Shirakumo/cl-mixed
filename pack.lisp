@@ -42,6 +42,9 @@
 (define-accessor channels pack mixed:pack-channels)
 (define-accessor samplerate pack mixed:pack-samplerate)
 
+(defmethod clear ((pack pack))
+  (mixed:clear-pack (handle pack)))
+
 (defmethod (setf size) :before (size (pack pack))
   (unless (= size (size pack))
     (let ((old (data pack))
@@ -56,3 +59,29 @@
       (tg:finalize pack (free-handle pack (handle pack)))
       (static-vectors:free-static-vector old)))
   size)
+
+(defmethod transfer ((from buffer) (to pack))
+  (cffi:with-foreign-object (buffers :pointer)
+    (setf (cffi:mem-ref buffers :pointer) (handle from))
+    (with-error-on-failure ()
+      (mixed:buffer-to-pack buffers (handle to) 1.0))))
+
+(defmethod transfer ((from sequence) (to pack))
+  (cffi:with-foreign-object (buffers :pointer (length from))
+    (do-sequence (i buffer from)
+      (setf (cffi:mem-aref buffers :pointer i) (handle buffer)))
+    (with-error-on-failure ()
+      (mixed:buffer-to-pack buffers (handle to) 1.0))))
+
+(defmethod transfer ((from pack) (to buffer))
+  (cffi:with-foreign-object (buffers :pointer)
+    (setf (cffi:mem-ref buffers :pointer) (handle to))
+    (with-error-on-failure ()
+      (mixed:buffer-from-pack (handle from) buffers 1.0))))
+
+(defmethod transfer ((from pack) (to sequence))
+  (cffi:with-foreign-object (buffers :pointer (length from))
+    (do-sequence (i buffer to)
+      (setf (cffi:mem-aref buffers :pointer i) (handle buffer)))
+    (with-error-on-failure ()
+      (mixed:buffer-from-pack (handle from) buffers 1.0))))

@@ -229,3 +229,13 @@
     ((:int32 :uint32) 4)
     (:float 4)
     (:double 8)))
+
+(defmacro do-sequence ((i el sequence &optional result) &body body)
+  (let ((thunk (gensym "THUNK")))
+    `(block NIL
+       (let ((,i 0))
+         (flet ((,thunk (,el)
+                  (progn ,@body)
+                  (incf ,i)))
+           (map NIL #',thunk ,sequence))
+         ,result))))

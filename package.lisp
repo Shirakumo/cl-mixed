@@ -168,6 +168,16 @@
   (:shadow #:space)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed.cffi))
+  ;; bip-buffer.lisp
+  (:export
+   #:available-read
+   #:available-write
+   #:request-write
+   #:finish-write
+   #:request-read
+   #:finish-read
+   #:with-buffer-tx
+   #:with-buffer-transfer)
   ;; buffer.lisp
   (:export
    #:buffer
@@ -175,7 +185,8 @@
    #:data
    #:size
    #:clear
-   #:with-buffers)
+   #:with-buffers
+   #:transfer)
   ;; c-object.lisp
   (:export
    #:handle
@@ -187,16 +198,17 @@
    #:mixer
    #:sources
    #:source)
-  ;; packed-audio.lisp
+  ;; pack.lisp
   (:export
-   #:packed-audio
-   #:make-packed-audio
+   #:pack
+   #:make-pack
    #:data
    #:size
    #:encoding
    #:channels
-   #:layout
-   #:samplerate)
+   #:samplerate
+   #:transfer
+   #:clear)
   ;; segment-sequence.lisp
   (:export
    #:segment-sequence
@@ -305,7 +317,7 @@
   ;; segments/packer.lisp
   (:export
    #:packer
-   #:packed-audio
+   #:pack
    #:make-packer
    #:data
    #:size
@@ -374,7 +386,7 @@
   ;; segments/unpacker.lisp
   (:export
    #:unpacker
-   #:packed-audio
+   #:pack
    #:make-unpacker
    #:data
    #:size
