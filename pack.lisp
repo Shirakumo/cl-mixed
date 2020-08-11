@@ -20,13 +20,12 @@
       (setf (mixed:pack-channels handle) channels)
       (setf (mixed:pack-samplerate handle) samplerate))))
 
-(defun make-pack (data size encoding channels layout samplerate)
+(defun make-pack (data size encoding channels samplerate)
   (make-instance 'pack :data data
-                               :size size
-                               :encoding encoding
-                               :channels channels
-                               :layout layout
-                               :samplerate samplerate))
+                       :size size
+                       :encoding encoding
+                       :channels channels
+                       :samplerate samplerate))
 
 (defmethod allocate-handle ((pack pack))
   (calloc '(:struct mixed:pack)))

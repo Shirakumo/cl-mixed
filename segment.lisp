@@ -79,8 +79,8 @@
 (defmethod start ((segment segment))
   (mixed:segment-start (handle segment)))
 
-(defmethod mix (samples (segment segment))
-  (mixed:segment-mix samples (handle segment)))
+(defmethod mix ((segment segment))
+  (mixed:segment-mix (handle segment)))
 
 (defmethod end ((segment segment))
   (mixed:segment-end (handle segment)))

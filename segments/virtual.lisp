@@ -30,7 +30,7 @@
 
 (defmethod info ((virtual virtual)))
 (defmethod start ((virtual virtual)))
-(defmethod mix (samples (virtual virtual)))
+(defmethod mix ((virtual virtual)))
 (defmethod end ((virtual virtual)))
 (defmethod input-field (field location (virtual virtual)))
 (defmethod (setf input-field) (value field location (virtual virtual)))
@@ -82,8 +82,8 @@
 (define-std-callback virtual-start ((segment :pointer))
   (start (pointer->object segment)))
 
-(define-callback virtual-mix :int ((samples size_t) (segment :pointer)) 0
-  (if (mix samples (pointer->object segment))
+(define-callback virtual-mix :int ((segment :pointer))
+  (if (mix (pointer->object segment))
       1
       0))
 
