@@ -20,9 +20,8 @@
       (setf (mixed:pack-channels handle) channels)
       (setf (mixed:pack-samplerate handle) samplerate))))
 
-(defun make-pack (data size encoding channels samplerate)
-  (make-instance 'pack :data data
-                       :size size
+(defun make-pack (size encoding channels samplerate)
+  (make-instance 'pack :size size
                        :encoding encoding
                        :channels channels
                        :samplerate samplerate))

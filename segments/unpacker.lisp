@@ -7,23 +7,23 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass unpacker (segment)
-  ((packed-audio :initarg :packed-audio :reader packed-audio))
+  ((pack :initarg :pack :reader pack))
   (:default-initargs
+   :pack (error "PACK required.")
    :samplerate *default-samplerate*))
 
 (defmethod initialize-instance :after ((unpacker unpacker) &key samplerate)
   (with-error-on-failure ()
-    (mixed:make-segment-unpacker (handle (packed-audio unpacker)) samplerate (handle unpacker))))
+    (mixed:make-segment-unpacker (handle (pack unpacker)) samplerate (handle unpacker))))
 
-(defun make-unpacker (data size encoding channels layout unpacker-samplerate &optional (target-samplerate unpacker-samplerate))
-  (make-instance 'unpacker :packed-audio (make-packed-audio data size encoding channels layout unpacker-samplerate)
+(defun make-unpacker (size encoding channels unpacker-samplerate &optional (target-samplerate unpacker-samplerate))
+  (make-instance 'unpacker :pack (make-pack size encoding channels unpacker-samplerate)
                            :samplerate target-samplerate))
 
-(define-delegated-slot-accessor data unpacker packed-audio)
-(define-delegated-slot-accessor size unpacker packed-audio)
-(define-delegated-slot-accessor encoding unpacker packed-audio)
-(define-delegated-slot-accessor channels unpacker packed-audio)
-(define-delegated-slot-accessor layout unpacker packed-audio)
-(define-delegated-slot-accessor samplerate unpacker packed-audio)
+(define-delegated-slot-accessor data unpacker pack)
+(define-delegated-slot-accessor size unpacker pack)
+(define-delegated-slot-accessor encoding unpacker pack)
+(define-delegated-slot-accessor channels unpacker pack)
+(define-delegated-slot-accessor samplerate unpacker pack)
 (define-field-accessor volume unpacker :float :volume)
 (define-field-accessor bypass unpacker :bool :bypass)

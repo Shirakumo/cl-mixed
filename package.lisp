@@ -176,6 +176,7 @@
    #:finish-write
    #:request-read
    #:finish-read
+   #:data-ptr
    #:with-buffer-tx
    #:with-buffer-transfer)
   ;; buffer.lisp

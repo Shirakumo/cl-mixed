@@ -86,6 +86,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
            (decf (mixed:buffer-r1-size buffer) size)
            (incf (mixed:buffer-r1-start buffer) size)))))
 
+(declaim (inline data-ptr))
+(defun data-ptr (data &optional (start 0))
+  (static-vectors:static-vector-pointer data :offset start))
+
 (defmacro with-buffer-tx ((data start end buffer &key (direction :read) (size #xFFFFFFFF)) &body body)
   (let ((bufferg (gensym "BUFFER"))
         (sizeg (gensym "SIZE"))
@@ -95,11 +99,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
        (ecase ,direction
          (:read
           (multiple-value-bind (,start ,end) (request-read ,bufferg ,size)
-            (flet ((finish (,sizeg) (finish-read ,bufferg ,sizeg)))
+            (flet ((finish (,sizeg) (finish-read ,bufferg ,sizeg))
+                   (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
               ,@body)))
          (:write
           (multiple-value-bind (,start ,end) (request-write ,bufferg ,size)
-            (flet ((finish (,sizeg) (finish-write ,bufferg ,sizeg)))
+            (flet ((finish (,sizeg) (finish-write ,bufferg ,sizeg))
+                   (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
               (unwind-protect
                    (progn ,@body)
                 (let ((,handle (handle ,buffer)))
