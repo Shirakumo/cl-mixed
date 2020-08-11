@@ -115,23 +115,28 @@
    #:segment-get-out
    #:segment-set
    #:segment-get
-   #:make-segment-unpacker
-   #:make-segment-packer
    #:make-segment-basic-mixer
-   #:make-segment-volume-control
+   #:make-segment-channel-convert
+   #:make-segment-delay
+   #:make-segment-distribute
    #:make-segment-fade
+   #:make-segment-frequency-pass
+   #:make-segment-gate
    #:make-segment-generator
    #:make-segment-ladspa
-   #:make-segment-space-mixer
-   #:make-segment-delay
-   #:make-segment-repeat
-   #:make-segment-pitch
-   #:make-segment-gate
    #:make-segment-noise
-   #:make-segment-frequency-pass
-   #:make-segment-speed-change
-   #:make-segment-distribute
+   #:make-segment-packer
+   #:make-segment-pitch
+   #:make-segment-quantize
+   #:make-segment-quantize
    #:make-segment-queue
+   #:make-segment-repeat
+   #:make-segment-space-mixer
+   #:make-segment-speed-change
+   #:make-segment-unpacker
+   #:make-segment-void
+   #:make-segment-volume-control
+   #:make-segment-zero
    #:queue-add
    #:queue-remove
    #:queue-remove-at
@@ -230,6 +235,10 @@
    #:channels
    #:make-basic-mixer
    #:volume)
+  ;; segments/channel-convert.lisp
+  (:export
+   #:channel-convert
+   #:make-channel-convert)
   ;; segments/delay.lisp
   (:export
    #:delay
@@ -237,6 +246,10 @@
    #:duration
    #:samplerate
    #:bypass)
+  ;; segments/distribute.lisp
+  (:export
+   #:distributor
+   #:make-distributor)
   ;; segments/fader.lisp
   (:export
    #:fader
@@ -253,6 +266,17 @@
    #:cutoff
    #:frequency-pass
    #:samplerate
+   #:bypass)
+  ;; segments/gate.lisp
+  (:export
+   #:gate
+   #:make-gate
+   #:samplerate
+   #:open-threshold
+   #:close-threshold
+   #:attack
+   #:hold
+   #:release
    #:bypass)
   ;; segments/generator.lisp
   (:export
@@ -272,6 +296,12 @@
    #:make-noise
    #:volume
    #:noise-type)
+  ;; segments/null.lisp
+  (:export
+   #:void
+   #:make-void
+   #:zero
+   #:make-zero)
   ;; segments/packer.lisp
   (:export
    #:packer
@@ -291,6 +321,12 @@
    #:make-pitch
    #:pitch
    #:samplerate
+   #:bypass)
+  ;; segments/quantize.lisp
+  (:export
+   #:quantize
+   #:make-quantize
+   #:steps
    #:bypass)
   ;; segments/queue.lisp
   (:export
@@ -329,6 +365,12 @@
    #:volume
    #:field
    #:attenutation)
+  ;; segments/speed-change.lisp
+  (:export
+   #:speed-change
+   #:make-speed-change
+   #:speed
+   #:bypass)
   ;; segments/unpacker.lisp
   (:export
    #:unpacker

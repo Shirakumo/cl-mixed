@@ -11,7 +11,7 @@
 
 (defmethod initialize-instance :after ((buffer buffer) &key size)
   (unless size (error "Buffer SIZE required."))
-  (let ((data (static-vectors:make-static-vector size :element-type 'float))
+  (let ((data (static-vectors:make-static-vector size :element-type 'single-float))
         (handle (handle buffer)))
     (setf (mixed:buffer-size handle) size)
     (setf (mixed:buffer-data handle) (static-vectors:static-vector-pointer data))
@@ -41,7 +41,7 @@
 (defmethod (setf size) (size (buffer buffer))
   (unless (= size (size buffer))
     (let ((old (data buffer))
-          (new (static-vectors:make-static-vector size :element-type 'float)))
+          (new (static-vectors:make-static-vector size :element-type 'single-float)))
       (static-vectors:replace-foreign-memory
        (static-vectors:static-vector-pointer new) (static-vectors:static-vector-pointer old)
        (* (cffi:foreign-type-size :float) (length old)))

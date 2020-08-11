@@ -104,7 +104,8 @@
   :in-count
   :out-count
   :current-segment
-  :speed-factor)
+  :speed-factor
+  :quantize-steps)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -501,9 +502,13 @@
 (defcfun (make-segment-zero "mixed_make_segment_zero") :int
   (segment :pointer))
 
-(defcfun (make-segment-noise "mixed_make_segment_channel_convert") :int
+(defcfun (make-segment-channel-convert "mixed_make_segment_channel_convert") :int
   (in :uint8)
   (out :uint8)
+  (segment :pointer))
+
+(defcfun (make-segment-quantize "mixed_make_segment_quantize") :int
+  (steps size_t)
   (segment :pointer))
 
 (defcfun (free-segment-sequence "mixed_free_segment_sequence") :void
