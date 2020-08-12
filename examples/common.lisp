@@ -18,39 +18,24 @@
 (defmacro with-out ((out &key (rate 44100) (channels 2) (encoding :float)) &body body)
   `(call-with-out (lambda (,out) ,@body) ,rate ,channels ,encoding))
 
-(defun call-with-mp3 (function pathname samples)
+(defun call-with-mp3 (function pathname)
   (let* ((file (mpg123:connect (mpg123:make-file pathname :buffer-size NIL))))
     (multiple-value-bind (rate channels encoding) (mpg123:file-format file)
       (format T "~&Input format ~a Hz ~a channels ~a encoded." rate channels encoding)
-      (setf (mpg123:buffer-size file) (* samples channels (mixed:samplesize encoding)))
-      (setf (mpg123:buffer file) (cffi:foreign-alloc :uchar :count (mpg123:buffer-size file)))
       (unwind-protect
            (funcall function file rate channels encoding)
         (mpg123:disconnect file)
         (cffi:foreign-free (mpg123:buffer file))))))
 
-(defmacro with-mp3 ((file rate channels encoding &key pathname samples) &body body)
-  `(call-with-mp3 (lambda (,file ,rate ,channels ,encoding) ,@body) ,pathname ,samples))
+(defmacro with-mp3 ((file rate channels encoding &key pathname) &body body)
+  `(call-with-mp3 (lambda (,file ,rate ,channels ,encoding) ,@body) ,pathname))
 
-(defmacro with-edge-setup ((file out rate &key pathname samples) &body body)
+(defmacro with-edge-setup ((file out rate &key pathname) &body body)
   (let ((channels (gensym "CHANNELS"))
         (encoding (gensym "ENCODING")))
-    `(with-mp3 (,file ,rate ,channels ,encoding :pathname ,pathname :samples ,samples)
+    `(with-mp3 (,file ,rate ,channels ,encoding :pathname ,pathname)
        (with-out (,out :rate ,rate :channels ,channels :encoding ,encoding)
          ,@body))))
-
-(defun play (file out sequence samples)
-  (let* ((buffer (mpg123:buffer file))
-         (buffersize (mpg123:buffer-size file))
-         (read (mpg123:process file)))
-    (loop for i from read below buffersize
-          do (setf (cffi:mem-aref buffer :uchar i) 0))
-    (mixed:mix samples sequence)
-    (let ((played (out123:play out buffer buffersize)))
-      (when (/= played read)
-        (format T "~&Playback is not catching up with input by ~a bytes."
-                (- read played))))
-    (/= 0 read)))
 
 (defmacro with-sequence ((name &rest segments) &body body)
   `(let ((,name (mixed:make-segment-sequence ,@segments)))
@@ -60,3 +45,12 @@
                    (mixed:mix ,name)))
             ,@body)
        (mixed:end ,name))))
+
+(defun play (file out sequence)
+  (let ((packer (aref (mixed:segments sequence) 0))
+        (unpacker (aref (mixed:segments sequence) (1- (length (mixed:segments sequence))))))
+    (mixed:with-buffer-tx (data start end (mixed:pack packer) :direction :output)
+      (mixed:finish (mpg123:read-directly file (mixed:data-ptr) (- end start))))
+    (mixed:mix sequence)
+    (mixed:with-buffer-tx (data start end (mixed:pack unpacker) :direction :input)
+      (mixed:finish (out123:play-directly out (mixed:data-ptr) (- end start))))))

@@ -96,27 +96,27 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defun data-ptr (data &optional (start 0))
   (static-vectors:static-vector-pointer data :offset start))
 
-(defmacro with-buffer-tx ((data start end buffer &key (direction :read) (size #xFFFFFFFF)) &body body)
+(defmacro with-buffer-tx ((data start end buffer &key (direction :input) (size #xFFFFFFFF)) &body body)
   (let ((bufferg (gensym "BUFFER"))
         (sizeg (gensym "SIZE"))
         (handle (gensym "HANDLE")))
     `(let* ((,bufferg ,buffer)
             (,data (data ,bufferg)))
-       (ecase ,direction
-         (:read
-          (multiple-value-bind (,start ,end) (request-read ,bufferg ,size)
-            (flet ((finish (,sizeg) (finish-read ,bufferg ,sizeg))
-                   (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
-              ,@body)))
-         (:write
-          (multiple-value-bind (,start ,end) (request-write ,bufferg ,size)
-            (flet ((finish (,sizeg) (finish-write ,bufferg ,sizeg))
-                   (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
-              (unwind-protect
-                   (progn ,@body)
-                (let ((,handle (handle ,buffer)))
-                  (setf (mixed:buffer-reserved-size ,handle) 0)
-                  (setf (mixed:buffer-reserved-start ,handle) 0))))))))))
+       ,(ecase direction
+          ((:input :read)
+           `(multiple-value-bind (,start ,end) (request-read ,bufferg ,size)
+              (flet ((finish (,sizeg) (finish-read ,bufferg ,sizeg))
+                     (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
+                ,@body)))
+          ((:output :write)
+           `(multiple-value-bind (,start ,end) (request-write ,bufferg ,size)
+              (flet ((finish (,sizeg) (finish-write ,bufferg ,sizeg))
+                     (data-ptr (&optional (,data ,data) (,start ,start)) (data-ptr ,data ,start)))
+                (unwind-protect
+                     (progn ,@body)
+                  (let ((,handle (handle ,buffer)))
+                    (setf (mixed:buffer-reserved-size ,handle) 0)
+                    (setf (mixed:buffer-reserved-start ,handle) 0))))))))))
 
 (defmacro with-buffer-transfer ((fdata fstart fend from &optional (size #xFFFFFFFF)) (tdata tstart tend to) &body body)
   `(let* ((,fromg ,from)
