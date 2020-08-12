@@ -20,14 +20,14 @@
   (unless (handle object)
     (let ((handle (allocate-handle object)))
       (setf (handle object) handle)
-      (tg:finalize object (free-handle object handle))
       (setf (pointer->object handle) object))))
 
 (defmethod initialize-instance :around ((object c-object) &key handle)
   (if handle
       (call-next-method)
       (with-cleanup-on-failure (free object)
-        (call-next-method))))
+        (call-next-method)
+        (tg:finalize object (free-handle object (handle object))))))
 
 (defmethod free ((object c-object))
   (let ((handle (when (slot-boundp object 'handle) (handle object))))

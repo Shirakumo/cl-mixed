@@ -9,15 +9,15 @@
 (defclass speed-change (segment)
   ()
   (:default-initargs
-   :speed 1.0))
+   :speed-factor 1.0))
 
-(defmethod initialize-instance :after ((segment speed-change) &key speed)
+(defmethod initialize-instance :after ((segment speed-change) &key speed-factor)
   (with-error-on-failure ()
-    (mixed:make-segment-speed-change speed (handle segment))))
+    (mixed:make-segment-speed-change speed-factor (handle segment))))
 
-(defun make-speed-change (&rest args &key speed)
-  (declare (ignore speed))
+(defun make-speed-change (&rest args &key speed-factor)
+  (declare (ignore speed-factor))
   (apply #'make-instance 'speed-change args))
 
-(define-field-accessor speed speed-change float :speed-factor)
+(define-field-accessor speed-factor speed-change :float :speed-factor)
 (define-field-accessor bypass speed-change :bool :bypass)

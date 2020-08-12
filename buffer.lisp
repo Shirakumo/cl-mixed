@@ -9,26 +9,27 @@
 (defclass buffer (bip-buffer c-object)
   ((data :reader data)))
 
-(defmethod initialize-instance :after ((buffer buffer) &key size)
-  (unless size (error "Buffer SIZE required."))
-  (let ((data (static-vectors:make-static-vector size :element-type 'single-float))
-        (handle (handle buffer)))
-    (setf (mixed:buffer-size handle) size)
-    (setf (mixed:buffer-data handle) (static-vectors:static-vector-pointer data))
-    (setf (mixed:buffer-virtual-p handle) 1)))
+(defmethod initialize-instance :after ((buffer buffer) &key size virtual)
+  (if virtual
+      (setf (mixed:buffer-virtual-p (handle buffer)) 1)
+      (let ((data (static-vectors:make-static-vector size :element-type 'single-float))
+            (handle (handle buffer)))
+        (setf (slot-value buffer 'data) data)
+        (setf (mixed:buffer-size handle) size)
+        (setf (mixed:buffer-data handle) (static-vectors:static-vector-pointer data)))))
 
 (defun make-buffer (size)
-  (etypecase size
-    ((integer 1)
-     (make-instance 'buffer :size size))))
+  (make-instance 'buffer :size size))
 
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct mixed:buffer)))
 
 (defmethod free-handle ((buffer buffer) handle)
-  (let ((data (data buffer)))
+  (let ((data (unless (mixed:buffer-virtual-p handle)
+                (data buffer))))
     (lambda ()
-      (static-vectors:free-static-vector data)
+      (when data 
+        (static-vectors:free-static-vector data))
       (cffi:foreign-free handle)
       (setf (pointer->object handle) NIL))))
 
@@ -59,7 +60,7 @@
        (unwind-protect
             (progn
               ,@(loop for buffer in buffers
-                      collect `(setf ,buffer (mixed:make-buffer ,sizeg)))
+                      collect `(setf ,buffer (make-buffer ,sizeg)))
               (let ,(loop for buffer in buffers
                           collect `(,buffer ,buffer))
                 ,@body))

@@ -52,7 +52,8 @@
    (outputs :reader outputs)
    (info :initform NIL :accessor direct-info)))
 
-(defmethod initialize-instance :after ((segment segment) &key)
+(defmethod initialize-instance :around ((segment segment) &key)
+  (call-next-method)
   (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
     (flet ((marr (count)
              (if (< 128 count)
@@ -111,11 +112,7 @@
   (input-field field (cffi:foreign-enum-value 'mixed:location location) segment))
 
 (defmethod input-field ((field (eql :buffer)) (location integer) (segment segment))
-  (cffi:with-foreign-object (ptr :pointer)
-    (with-error-on-failure ()
-      (mixed:segment-get-in field location ptr segment))
-    (or (pointer->object (cffi:mem-ref ptr :pointer))
-        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
+  (aref (inputs segment) location))
 
 (defmethod (setf input-field) (value (field (eql :buffer)) (location symbol) (segment segment))
   (setf (input-field field (cffi:foreign-enum-value 'mixed:location location) segment) value))
@@ -136,11 +133,7 @@
   (output-field field (cffi:foreign-enum-value 'mixed:location location) segment))
 
 (defmethod output-field ((field (eql :buffer)) (location integer) (segment segment))
-  (cffi:with-foreign-object (ptr :pointer)
-    (with-error-on-failure ()
-      (mixed:segment-get-out field location ptr segment))
-    (or (pointer->object (cffi:mem-ref ptr :pointer))
-        (make-instance 'buffer :handle (cffi:mem-ref ptr :pointer)))))
+  (aref (outputs segment) location))
 
 (defmethod (setf output-field) (value (field (eql :buffer)) (location symbol) (segment segment))
   (setf (output-field field (cffi:foreign-enum-value 'mixed:location location) segment) value))

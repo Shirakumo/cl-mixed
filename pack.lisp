@@ -12,7 +12,7 @@
 (defmethod initialize-instance :after ((pack pack) &key frames encoding channels samplerate)
   (let* ((size (* frames channels (samplesize encoding)))
          (data (static-vectors:make-static-vector size :element-type '(unsigned-byte 8))))
-    (setf (data pack) data)
+    (setf (slot-value pack 'data) data)
     (let ((handle (handle pack)))
       (setf (mixed:pack-data handle) (static-vectors:static-vector-pointer data))
       (setf (mixed:pack-size handle) size)
@@ -20,8 +20,8 @@
       (setf (mixed:pack-channels handle) channels)
       (setf (mixed:pack-samplerate handle) samplerate))))
 
-(defun make-pack (size encoding channels samplerate)
-  (make-instance 'pack :size size
+(defun make-pack (frames encoding channels samplerate)
+  (make-instance 'pack :frames frames
                        :encoding encoding
                        :channels channels
                        :samplerate samplerate))

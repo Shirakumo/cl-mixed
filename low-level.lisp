@@ -197,6 +197,9 @@
   :error-enum
   :resample-type-enum)
 
+(declaim (ftype (function (cffi:foreign-pointer) (unsigned-byte 32))
+                buffer-size buffer-r1-start buffer-r1-size buffer-r2-start buffer-r2-size buffer-reserved-start buffer-reserved-size
+                pack-size pack-r1-start pack-r1-size pack-r2-start pack-r2-size pack-reserved-start pack-reserved-size))
 (defcstruct (buffer :class buffer :conc-name buffer-)
   (data :pointer)
   (size size_t)

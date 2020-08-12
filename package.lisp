@@ -178,6 +178,7 @@
    #:finish-read
    #:data-ptr
    #:with-buffer-tx
+   #:finish
    #:with-buffer-transfer)
   ;; buffer.lisp
   (:export
@@ -382,7 +383,7 @@
   (:export
    #:speed-change
    #:make-speed-change
-   #:speed
+   #:speed-factor
    #:bypass)
   ;; segments/unpacker.lisp
   (:export

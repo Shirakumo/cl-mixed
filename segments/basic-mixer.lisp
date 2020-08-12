@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass basic-mixer (c-object)
+(defclass basic-mixer (segment)
   ((channels :initarg :channels :accessor channels))
   (:default-initargs :channels 1))
 

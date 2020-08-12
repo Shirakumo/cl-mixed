@@ -11,11 +11,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (declaim (inline free-for-r2 free-after-r1))
 (defun free-for-r2 (handle)
+  (declare (optimize speed))
   (- (mixed:buffer-r1-start handle)
      (mixed:buffer-r2-start handle)
      (mixed:buffer-r2-size handle)))
 
 (defun free-after-r1 (handle)
+  (declare (optimize speed))
   (- (mixed:buffer-size handle)
      (mixed:buffer-r1-start handle)
      (mixed:buffer-r1-size handle)))
@@ -33,6 +35,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defun request-write (buffer size)
   (declare (optimize speed))
+  (declare (type (unsigned-byte 32) size))
   (let ((buffer (handle buffer)))
     (cond ((< 0 (mixed:buffer-r2-size buffer))
            (let ((free (min size (free-for-r2 buffer)))
@@ -53,6 +56,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defun finish-write (buffer size)
   (declare (optimize speed))
+  (declare (type (unsigned-byte 32) size))
   (let ((buffer (handle buffer)))
     (when (< size (mixed:buffer-reserved-size buffer))
       (error "Cannot commit more than was allocated."))
@@ -70,18 +74,20 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defun request-read (buffer size)
   (declare (optimize speed))
+  (declare (type (unsigned-byte 32) size))
   (let ((buffer (handle buffer)))
     (values (mixed:buffer-r1-start buffer)
             (min size (mixed:buffer-r1-size buffer)))))
 
 (defun finish-read (buffer size)
   (declare (optimize speed))
+  (declare (type (unsigned-byte 32) size))
   (let ((buffer (handle buffer)))
     (when (< (mixed:buffer-r1-size buffer) size)
       (error "Cannot commit more than was available."))
     (cond ((= (mixed:buffer-r1-size buffer) size)
-           (shiftf (mixed:buffer-r1-start buffer) (mixed:buffer-r2-start) 0)
-           (shiftf (mixed:buffer-r1-size buffer) (mixed:buffer-r2-size) 0))
+           (shiftf (mixed:buffer-r1-start buffer) (mixed:buffer-r2-start buffer) 0)
+           (shiftf (mixed:buffer-r1-size buffer) (mixed:buffer-r2-size buffer) 0))
           (T
            (decf (mixed:buffer-r1-size buffer) size)
            (incf (mixed:buffer-r1-start buffer) size)))))

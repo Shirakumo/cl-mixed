@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass space-mixer (c-object)
+(defclass space-mixer (segment)
   ()
   (:default-initargs
    :samplerate *default-samplerate*))

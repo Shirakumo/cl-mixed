@@ -16,8 +16,8 @@
   (with-error-on-failure ()
     (mixed:make-segment-packer (handle (pack packer)) samplerate (handle packer))))
 
-(defun make-packer (size encoding channels source-samplerate &optional (target-samplerate source-samplerate))
-  (make-instance 'packer :pack (make-pack size encoding channels source-samplerate)
+(defun make-packer (frames encoding channels source-samplerate &optional (target-samplerate source-samplerate))
+  (make-instance 'packer :pack (make-pack frames encoding channels source-samplerate)
                          :samplerate target-samplerate))
 
 (define-delegated-slot-accessor data packer pack)
