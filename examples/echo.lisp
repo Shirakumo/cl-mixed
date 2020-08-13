@@ -19,9 +19,13 @@
                                   :initial-element 0.0f0)))
 
 (defmethod mixed:mix ((echo echo))
+  (declare (optimize speed))
   (let ((buf (buffer echo))
         (offset (offset echo))
         (falloff (falloff echo)))
+    (declare (type (simple-array single-float (*)) buf)
+             (type single-float falloff)
+             (type (unsigned-byte 32) offset))
     (mixed:with-buffer-transfer
         (in ins (aref (mixed:inputs echo) 0))
         (out outs (aref (mixed:outputs echo) 0)) size

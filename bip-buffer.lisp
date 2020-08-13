@@ -22,10 +22,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
      (mixed:buffer-r1-start handle)
      (mixed:buffer-r1-size handle)))
 
+(declaim (ftype (function (buffer) (unsigned-byte 32)) available-read))
 (defun available-read (buffer)
   (declare (optimize speed))
   (mixed:buffer-r1-size (handle buffer)))
 
+(declaim (ftype (function (buffer) (unsigned-byte 32)) available-write))
 (defun available-write (buffer)
   (declare (optimize speed))
   (let ((buffer (handle buffer)))
@@ -33,6 +35,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         (free-for-r2 buffer)
         (free-after-r1 buffer))))
 
+(declaim (ftype (function (buffer (unsigned-byte 32)) (values (unsigned-byte 32) (unsigned-byte 32))) request-write))
 (defun request-write (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
@@ -72,6 +75,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (setf (mixed:buffer-reserved-size buffer) 0)
     (setf (mixed:buffer-reserved-start buffer) 0)))
 
+(declaim (ftype (function (buffer (unsigned-byte 32)) (values (unsigned-byte 32) (unsigned-byte 32))) request-read))
 (defun request-read (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
@@ -102,6 +106,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         (handle (gensym "HANDLE")))
     `(let* ((,bufferg ,buffer)
             (,data (data ,bufferg)))
+       (declare (type (simple-array single-float (*)) ,data))
        ,(ecase direction
           ((:input :read)
            `(multiple-value-bind (,start ,end) (request-read ,bufferg ,size)
@@ -135,10 +140,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                     (,fdata (data ,fromg))
                     (,tdata ,fdata)
                     (,size (- ,fend ,fstart)))
+               (declare (type (simple-array single-float (*)) ,fdata ,tdata))
+               (declare (type (unsigned-byte 32) ,tstart ,size))
                (flet ((finish (,size) (declare (ignore ,size))))
                  ,@body)))
            (with-buffer-tx (,fdata ,fstart ,fend ,fromg :direction :read)
              (let ((,size (- ,fend ,fstart)))
+               (declare (type (unsigned-byte 32) ,size))
                (with-buffer-tx (,tdata ,tstart ,tend ,tog :direction :write :size ,size)
                  (setf ,size (- ,tend ,tstart))
                  (flet ((finish (,size)
