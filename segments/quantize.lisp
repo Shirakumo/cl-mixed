@@ -19,5 +19,5 @@
   (declare (ignore steps))
   (apply #'make-instance 'quantize args))
 
-(define-field-accessor steps quantize size_t :quantize-steps)
+(define-field-accessor steps quantize :uint32 :quantize-steps)
 (define-field-accessor bypass quantize :bool :bypass)

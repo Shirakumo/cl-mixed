@@ -27,8 +27,8 @@
 (defmethod current-segment ((segment queue))
   (field :current-segment segment))
 
-(define-field-accessor in-count queue size_t :in-count)
-(define-field-accessor out-count queue size_t :out-count)
+(define-field-accessor in-count queue :uint32 :in-count)
+(define-field-accessor out-count queue :uint32 :out-count)
 (define-field-accessor bypass queue :bool :bypass)
 
 (defmethod add ((segment segment) (queue queue))

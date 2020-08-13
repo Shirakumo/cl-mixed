@@ -202,42 +202,42 @@
                 pack-size pack-r1-start pack-r1-size pack-r2-start pack-r2-size pack-reserved-start pack-reserved-size))
 (defcstruct (buffer :class buffer :conc-name buffer-)
   (data :pointer)
-  (size size_t)
-  (r1-start size_t)
-  (r1-size size_t)
-  (r2-start size_t)
-  (r2-size size_t)
-  (reserved-start size_t)
-  (reserved-size size_t)
+  (size :uint32)
+  (r1-start :uint32)
+  (r1-size :uint32)
+  (r2-start :uint32)
+  (r2-size :uint32)
+  (reserved-start :uint32)
+  (reserved-size :uint32)
   (virtual-p :char))
 
 (defcstruct (pack :class pack :conc-name pack-)
   (data :pointer)
-  (size size_t)
-  (r1-start size_t)
-  (r1-size size_t)
-  (r2-start size_t)
-  (r2-size size_t)
-  (reserved-start size_t)
-  (reserved-size size_t)
+  (size :uint32)
+  (r1-start :uint32)
+  (r1-size :uint32)
+  (r2-start :uint32)
+  (r2-size :uint32)
+  (reserved-start :uint32)
+  (reserved-size :uint32)
   (encoding encoding)
   (channels :uint8)
-  (samplerate size_t))
+  (samplerate :uint32))
 
 (defcstruct (field-info :class field-info :conc-name field-info-)
-  (field size_t)
+  (field :uint32)
   (description :string)
   (flags :int)
   (type field-type)
-  (type-count size_t))
+  (type-count :uint32))
 
 (defcstruct (segment-info :class segment-info :conc-name segment-info-)
   (name :string)
   (description :string)
   (flags :int)
-  (min-inputs size_t)
-  (max-inputs size_t)
-  (outputs size_t)
+  (min-inputs :uint32)
+  (max-inputs :uint32)
+  (outputs :uint32)
   (fields (:struct field-info) :count 32))
 
 (cffi:defcstruct (segment :class segment :conc-name direct-segment-)
@@ -256,11 +256,11 @@
 
 (defcstruct (segment-sequence :class segment-sequence :conc-name segment-sequence-)
   (segments :pointer)
-  (count size_t)
-  (size size_t))
+  (count :uint32)
+  (size :uint32))
 
 (defcfun (make-pack "mixed_make_pack") :int
-  (frames size_t)
+  (frames :uint32)
   (pack :pointer))
 
 (defcfun (free-pack "mixed_free_pack") :void
@@ -269,10 +269,10 @@
 (defcfun (clear-pack "mixed_pack_clear") :int
   (pack :pointer))
 
-(defcfun (pack-available-write "mixed_pack_available_write") size_t
+(defcfun (pack-available-write "mixed_pack_available_write") :uint32
   (pack :pointer))
 
-(defcfun (pack-available-read "mixed_pack_available_read") size_t
+(defcfun (pack-available-read "mixed_pack_available_read") :uint32
   (pack :pointer))
 
 (defcfun (pack-request-write "mixed_pack_request_write") :int
@@ -281,7 +281,7 @@
   (pack :pointer))
 
 (defcfun (pack-finish-write "mixed_pack_finish_write") :int
-  (size size_t)
+  (size :uint32)
   (pack :pointer))
 
 (defcfun (pack-request-read "mixed_pack_request_read") :int
@@ -290,11 +290,11 @@
   (pack :pointer))
 
 (defcfun (pack-finish-read "mixed_pack_finish_read") :int
-  (size size_t)
+  (size :uint32)
   (pack :pointer))
 
 (defcfun (make-buffer "mixed_make_buffer") :int
-  (size size_t)
+  (size :uint32)
   (buffer :pointer))
 
 (defcfun (free-buffer "mixed_free_buffer") :void
@@ -322,13 +322,13 @@
   (buffer :pointer))
 
 (defcfun (resize-buffer "mixed_buffer_resize") :int
-  (size size_t)
+  (size :uint32)
   (buffer :pointer))
 
-(defcfun (buffer-available-write "mixed_buffer_available_write") size_t
+(defcfun (buffer-available-write "mixed_buffer_available_write") :uint32
   (buffer :pointer))
 
-(defcfun (buffer-available-read "mixed_buffer_available_read") size_t
+(defcfun (buffer-available-read "mixed_buffer_available_read") :uint32
   (buffer :pointer))
 
 (defcfun (buffer-request-write "mixed_buffer_request_write") :int
@@ -337,7 +337,7 @@
   (buffer :pointer))
 
 (defcfun (buffer-finish-write "mixed_buffer_finish_write") :int
-  (size size_t)
+  (size :uint32)
   (buffer :pointer))
 
 (defcfun (buffer-request-read "mixed_buffer_request_read") :int
@@ -346,7 +346,7 @@
   (buffer :pointer))
 
 (defcfun (buffer-finish-read "mixed_buffer_finish_read") :int
-  (size size_t)
+  (size :uint32)
   (buffer :pointer))
 
 (defcfun (free-segment "mixed_free_segment") :int
@@ -401,16 +401,16 @@
 
 (defcfun (make-segment-unpacker "mixed_make_segment_unpacker") :int
   (pack :pointer)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-packer "mixed_make_segment_packer") :int
   (pack :pointer)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-basic-mixer "mixed_make_segment_basic_mixer") :int
-  (channels size_t)
+  (channels :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-volume-control "mixed_make_segment_volume_control") :int
@@ -423,42 +423,42 @@
   (to :float)
   (time :float)
   (type fade-type)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-generator "mixed_make_segment_generator") :int
   (type generator-type)
-  (frequency size_t)
-  (samplerate size_t)
+  (frequency :uint32)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-ladspa "mixed_make_segment_ladspa") :int
   (file :string)
-  (index size_t)
-  (samplerate size_t)
+  (index :uint32)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-space-mixer "mixed_make_segment_space_mixer") :int
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-delay "mixed_make_segment_delay") :int
   (time :float)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-repeat "mixed_make_segment_repeat") :int
   (time :float)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-pitch "mixed_make_segment_pitch") :int
   (pitch :float)
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-gate "mixed_make_segment_gate") :int
-  (samplerate size_t)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-noise "mixed_make_segment_noise") :int
@@ -467,8 +467,8 @@
 
 (defcfun (make-segment-frequency-pass "mixed_make_segment_frequency_pass") :int
   (pass frequency-pass)
-  (cutoff size_t)
-  (samplerate size_t)
+  (cutoff :uint32)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-speed-change "mixed_make_segment_speed_change") :int
@@ -490,7 +490,7 @@
   (queue :pointer))
 
 (defcfun (queue-remove-at "mixed_queue_remove_at") :int
-  (pos size_t)
+  (pos :uint32)
   (queue :pointer))
 
 (defcfun (queue-clear "mixed_queue_clear") :int
@@ -508,7 +508,7 @@
   (segment :pointer))
 
 (defcfun (make-segment-quantize "mixed_make_segment_quantize") :int
-  (steps size_t)
+  (steps :uint32)
   (segment :pointer))
 
 (defcfun (free-segment-sequence "mixed_free_segment_sequence") :void
@@ -539,7 +539,7 @@
 
 (defcfun (register-segment "mixed_register_segment") :int
   (name :string)
-  (argc size_t)
+  (argc :uint32)
   (args :pointer)
   (function :pointer))
 

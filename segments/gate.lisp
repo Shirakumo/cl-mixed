@@ -24,7 +24,7 @@
   (declare (ignore samplerate))
   (apply #'make-instance 'gate args))
 
-(define-field-accessor samplerate gate size_t :samplerate)
+(define-field-accessor samplerate gate :uint32 :samplerate)
 (define-field-accessor open-threshold gate :float :gate-open-threshold)
 (define-field-accessor close-threshold gate :float :gate-close-threshold)
 (define-field-accessor attack gate :float :gate-attack)

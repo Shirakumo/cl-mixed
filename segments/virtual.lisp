@@ -91,23 +91,23 @@
 (define-std-callback virtual-end ((segment :pointer))
   (end (pointer->object segment)))
 
-(define-std-callback virtual-set-input ((field size_t) (location size_t) (value :pointer) (segment :pointer))
+(define-std-callback virtual-set-input ((field :uint32) (location :uint32) (value :pointer) (segment :pointer))
   (setf (input-field field location (pointer->object segment)) value))
 
-(define-std-callback virtual-set-output ((field size_t) (location size_t) (value :pointer) (segment :pointer))
+(define-std-callback virtual-set-output ((field :uint32) (location :uint32) (value :pointer) (segment :pointer))
   (setf (output-field field location (pointer->object segment)) value))
 
-(define-std-callback virtual-get-input ((field size_t) (location size_t) (value-ptr :pointer) (segment :pointer))
+(define-std-callback virtual-get-input ((field :uint32) (location :uint32) (value-ptr :pointer) (segment :pointer))
   (multiple-value-bind (value type) (input-field field location (pointer->object segment))
     (setf (cffi:mem-ref value-ptr type) value)))
 
-(define-std-callback virtual-get-output ((field size_t) (location size_t) (value-ptr :pointer) (segment :pointer))
+(define-std-callback virtual-get-output ((field :uint32) (location :uint32) (value-ptr :pointer) (segment :pointer))
   (multiple-value-bind (value type) (output-field field location (pointer->object segment))
     (setf (cffi:mem-ref value-ptr type) value)))
 
-(define-std-callback virtual-set ((field size_t) (value :pointer) (segment :pointer))
+(define-std-callback virtual-set ((field :uint32) (value :pointer) (segment :pointer))
   (setf (field field (pointer->object segment)) value))
 
-(define-std-callback virtual-get ((field size_t) (value-ptr :pointer) (segment :pointer))
+(define-std-callback virtual-get ((field :uint32) (value-ptr :pointer) (segment :pointer))
   (multiple-value-bind (value type) (field field (pointer->object segment))
     (setf (cffi:mem-ref value-ptr type) value)))

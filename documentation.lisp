@@ -947,10 +947,10 @@ use the :RESAMPLER method. The value must be a
 pointer to a C function of the following signature:
 
   int resample(struct mixed_buffer *in,
-               size_t in_samplerate,
+               uint32_t in_samplerate,
                struct mixed_buffer *out,
-               size_t out_samplerate,
-               size_t out_samples)
+               uint32_t out_samplerate,
+               uint32_t out_samples)
 
 Three such resampling functions are available out
 of the box:
