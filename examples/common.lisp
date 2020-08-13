@@ -24,8 +24,7 @@
       (format T "~&Input format ~a Hz ~a channels ~a encoded." rate channels encoding)
       (unwind-protect
            (funcall function file rate channels encoding)
-        (mpg123:disconnect file)
-        (cffi:foreign-free (mpg123:buffer file))))))
+        (mpg123:disconnect file)))))
 
 (defmacro with-mp3 ((file rate channels encoding &key pathname) &body body)
   `(call-with-mp3 (lambda (,file ,rate ,channels ,encoding) ,@body) ,pathname))
@@ -48,9 +47,11 @@
 
 (defun play (file out sequence)
   (let ((packer (aref (mixed:segments sequence) 0))
-        (unpacker (aref (mixed:segments sequence) (1- (length (mixed:segments sequence))))))
+        (unpacker (aref (mixed:segments sequence) (1- (length (mixed:segments sequence)))))
+        (played 0) (read 0))
     (mixed:with-buffer-tx (data start end (mixed:pack packer) :direction :output)
-      (mixed:finish (mpg123:read-directly file (mixed:data-ptr) (- end start))))
+      (mixed:finish (setf read (mpg123:read-directly file (mixed:data-ptr) (- end start)))))
     (mixed:mix sequence)
     (mixed:with-buffer-tx (data start end (mixed:pack unpacker) :direction :input)
-      (mixed:finish (out123:play-directly out (mixed:data-ptr) (- end start))))))
+      (mixed:finish (setf played (out123:play-directly out (mixed:data-ptr) (- end start)))))
+    (or (< 0 played) (< 0 read))))

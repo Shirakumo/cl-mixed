@@ -19,39 +19,47 @@
                                   :initial-element 0.0f0)))
 
 (defmethod mixed:mix ((echo echo))
-  (let ((out (mixed:data (aref (mixed:outputs echo) 0)))
-        (in (mixed:data (aref (mixed:inputs echo) 0)))
-        (buf (buffer echo))
+  (let ((buf (buffer echo))
         (offset (offset echo))
         (falloff (falloff echo)))
-    (declare (type cffi:foreign-pointer in out))
-    ;; Mix
-    (loop for i from 0 below samples
-          for sample = (cffi:mem-aref in :float i)
-          for echo = (aref buf offset)
-          do (setf (cffi:mem-aref out :float i) (+ sample echo))
-             (setf (aref buf offset) (* (+ sample echo) falloff))
-             (setf offset (mod (1+ offset) (length buf))))
-    (setf (offset echo) offset)
-    T))
+    (mixed:with-buffer-transfer
+        (in ins (aref (mixed:inputs echo) 0))
+        (out outs (aref (mixed:outputs echo) 0)) size
+      (loop for i from 0 below size
+            for sample = (aref in (+ i ins))
+            for echo = (aref buf offset)
+            do (setf (aref out (+ i outs)) (+ sample echo))
+               (setf (aref buf offset) (* (+ sample echo) falloff))
+               (setf offset (mod (1+ offset) (length buf))))
+      (setf (offset echo) offset)
+      (mixed:finish size)
+      T)))
 
-(defun echo (mp3 &key (samples 500) (delay 0.2) (falloff 0.8))
-  (with-edge-setup (file out samplerate :pathname mp3 :samples samples)
-    (let* ((source (mixed:make-unpacker (mpg123:buffer file)
-                                        (mpg123:buffer-size file)
+(defmethod mixed:info ((echo echo))
+  (list :name "echo"
+        :description "Simple one-channel delay-line echo."
+        :flags 0
+        :min-inputs 1
+        :max-inputs 1
+        :outputs 1
+        :fields ()))
+
+(defun echo (mp3 &key (samples 500) (delay 0.2) (falloff 0.5))
+  (with-edge-setup (file out samplerate :pathname mp3)
+    (let* ((source (mixed:make-unpacker samples
                                         (mpg123:encoding file)
                                         (mpg123:channels file)
                                         samplerate))
-           (drain (mixed:make-packer (mpg123:buffer file)
-                                     (mpg123:buffer-size file)
+           (drain (mixed:make-packer samples
                                      (out123:encoding out)
                                      (out123:channels out)
                                      samplerate))
-           (echo (make-instance 'echo :samplerate samplerate :falloff falloff :delay delay)))
+           (echo-l (make-instance 'echo :samplerate samplerate :falloff falloff :delay delay))
+           (echo-r (make-instance 'echo :samplerate samplerate :falloff falloff :delay delay)))
       (mixed:with-buffers samples (li ri lo ro)
-        (mixed:connect source :left echo 0 li)
-        (setf (mixed:output :right source) ri)
-        (mixed:connect echo :left drain :left lo)
-        (mixed:connect echo :right drain :right ro)
-        (with-sequence (sequence source echo drain)
-          (loop while (play file out sequence samples)))))))
+        (mixed:connect source :left echo-l 0 li)
+        (mixed:connect source :right echo-r 0 ri)
+        (mixed:connect echo-l :mono drain :left lo)
+        (mixed:connect echo-r :mono drain :right ro)
+        (with-sequence (sequence source echo-l echo-r drain)
+          (loop while (play file out sequence)))))))

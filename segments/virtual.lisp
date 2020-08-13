@@ -62,7 +62,7 @@
   value)
 
 (define-callback virtual-free :void ((segment :pointer))
-  NIL
+    NIL
   (free (pointer->object segment)))
 
 (define-callback virtual-info :pointer ((segment :pointer))
@@ -83,6 +83,7 @@
   (start (pointer->object segment)))
 
 (define-callback virtual-mix :int ((segment :pointer))
+    0
   (if (mix (pointer->object segment))
       1
       0))
