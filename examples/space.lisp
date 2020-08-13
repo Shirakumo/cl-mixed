@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
-(defun spess (mp3 &key (samples 500) (width 100) (height 50) (speed 0.001))
+(defun space (mp3 &key (samples 500) (width 100) (height 50) (speed 0.001))
   (with-edge-setup (file out samplerate :pathname mp3)
     (let* ((source (mixed:make-unpacker samples
                                         (mpg123:encoding file)

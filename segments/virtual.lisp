@@ -84,6 +84,7 @@
 
 (define-callback virtual-mix :int ((segment :pointer))
     0
+  (declare (optimize speed))
   (if (mix (pointer->object segment))
       1
       0))

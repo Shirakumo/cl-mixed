@@ -45,7 +45,7 @@
   (let ((err (gensym "ERROR")))
     `(cffi:defcallback ,name ,return ,args
        (handler-case
-           (progn
+           (locally
              ,@body)
          (error (,err)
            (format T "Error in ~a callback: ~a" ',name ,err)
@@ -54,8 +54,8 @@
 (defmacro define-std-callback (name args &body body)
   `(define-callback ,name :int ,args
        0
-     (prog1 1
-       ,@body)))
+     (locally ,@body
+       1)))
 
 (defun coerce-ctype (value type)
   (case type

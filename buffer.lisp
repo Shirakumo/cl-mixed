@@ -12,7 +12,7 @@
 (defmethod initialize-instance :after ((buffer buffer) &key size virtual)
   (if virtual
       (setf (mixed:buffer-virtual-p (handle buffer)) 1)
-      (let ((data (static-vectors:make-static-vector size :element-type 'single-float))
+      (let ((data (static-vectors:make-static-vector size :element-type 'single-float :initial-element 0f0))
             (handle (handle buffer)))
         (setf (slot-value buffer 'data) data)
         (setf (mixed:buffer-size handle) size)
