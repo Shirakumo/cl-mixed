@@ -84,3 +84,8 @@
       (setf (cffi:mem-aref buffers :pointer i) (handle buffer)))
     (with-error-on-failure ()
       (mixed:buffer-from-pack (handle from) buffers 1.0))))
+
+(defmethod framesize ((pack pack))
+  (let ((handle (handle pack)))
+    (* (mixed:pack-channels handle)
+       (samplesize (mixed:pack-encoding handle)))))

@@ -216,7 +216,8 @@
    #:channels
    #:samplerate
    #:transfer
-   #:clear)
+   #:clear
+   #:framesize)
   ;; segment-sequence.lisp
   (:export
    #:segment-sequence
@@ -247,7 +248,7 @@
   (:export
    #:source
    #:pack
-   #:frame-position
+   #:byte-position
    #:seek
    #:seek-to-frame
    #:frame-count)

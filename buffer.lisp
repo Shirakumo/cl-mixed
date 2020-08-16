@@ -70,3 +70,6 @@
 (defmethod transfer ((from buffer) (to buffer))
   (with-error-on-failure ()
     (mixed:transfer-buffer (handle from) (handle to))))
+
+(defmethod framesize ((buffer buffer))
+  (samplesize :float))

@@ -221,6 +221,7 @@
         unless found collect k
         unless found collect v))
 
+(declaim (inline samplesize))
 (defun samplesize (type)
   (ecase type
     ((:int8 :uint8) 1)

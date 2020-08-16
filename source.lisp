@@ -8,7 +8,7 @@
 
 (defclass source (mixed:virtual)
   ((pack :initarg :pack :initform NIL :accessor pack)
-   (frame-position :initform 0 :accessor frame-position)))
+   (byte-position :initform 0 :accessor byte-position)))
 
 (defmethod info ((source source))
   (list :name (string (class-name (class-of drain)))
@@ -34,15 +34,17 @@
 (defmethod seek ((source source) position &key (mode :absolute) (by :frame))
   (ecase by
     (:second
-     (setf position (round (* position (samplerate (pack source))))))
+     (setf position (floor (* position (samplerate (pack source))))))
+    (:percentage
+     (setf position (floor (* position (frame-count source)) 100)))
     (:frame))
   (ecase mode
     (:relative
      (setf mode :absolute)
-     (incf position (sample-position source)))
+     (incf position (/ (byte-position source) (framesize (pack source)))))
     (:absolute))
   (seek-to-frame source position)
-  (setf (frame-position source) position)
+  (setf (byte-position source) (* position (framesize (pack source))))
   source)
 
 (defgeneric seek-to-frame (source position))
