@@ -22,14 +22,15 @@
 
 (defmethod mixed:start ((drain out123-drain))
   (out123:connect (out drain))
-  (out123:start (out drain) :rate (target-samplerate drain) :channels 2 :encoding :float)
+  (out123:start (out drain) :rate (mixed:target-samplerate drain) :channels 2 :encoding :float)
   (setf (mixed:samplerate (mixed:pack drain)) (out123:rate (out drain)))
   (setf (mixed:encoding (mixed:pack drain)) (out123:encoding (out drain))))
 
 (cffi:defcallback mix :int ((segment :pointer))
   (let ((drain (mixed:pointer->object segment)))
     (mixed:with-buffer-tx (data start end (mixed:pack drain))
-      (mixed:finish (out123:play-directly (out drain) (mixed:data-ptr) (- end start))))))
+      (mixed:finish (out123:play-directly (out drain) (mixed:data-ptr) (- end start))))
+    1))
 
 (defmethod mixed:end ((drain out123-drain))
   (out123:stop (out drain))

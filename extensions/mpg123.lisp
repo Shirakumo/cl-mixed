@@ -23,7 +23,7 @@
 
 (defmethod mixed:start ((source mpg123-source))
   (mpg123:connect (file source))
-  (multiple-value-bind (rate channels encoding) (mpg123:file-format file)
+  (multiple-value-bind (rate channels encoding) (mpg123:file-format (file source))
     (setf (mixed:samplerate (mixed:pack source)) rate)
     (setf (mixed:channels (mixed:pack source)) channels)
     (setf (mixed:encoding (mixed:pack source)) encoding)))
@@ -33,13 +33,14 @@
     (mixed:with-buffer-tx (data start end (mixed:pack source) :direction :output)
       (let ((read (mpg123:read-directly (file source) (mixed:data-ptr) (- end start))))
         (incf (mixed:byte-position source) read)
-        (mixed:finish read)))))
+        (mixed:finish read)))
+    1))
 
 (defmethod mixed:end ((source mpg123-source))
   (mpg123:disconnect (file source)))
 
-(defmethod mixed:seek-to-frame ((source mp3-source) position)
+(defmethod mixed:seek-to-frame ((source mpg123-source) position)
   (cl-mpg123:seek (file source) position :mode :absolute :by :frame))
 
-(defmethod mixed:frame-count ((source mp3-source))
+(defmethod mixed:frame-count ((source mpg123-source))
   (cl-mpg123:frame-count (file source)))

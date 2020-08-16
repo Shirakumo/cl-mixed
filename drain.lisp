@@ -6,10 +6,10 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass drain (mixed:virtual)
-  ((target-samplerate :initarg :target-samplerate :initform 48000 :accessor target-samplerate)
-   (program-name :initform NIL :initarg :program-name :initform "Mixed" :accessor program-name)
-   (pack :initarg :pack :initform NIL :accessor pack)))
+(defclass drain (virtual)
+  ((target-samplerate :initform 48000 :initarg :target-samplerate :accessor target-samplerate)
+   (program-name :initform "Mixed" :initarg :program-name :accessor program-name)
+   (pack :initform NIL :initarg :pack :accessor pack)))
 
 (defmethod info ((drain drain))
   (list :name (string (class-name (class-of drain)))
@@ -20,14 +20,14 @@
         :outputs 0
         :fields ()))
 
-(defmethod input-field ((field (eql :pack)) (location (eql 0)) (drain drain))
+(defmethod output-field ((field (eql :pack)) (location (eql 0)) (drain drain))
   (pack drain))
 
-(defmethod (setf input-field) ((value pack) (field (eql :pack)) (location (eql 0)) (drain drain))
+(defmethod (setf output-field) ((value pack) (field (eql :pack)) (location (eql 0)) (drain drain))
   (setf (pack drain) value))
 
-(defmethod (setf input-field) ((value null) (field (eql :pack)) (location (eql 0)) (drain drain))
+(defmethod (setf output-field) ((value null) (field (eql :pack)) (location (eql 0)) (drain drain))
   (setf (pack drain) value))
 
-(defmethod input ((location (eql 0)) (drain drain))
+(defmethod output ((location (eql 0)) (drain drain))
   (pack drain))

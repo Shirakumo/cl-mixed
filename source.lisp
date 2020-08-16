@@ -6,12 +6,12 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass source (mixed:virtual)
-  ((pack :initarg :pack :initform NIL :accessor pack)
+(defclass source (virtual)
+  ((pack :initform NIL :initarg :pack :accessor pack)
    (byte-position :initform 0 :accessor byte-position)))
 
 (defmethod info ((source source))
-  (list :name (string (class-name (class-of drain)))
+  (list :name (string (class-name (class-of source)))
         :description "Input source."
         :flags ()
         :min-inputs 0
