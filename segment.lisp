@@ -169,6 +169,8 @@
 (defmethod (setf output) (buffer location (segment segment))
   (setf (output-field :buffer location segment) buffer))
 
-(defmethod connect ((source segment) source-location (drain segment) drain-location buffer)
-  (setf (output source-location source) buffer)
+(defmethod connect ((source segment) source-location (drain segment) drain-location &optional buffer)
+  (if buffer
+      (setf (output source-location source) buffer)
+      (setf buffer (output source-location source)))
   (setf (input drain-location drain) buffer))

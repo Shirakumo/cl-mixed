@@ -195,6 +195,13 @@
    #:c-object
    #:free
    #:pointer->object)
+  ;; drain.lisp
+  (:export
+   #:drain
+   #:target-samplerate
+   #:program-name
+   #:pack
+   #:source)
   ;; mixer.lisp
   (:export
    #:mixer
