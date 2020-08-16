@@ -40,9 +40,6 @@
 (define-foreign-library libpulse-simple
     (t (:default "libpulse-simple")))
 
-(use-foreign-library libpulse)
-(use-foreign-library libpulse-simple)
-
 (defconstant +channels-max+ 32)
 
 (defctype size_t #+x86-64 :uint64 #+x86 :uint32)

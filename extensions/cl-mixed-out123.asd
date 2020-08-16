@@ -1,5 +1,5 @@
 #|
- This file is a part of harmony
+ This file is a part of cl-mixed
  (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#

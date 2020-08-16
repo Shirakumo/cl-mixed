@@ -4,17 +4,17 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(asdf:defsystem cl-mixed-pulse
+(asdf:defsystem cl-mixed-alsa
   :version "1.0.0"
   :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
-  :description "PulseAudio based playback drain."
+  :description "ALSA based playback drain."
   :homepage "https://Shirakumo.github.io/cl-mixed/"
   :bug-tracker "https://github.com/Shirakumo/cl-mixed/issues"
   :source-control (:git "https://github.com/Shirakumo/cl-mixed.git")
   :serial T
-  :components ((:file "pulse-cffi")
-               (:file "pulse"))
+  :components ((:file "alsa-cffi")
+               (:file "alsa"))
   :depends-on (:cl-mixed
                :cffi))

@@ -30,13 +30,15 @@
   ((simple :initform NIL :accessor simple)))
 
 (defmethod initialize-instance :after ((drain pulse-drain) &key)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix)))
+  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
+  (cffi:use-foreign-library pulse:libpulse)
+  (cffi:use-foreign-library pulse:libpulse-simple))
 
 (defmethod mixed:start ((drain pulse-drain))
   (unless (simple drain)
     (cffi:with-foreign-object (sample-spec '(:struct pulse:sample-spec))
       (setf (pulse:sample-spec-format sample-spec) :float)
-      (setf (pulse:sample-spec-rate sample-spec) (target-samplerate drain))
+      (setf (pulse:sample-spec-rate sample-spec) (mixed:target-samplerate drain))
       (setf (pulse:sample-spec-channels sample-spec) 2)
       (with-error (error)
         (setf (simple drain) (pulse:simple-new

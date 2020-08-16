@@ -4,17 +4,18 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(asdf:defsystem cl-mixed-pulse
+(asdf:defsystem cl-mixed-coreaudio
   :version "1.0.0"
   :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
-  :description "PulseAudio based playback drain."
+  :description "CoreAudio based playback drain."
   :homepage "https://Shirakumo.github.io/cl-mixed/"
   :bug-tracker "https://github.com/Shirakumo/cl-mixed/issues"
   :source-control (:git "https://github.com/Shirakumo/cl-mixed.git")
   :serial T
-  :components ((:file "pulse-cffi")
-               (:file "pulse"))
+  :components ((:file "coreaudio-cffi")
+               (:file "coreaudio"))
   :depends-on (:cl-mixed
+               :float-features
                :cffi))
