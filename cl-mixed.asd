@@ -24,6 +24,8 @@
                (:file "segment")
                (:file "segment-sequence")
                (:file "generic")
+               (:file "drain")
+               (:file "source")
                (:module "segments"
                 :components ((:file "basic-mixer")
                              (:file "channel-convert")

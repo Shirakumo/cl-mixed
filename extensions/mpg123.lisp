@@ -15,7 +15,7 @@
 (in-package #:org.shirakumo.fraf.mixed.mpg123)
 
 (defclass mpg123-source (mixed:source)
-  ((file :accessor out)))
+  ((file :accessor file)))
 
 (defmethod initialize-instance :after ((source mpg123-source) &key file)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix))
@@ -35,3 +35,9 @@
 
 (defmethod mixed:end ((source mpg123-source))
   (mpg123:disconnect (file source)))
+
+(defmethod mixed:seek-to-frame ((source mp3-source) position)
+  (cl-mpg123:seek (file source) position :mode :absolute :by :frame))
+
+(defmethod mixed:frame-count ((source mp3-source))
+  (cl-mpg123:frame-count (file source)))

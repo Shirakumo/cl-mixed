@@ -1,0 +1,41 @@
+#|
+ This file is a part of cl-mixed
+ (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
+ Author: Nicolas Hafner <shinmera@tymoon.eu>
+|#
+
+(defpackage #:org.shirakumo.fraf.mixed.flac
+  (:use #:cl)
+  (:local-nicknames
+   (#:mixed #:org.shirakumo.fraf.mixed)
+   (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi)
+   (#:flac #:org.shirakumo.fraf.flac))
+  (:export
+   #:flac-source))
+(in-package #:org.shirakumo.fraf.mixed.flac)
+
+(defclass flac-source (mixed:source)
+  ((file :accessor file)))
+
+(defmethod initialize-instance :after ((source flac-source) &key file)
+  (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix))
+  (setf (file source) (cl-flac:make-file file)))
+
+(defmethod mixed:start ((source flac-source))
+  (setf (mixed:samplerate (mixed:pack source)) (flac:samplerate (file source)))
+  (setf (mixed:channels (mixed:pack source)) (flac:channels (file source)))
+  (setf (mixed:encoding (mixed:pack source)) :float))
+
+(cffi:defcallback mix :int ((segment :pointer))
+  (let ((source (mixed:pointer->object segment)))
+    (mixed:with-buffer-tx (data start end (mixed:pack source) :direction :output)
+      (mixed:finish (flac:read-directly (file source) (mixed:data-ptr) (- end start))))))
+
+(defmethod mixed:end ((source flac-source))
+  (flac:disconnect (file source)))
+
+(defmethod mixed:seek-to-frame ((source flac-source) position)
+  (cl-flac:seek (file source) position))
+
+(defmethod mixed:frame-count ((source flac-source))
+  (cl-flac:frame-count (file source)))

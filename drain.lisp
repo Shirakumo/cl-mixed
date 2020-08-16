@@ -31,27 +31,3 @@
 
 (defmethod input ((location (eql 0)) (drain drain))
   (pack drain))
-
-(defclass source (mixed:virtual)
-  ((pack :initarg :pack :initform NIL :accessor pack)))
-
-(defmethod info ((source source))
-  (list :name (string (class-name (class-of drain)))
-        :description "Input source."
-        :flags ()
-        :min-inputs 0
-        :max-inputs 0
-        :outputs 1
-        :fields ()))
-
-(defmethod output-field ((field (eql :pack)) (location (eql 0)) (drain drain))
-  (pack drain))
-
-(defmethod (setf output-field) ((value pack) (field (eql :pack)) (location (eql 0)) (drain drain))
-  (setf (pack drain) value))
-
-(defmethod (setf output-field) ((value null) (field (eql :pack)) (location (eql 0)) (drain drain))
-  (setf (pack drain) value))
-
-(defmethod output ((location (eql 0)) (drain drain))
-  (pack drain))

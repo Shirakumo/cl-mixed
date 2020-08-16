@@ -200,8 +200,7 @@
    #:drain
    #:target-samplerate
    #:program-name
-   #:pack
-   #:source)
+   #:pack)
   ;; mixer.lisp
   (:export
    #:mixer
@@ -244,6 +243,14 @@
    #:input
    #:output
    #:connect)
+  ;; source.lisp
+  (:export
+   #:source
+   #:pack
+   #:frame-position
+   #:seek
+   #:seek-to-frame
+   #:frame-count)
   ;; toolkit.lisp
   (:export
    #:*default-samplerate*
