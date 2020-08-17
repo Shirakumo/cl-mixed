@@ -90,7 +90,7 @@
     label))
 
 (defclass wasapi-drain (mixed:drain)
-  ((mode :initform :shared :accessor mode)
+  ((mode :initform :shared :initarg :mode :accessor mode)
    (client :initform NIL :accessor client)
    (render :initform NIL :accessor render)
    (event :initform NIL :accessor event)

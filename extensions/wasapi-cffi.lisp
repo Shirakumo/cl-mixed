@@ -18,8 +18,6 @@
    #:INFINITE
    #:word
    #:dword
-   #:refiid
-   #:refclsid
    #:lpunknown
    #:byte
    #:ulong
@@ -163,8 +161,6 @@
 
 (cffi:defctype word :uint16)
 (cffi:defctype dword :uint32)
-(cffi:defctype refiid :pointer)
-(cffi:defctype refclsid :pointer)
 (cffi:defctype lpunknown :pointer)
 (cffi:defctype byte :uint8)
 (cffi:defctype ulong :unsigned-long)
@@ -278,7 +274,7 @@
   (item (device-id :uint) (device :pointer)))
 
 (com:define-comstruct imm-device
-  (activate (id refiid) (cls-ctx dword) (activation-params :pointer) (interface :pointer))
+  (activate (id com:guid) (cls-ctx dword) (activation-params :pointer) (interface :pointer))
   (open-property-store (access dword) (properties :pointer))
   (get-id (str-id :pointer))
   (get-state (state :pointer)))
@@ -295,7 +291,7 @@
   (stop)
   (reset)
   (set-event-handle (event-handle handle))
-  (get-service (riid refiid) (service :pointer)))
+  (get-service (riid com:guid) (service :pointer)))
 
 (com:define-comstruct i-audio-render-client
   (get-buffer (num-frames-requested :uint32) (data :pointer))
