@@ -7,8 +7,16 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass source (virtual)
-  ((pack :initform NIL :initarg :pack :accessor pack)
+  ((pack :initform NIL :reader pack)
    (byte-position :initform 0 :accessor byte-position)))
+
+(defmethod initialize-instance :after ((source source) &key pack)
+  (setf (pack source) pack))
+
+(defmethod (setf pack) (thing (source source))
+  (etypecase thing
+    ((or null pack) (setf (slot-value source 'pack) thing))
+    (unpacker (setf (pack source) (pack thing)))))
 
 (defmethod info ((source source))
   (list :name (string (class-name (class-of source)))

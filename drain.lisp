@@ -9,7 +9,15 @@
 (defclass drain (virtual)
   ((target-samplerate :initform 48000 :initarg :target-samplerate :accessor target-samplerate)
    (program-name :initform "Mixed" :initarg :program-name :accessor program-name)
-   (pack :initform NIL :initarg :pack :accessor pack)))
+   (pack :initform NIL :reader pack)))
+
+(defmethod initialize-instance :after ((drain drain) &key pack)
+  (setf (pack drain) pack))
+
+(defmethod (setf pack) (thing (drain drain))
+  (etypecase thing
+    ((or null pack) (setf (slot-value drain 'pack) thing))
+    (packer (setf (pack drain) (pack thing)))))
 
 (defmethod info ((drain drain))
   (list :name (string (class-name (class-of drain)))
