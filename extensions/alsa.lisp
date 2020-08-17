@@ -53,7 +53,8 @@
         (when (< error 0)
           (setf error (alsa:pcm-recover (pcm drain) error 0))
           (when (< error 0)
-            (error 'alsa-error :code error)))))))
+            (error 'alsa-error :code error)))
+        (mixed:finish error)))))
 
 (defmethod mixed:end ((drain alsa-drain))
   (when (pcm drain)
