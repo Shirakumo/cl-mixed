@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
-(defun space (mp3 &key (samples 500) (width 100) (height 50) (speed 0.001))
+(defun space (mp3 &key (samples 500) (width 100) (height 50) (speed 0.001) pitch-shift)
   (let* ((source (mixed:make-unpacker samples :float 2 44100))
          (drain (mixed:make-packer samples :float 2 44100))
          (void (mixed:make-void))
@@ -25,5 +25,6 @@
               for x = (* width (sin tt)) then (+ x dx)
               for z = (* height (cos tt)) then (+ z dz)
               do (setf (mixed:input-field :location 0 space) (list x 0 z))
-                 ;(setf (mixed:input-field :velocity 0 space) (list dx 0 dz))
+                 (when pitch-shift
+                   (setf (mixed:input-field :velocity 0 space) (list dx 0 dz)))
                  (mixed:mix sequence))))))
