@@ -84,7 +84,7 @@
   :u24
   :s32
   :u32
-  :float
+  :float32
   :float64
   :iec958-subframe)
 

@@ -11,7 +11,7 @@
          (drain (mixed:make-packer samples :float 2 44100))
          (void (mixed:make-void))
          (space (mixed:make-space-mixer :samplerate 44100))
-         (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:mpg123-source :file mp3 :pack source))
+         (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file mp3 :pack source))
          (out (make-instance output :pack drain)))
     (mixed:with-buffers samples (li ri lo ro)
       (mixed:connect source :left space 0 li)

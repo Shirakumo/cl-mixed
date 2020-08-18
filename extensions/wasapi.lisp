@@ -13,7 +13,7 @@
    (#:com-cffi #:org.shirakumo.com-on.cffi)
    (#:wasapi #:org.shirakumo.fraf.mixed.wasapi.cffi))
   (:export
-   #:wasapi-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.wasapi)
 
 (defun enumerate-devices ()
@@ -89,19 +89,19 @@
       (cffi:foreign-free label))
     label))
 
-(defclass wasapi-drain (mixed:drain)
+(defclass drain (mixed:drain)
   ((mode :initform :shared :initarg :mode :accessor mode)
    (client :initform NIL :accessor client)
    (render :initform NIL :accessor render)
    (event :initform NIL :accessor event)
    (audio-client-id :initform NIL :initarg :audio-client-id :accessor audio-client-id)))
 
-(defmethod initialize-instance :after ((drain wasapi-drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key)
   (com:init)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (cffi:use-foreign-library wasapi:avrt))
 
-(defmethod mixed:start ((drain wasapi-drain))
+(defmethod mixed:start ((drain drain))
   ;; FIXME: allow picking a device
   ;; FIXME: allow picking shared/exclusive mode
   (let* ((mode (mode drain))
@@ -153,7 +153,7 @@
         (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) to-write)
         (wasapi:i-audio-render-client-release-buffer render to-write 0)))))
 
-(defmethod mixed:end ((drain wasapi-drain))
+(defmethod mixed:end ((drain drain))
   (when (event drain)
     (wasapi:close-handle (event drain))
     (setf (event drain) NIL))

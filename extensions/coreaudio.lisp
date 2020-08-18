@@ -14,7 +14,7 @@
   (:export
    #:coreaudio-error
    #:code
-   #:coreaudio-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.drains.coreaudio)
 
 (define-condition coreaudio-error (error)
@@ -27,10 +27,10 @@
        (when (/= ,error 0)
          (error 'coreaudio-error :code ,error)))))
 
-(defclass coreaudio-drain (mixed:drain)
+(defclass drain (mixed:drain)
   ((audio-unit :initform NIL :accessor audio-unit)))
 
-(defmethod initialize-instance :after ((drain coreaudio-drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (cffi:use-foreign-library coreaudio:audio-unit)
   (cffi:use-foreign-library coreaudio:audio-toolbox))
@@ -100,7 +100,7 @@
   (setf (harmony-coreaudio-cffi:au-render-callback-struct-input-proc-ref-con callback)
         data))
 
-(defmethod mixed:start ((drain coreaudio-drain))
+(defmethod mixed:start ((drain drain))
   (cffi:with-foreign-objects ((description '(:struct harmony-coreaudio-cffi:audio-component-description))
                               (stream '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))
                               (callback '(:struct harmony-coreaudio-cffi:au-render-callback-struct))
@@ -146,7 +146,7 @@
 
 (cffi:defcallback mix :int ((segment :pointer)) 1)
 
-(defmethod end ((drain coreaudio-drain))
+(defmethod end ((drain drain))
   (let ((unit (audio-unit drain)))
     (when unit
       (with-float-traps-masked ()

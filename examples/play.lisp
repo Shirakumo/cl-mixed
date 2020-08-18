@@ -9,7 +9,7 @@
 (defun play (mp3 &key (samples 500) (output 'org.shirakumo.fraf.mixed.out123:drain))
   (let* ((source (mixed:make-unpacker samples :float 2 44100))
          (drain (mixed:make-packer samples :float 2 44100))
-         (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:mpg123-source :file mp3 :pack source))
+         (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file mp3 :pack source))
          (out (make-instance output :pack drain)))
     (mixed:with-buffers samples (l r)
       (mixed:connect source :left drain :left l)

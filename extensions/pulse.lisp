@@ -14,7 +14,7 @@
    #:pulse-error
    #:code
    #:pulse-present-p
-   #:pulse-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.pulse)
 
 (define-condition pulse-error (error)
@@ -29,7 +29,7 @@
 
 (defun pulse-present-p ()
   (handler-case (cffi:use-foreign-library pulse:libpulse)
-    (error () (return-from 'pulse-present-p NIL)))
+    (error () (return-from pulse-present-p NIL)))
   (cffi:with-foreign-object (err :int)
     (let ((drain (pulse:simple-new
                   (cffi:null-pointer) (cffi:null-pointer)
@@ -42,16 +42,15 @@
              (pulse:simple-free drain)
              T)))))
 
-(defclass pulse-drain (mixed:drain)
+(defclass drain (mixed:drain)
   ((simple :initform NIL :accessor simple)
    (server :initform NIL :initarg :server :accessor server)))
 
-(defmethod initialize-instance :after ((drain pulse-drain) &key)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
+(defmethod initialize-instance :after ((drain drain) &key)
   (cffi:use-foreign-library pulse:libpulse)
   (cffi:use-foreign-library pulse:libpulse-simple))
 
-(defmethod mixed:start ((drain pulse-drain))
+(defmethod mixed:start ((drain drain))
   (unless (simple drain)
     (let ((pack (mixed:pack drain)))
       (cffi:with-foreign-object (sample-spec '(:struct pulse:sample-spec))
@@ -61,21 +60,21 @@
         (with-error (error)
           (setf (simple drain) (pulse:simple-new
                                 (or (server drain) (cffi:null-pointer)) (mixed:program-name drain)
-                                :playback (cffi:null-pointer) (program-name drain)
+                                :playback (cffi:null-pointer) (mixed:program-name drain)
                                 sample-spec (cffi:null-pointer) (cffi:null-pointer)
                                 error))
-          (when (cffi:null-pointer-p (simple drain)) -1 1))
+          (if (cffi:null-pointer-p (simple drain)) -1 1))
         (setf (mixed:samplerate pack) (pulse:sample-spec-rate sample-spec))
         (setf (mixed:encoding pack) (pulse:sample-spec-format sample-spec))
         (setf (mixed:channels pack) (pulse:sample-spec-channels sample-spec))))))
 
-(cffi:defcallback mix :int ((segment :pointer))
-  (let ((drain (mixed:pointer->object segment)))
-    (mixed:with-buffer-tx (data start end (mixed:pack drain))
-      (with-error (err)
-        (mixed:finish (pulse:simple-write (simple drain) (mixed:data-ptr) (- end start) err))))))
+(defmethod mixed:mix ((drain drain))
+  (mixed:with-buffer-tx (data start end (mixed:pack drain))
+    (with-error (err)
+      (pulse:simple-write (simple drain) (mixed:data-ptr) (- end start) err))
+    (mixed:finish (- end start))))
 
-(defmethod mixed:end ((drain pulse-drain))
+(defmethod mixed:end ((drain drain))
   (when (simple drain)
     (with-error (err)
       (pulse:simple-drain (simple drain) err))

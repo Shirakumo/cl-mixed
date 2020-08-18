@@ -10,16 +10,16 @@
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi))
   (:export
-   #:wav-source))
+   #:source))
 (in-package #:org.shirakumo.fraf.mixed.wav)
 
-(defclass wav-source (mixed:source)
+(defclass source (mixed:source)
   ((file :initarg :file :accessor file)
    (wav-stream :accessor wav-stream)
    (data-start :accessor data-start)
    (data-end :accessor data-end)))
 
-(defmethod initialize-instance :after ((source wav-source) &key)
+(defmethod initialize-instance :after ((source source) &key)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix)))
 
 (defun evenify (int)
@@ -89,7 +89,7 @@
             (getf data :start)
             (getf data :size))))
 
-(defmethod mixed:start ((source wav-source))
+(defmethod mixed:start ((source source))
   (let ((stream (open (file source) :direction :input
                                     :element-type '(unsigned-byte 8))))
     (multiple-value-bind (channels samplerate encoding start size) (decode-wav-header stream)
@@ -109,13 +109,13 @@
         (mixed:finish read)))
     1))
 
-(defmethod mixed:end ((source wav-source))
+(defmethod mixed:end ((source source))
   (close (file source)))
 
-(defmethod mixed:seek-to-frame ((source wav-source) position)
+(defmethod mixed:seek-to-frame ((source source) position)
   (file-position (wav-stream source)
                  (min (data-end source)
                       (+ (data-start source) (* position (mixed:framesize (mixed:pack source)))))))
 
-(defmethod mixed:frame-count ((source wav-source))
+(defmethod mixed:frame-count ((source source))
   (/ (- (data-end source) (data-start source)) (mixed:framesize (mixed:pack source))))

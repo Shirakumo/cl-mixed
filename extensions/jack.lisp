@@ -14,7 +14,7 @@
    #:jack-error
    #:code
    #:jack-present-p
-   #:jack-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.jack)
 
 (define-condition jack-error (error)
@@ -47,12 +47,12 @@
   (channels :uint8)
   (ports :pointer))
 
-(defclass jack-drain (mixed:virtual)
+(defclass drain (mixed:virtual)
   ((client :initform NIL :accessor client)
    (name :initarg :name :initform "mixed" :accessor name)
    (server :initarg :server :initform "default" :accessor server)))
 
-(defmethod initialize-instance :after ((drain jack-drain) &key channels)
+(defmethod initialize-instance :after ((drain drain) &key channels)
   (cffi:use-foreign-library jack:libjack)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (let ((data (cffi:foreign-alloc :uint8 :count (+ (cffi:foreign-struct-size '(:struct data))
@@ -76,7 +76,7 @@
                (setf (cffi:mem-aref ports :pointer (* 2 i)) port))
       (setf (client drain) client))))
 
-(defmethod (setf mixed:output-field) :after (value (field (eql :buffer)) (location integer) (segment jack-drain))
+(defmethod (setf mixed:output-field) :after (value (field (eql :buffer)) (location integer) (segment drain))
   (let* ((data (mixed-cffi:direct-segment-data (mixed:handle drain)))
          (ports (cffi:foreign-slot-pointer data '(:struct data) 'ports)))
     (setf (cffi:mem-aref ports :pointer (1+ (* 2 i)))
@@ -84,7 +84,7 @@
             (buffer (mixed:handle buffer))
             (null (cffi:null-pointer))))))
 
-(defmethod mixed:start ((drain jack-drain))
+(defmethod mixed:start ((drain drain))
   (if (client drain)
       (jack:activate-client (client drain))
       (error "Client not allocated.")))
@@ -116,6 +116,6 @@
     (setf (client drain) NIL))
   1)
 
-(defmethod mixed:end ((drain jack-drain))
+(defmethod mixed:end ((drain drain))
   (when (client drain)
     (jack:deactivate-client (client drain))))

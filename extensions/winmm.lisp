@@ -13,7 +13,7 @@
   (:export
    #:winmm-error
    #:code
-   #:winmm-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.winmm)
 
 (define-condition winmm-error (error)
@@ -24,16 +24,16 @@
   (unless (eql :ok error)
     (error 'winmm-error :code error)))
 
-(defclass winmm-drain (mixed:drain)
+(defclass drain (mixed:drain)
   ((device :initform NIL :accessor device)
    (event :initform NIL :accessor event)
    (header :initform NIL :accessor header)))
 
-(defmethod initialize-instance :after ((drain winmm-drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (cffi:use-foreign-library winmm:winmm))
 
-(defmethod mixed:start ((drain winmm-drain))
+(defmethod mixed:start ((drain drain))
   (unless (event drain)
     (let ((event (winmm:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
       (if (cffi:null-pointer-p event)
@@ -61,7 +61,7 @@
          (winmm:wave-out-prepare (device drain) (header drain)
                                  (cffi:foreign-type-size '(:struct winmm:wave-header))))))))
 
-(defmethod mixed:mix ((drain winmm-drain))
+(defmethod mixed:mix ((drain drain))
   (let ((device (device drain))
         (header (header drain)))
     (mixed:with-buffer-tx (data start end (mixed:pack drain))
@@ -75,7 +75,7 @@
          (winmm:wave-out-write device header size))
         (mixed:finish size)))))
 
-(defmethod mixed:end ((drain winmm-drain))
+(defmethod mixed:end ((drain drain))
   (when (device drain)
     (winmm:wave-out-reset (device drain))
     (winmm:wave-out-close (device drain))

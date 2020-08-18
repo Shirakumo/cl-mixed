@@ -11,17 +11,17 @@
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi)
    (#:flac #:org.shirakumo.fraf.flac))
   (:export
-   #:flac-source))
+   #:source))
 (in-package #:org.shirakumo.fraf.mixed.flac)
 
-(defclass flac-source (mixed:source)
+(defclass source (mixed:source)
   ((file :accessor file)))
 
-(defmethod initialize-instance :after ((source flac-source) &key file)
+(defmethod initialize-instance :after ((source source) &key file)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix))
   (setf (file source) (cl-flac:make-file file)))
 
-(defmethod mixed:start ((source flac-source))
+(defmethod mixed:start ((source source))
   (setf (mixed:samplerate (mixed:pack source)) (flac:samplerate (file source)))
   (setf (mixed:channels (mixed:pack source)) (flac:channels (file source)))
   (setf (mixed:encoding (mixed:pack source)) :float))
@@ -33,11 +33,11 @@
         (incf (mixed:byte-position source) read)
         (mixed:finish read)))))
 
-(defmethod mixed:end ((source flac-source))
+(defmethod mixed:end ((source source))
   (flac:disconnect (file source)))
 
-(defmethod mixed:seek-to-frame ((source flac-source) position)
+(defmethod mixed:seek-to-frame ((source source) position)
   (cl-flac:seek (file source) position))
 
-(defmethod mixed:frame-count ((source flac-source))
+(defmethod mixed:frame-count ((source source))
   (cl-flac:frame-count (file source)))

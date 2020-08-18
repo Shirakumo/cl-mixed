@@ -11,14 +11,14 @@
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi)
    (#:oss #:org.shirakumo.fraf.mixed.oss.cffi))
   (:export
-   #:oss-drain))
+   #:drain))
 (in-package #:org.shirakumo.fraf.mixed.oss)
 
-(defclass oss-drain (mixed:drain)
+(defclass drain (mixed:drain)
   ((device :initform "/dev/dsp" :initarg :device :accessor device)
    (fd :initform NIL :accessor fd)))
 
-(defmethod initialize-instance :after ((drain oss-drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix)))
 
 (defun ioctl (fd ctl parameter)
@@ -29,7 +29,7 @@
         (error "ioctl failed."))
       (cffi:mem-ref param :int))))
 
-(defmethod mixed:start ((drain oss-drain))
+(defmethod mixed:start ((drain drain))
   (unless (fd drain)
     (let ((pack (mixed:pack drain))
           (fd (oss:fd-open (device drain) :write-only :int 0)))
@@ -50,7 +50,7 @@
           (error "Failed to write."))
         (mixed:finish result)))))
 
-(defmethod mixed:end ((drain oss-drain))
+(defmethod mixed:end ((drain drain))
   (when (fd drain)
     (oss:fd-close (fd drain))
     (setf (fd drain) NIL)))
