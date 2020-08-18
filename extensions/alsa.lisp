@@ -36,14 +36,33 @@
 
 (defmethod mixed:start ((drain alsa-drain))
   (unless (pcm drain)
-    (cffi:with-foreign-object (pcm :pointer)
+    (cffi:with-foreign-objects ((pcm :pointer)
+                                (params :uint8 (alsa:pcm-hw-params-size))
+                                (format 'alsa:pcm-format)
+                                (channels :uint)
+                                (rate :uint)
+                                (dir :int))
       (with-error ()
         (alsa:pcm-open pcm "default" :playback 0))
-      (let ((pcm (cffi:mem-ref pcm :pointer)))
+      (let ((pcm (cffi:mem-ref pcm :pointer))
+            (pack (mixed:pack drain)))
         (with-error ()
-          (alsa:pcm-set-params pcm :float-le :rw-interleaved 2
-                                            (mixed:target-samplerate drain)
-                                            1 10000)) ;; 1ms
+          (alsa:pcm-set-params pcm :float :rw-interleaved
+                               (mixed:channels pack)
+                               (mixed:target-samplerate drain)
+                               1 1000))
+        ;; Extract actual parameters now.
+        (with-error ()
+          (alsa:pcm-hw-params-current pcm params))
+        (with-error ()
+          (alsa:pcm-hw-params-get-format params format))
+        (with-error ()
+          (alsa:pcm-hw-params-get-channels params channels))
+        (with-error ()
+          (alsa:pcm-hw-params-get-rate params rate dir))
+        (setf (mixed:format pack) (cffi:mem-ref format 'alsa:pcm-format))
+        (setf (mixed:channels pack) (cffi:mem-ref channels :uint))
+        (setf (mixed:samplerate pack) (cffi:mem-ref rate :uint))
         (setf (pcm drain) pcm)))))
 
 (cffi:defcallback mix :int ((segment :pointer))

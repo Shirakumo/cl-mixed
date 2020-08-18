@@ -6,7 +6,7 @@
 
 (in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.alsa.cffi
-  (:use #:cl #:cffi)
+  (:use #:cl)
   (:export
    #:libasound
    #:pcm-stream
@@ -14,6 +14,11 @@
    #:pcm-access
    #:pcm-open
    #:pcm-set-params
+   #:pcm-hw-params-size
+   #:pcm-hw-params-current
+   #:pcm-hw-params-get-channels
+   #:pcm-hw-params-get-format
+   #:pcm-hw-params-get-rate
    #:pcm-writei
    #:pcm-recover
    #:pcm-pause
@@ -23,36 +28,36 @@
    #:strerror))
 (in-package #:org.shirakumo.fraf.mixed.alsa.cffi)
 
-(define-foreign-library libasound
+(cffi:define-foreign-library libasound
   (:unix (:or "libasound.so.2.0.0" "libasound.so.2" "libasound.so"))
   (T (:or (:default "libasound") (:default "asound"))))
 
-(defctype size_t #+x86-64 :uint64 #+x86 :uint32)
+(cffi:defctype size_t #+x86-64 :uint64 #+x86 :uint32)
 
-(defcenum pcm-stream
+(cffi:defcenum pcm-stream
   :playback
   :capture)
 
-(defcenum pcm-format
+(cffi:defcenum pcm-format
   (:unknown -1)
-  :s8
-  :u8
-  :s16-le
-  :s16-be
-  :u16-le
-  :u16-be
-  :s24-le
-  :s24-be
-  :u24-le
-  :u24-be
-  :s32-le
-  :s32-be
-  :u32-le
-  :u32-be
-  :float-le
+  :int8
+  :uint8
+  :int16
+  :int16-be
+  :uint16
+  :uint16-be
+  :int24
+  :int24-be
+  :uint24
+  :uint24-be
+  :int32
+  :int32-be
+  :uint32
+  :uint32-be
+  :float
   :float-be
-  :float64-le
-  :float64-be
+  :double
+  :double-be
   :iec958-subframe-le
   :iec958-subframe-be
   :mu-law
@@ -83,20 +88,20 @@
   :float64
   :iec958-subframe)
 
-(defcenum pcm-access
+(cffi:defcenum pcm-access
   :mmap-interleaved
   :mmap-noninterleaved
   :mmap-complex
   :rw-interleaved
   :rw-noninterleaved)
 
-(defcfun (pcm-open "snd_pcm_open") :int
+(cffi:defcfun (pcm-open "snd_pcm_open") :int
   (pcm :pointer)
   (name :string)
   (stream pcm-stream)
   (mode :int))
 
-(defcfun (pcm-set-params "snd_pcm_set_params") :int
+(cffi:defcfun (pcm-set-params "snd_pcm_set_params") :int
   (pcm :pointer)
   (format pcm-format)
   (access pcm-access)
@@ -105,28 +110,47 @@
   (soft-resample :int)
   (latency :uint))
 
-(defcfun (pcm-writei "snd_pcm_writei") :long
+(cffi:defcfun (pcm-hw-params-size "snd_pcm_hw_params_sizeof") size_t)
+
+(cffi:defcfun (pcm-hw-params-current "snd_pcm_hw_params_current") :int
+  (pcm :pointer)
+  (params :pointer))
+
+(cffi:defcfun (pcm-hw-params-get-format "snd_pcm_hw_params_get_format") :int
+  (params :pointer)
+  (format :pointer))
+
+(cffi:defcfun (pcm-hw-params-get-channels "snd_pcm_hw_params_get_channels") :int
+  (params :pointer)
+  (channels :pointer))
+
+(cffi:defcfun (pcm-hw-params-get-rate "snd_pcm_hw_params_get_rate") :int
+  (params :pointer)
+  (rate :pointer)
+  (dir :pointer))
+
+(cffi:defcfun (pcm-writei "snd_pcm_writei") :long
   (pcm :pointer)
   (buffer :pointer)
   (frames :ulong))
 
-(defcfun (pcm-recover "snd_pcm_recover") :int
+(cffi:defcfun (pcm-recover "snd_pcm_recover") :int
   (pcm :pointer)
   (err :int)
   (silent :int))
 
-(defcfun (pcm-pause "snd_pcm_pause") :int
+(cffi:defcfun (pcm-pause "snd_pcm_pause") :int
   (pcm :pointer)
   (enable :int))
 
-(defcfun (pcm-drop "snd_pcm_drop") :int
+(cffi:defcfun (pcm-drop "snd_pcm_drop") :int
   (pcm :pointer))
 
-(defcfun (pcm-drain "snd_pcm_drain") :int
+(cffi:defcfun (pcm-drain "snd_pcm_drain") :int
   (pcm :pointer))
 
-(defcfun (pcm-close "snd_pcm_close") :int
+(cffi:defcfun (pcm-close "snd_pcm_close") :int
   (pcm :pointer))
 
-(defcfun (strerror "snd_strerror") :string
+(cffi:defcfun (strerror "snd_strerror") :string
   (error :int))
