@@ -56,9 +56,8 @@
     (mixed:segment-sequence-start (handle sequence))))
 
 (defmethod mix ((sequence segment-sequence))
-  (mixed:segment-sequence-mix (handle sequence))
-  (unless (eql :no-error (mixed:error))
-    (error 'mixed-error)))
+  (with-error-on-failure ()
+    (mixed:segment-sequence-mix (handle sequence))))
 
 (defmethod end ((sequence segment-sequence))
   (with-error-on-failure ()
