@@ -79,9 +79,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defun request-read (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
-  (let ((buffer (handle buffer)))
-    (values (mixed:buffer-r1-start buffer)
-            (min size (mixed:buffer-r1-size buffer)))))
+  (let* ((buffer (handle buffer))
+         (start (mixed:buffer-r1-start buffer)))
+    (values start
+            (+ start (min size (mixed:buffer-r1-size buffer))))))
 
 (defun finish-read (buffer size)
   (declare (optimize speed))
