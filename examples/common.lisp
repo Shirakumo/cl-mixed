@@ -10,7 +10,8 @@
   `(let ((,name (mixed:make-segment-sequence ,@segments)))
      (mixed:start ,name)
      (unwind-protect
-          (flet ((mixed:mix (&optional (,name ,name))
-                   (mixed:mix ,name)))
-            ,@body)
+          (with-simple-restart (abort "Abort playback.")
+            (flet ((mixed:mix (&optional (,name ,name))
+                     (mixed:mix ,name)))
+              ,@body))
        (mixed:end ,name))))

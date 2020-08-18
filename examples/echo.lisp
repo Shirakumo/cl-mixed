@@ -48,11 +48,11 @@
         :outputs 1
         :fields ()))
 
-(defun echo (mp3 &key (samples 500) (delay 0.2) (falloff 0.5) (samplerate 44100))
+(defun echo (mp3 &key (samples 500) (delay 0.2) (falloff 0.5) (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain))
   (let* ((source (mixed:make-unpacker samples :float 2 samplerate))
          (drain (mixed:make-packer samples :float 2 samplerate))
          (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:mpg123-source :file mp3 :pack source))
-         (out (make-instance 'org.shirakumo.fraf.mixed.out123:out123-drain :pack drain))
+         (out (make-instance output :pack drain))
          (echo-l (make-instance 'echo :samplerate samplerate :falloff falloff :delay delay))
          (echo-r (make-instance 'echo :samplerate samplerate :falloff falloff :delay delay)))
     (mixed:with-buffers samples (li ri lo ro)
