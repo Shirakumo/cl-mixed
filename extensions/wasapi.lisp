@@ -98,7 +98,6 @@
 
 (defmethod initialize-instance :after ((drain drain) &key)
   (com:init)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (cffi:use-foreign-library wasapi:avrt))
 
 (defmethod mixed:start ((drain drain))
@@ -107,26 +106,25 @@
   (let* ((mode (mode drain))
          (pack (mixed:pack drain))
          ;; Attempt to get a buffer as large as our internal ones.
-         (buffer-duration (seconds->reference-time (/ (mixed:size pack)
-                                                      (mixed:framesize pack)
-                                                      (mixed:samplerate pack))))
+         (buffer-duration (seconds->reference-time (/ (mixed:size pack) (mixed:framesize pack) (mixed:samplerate pack))))
          (client (find-audio-client (audio-client-id drain)))
          (format (mix-format client)))
     (unwind-protect
-         (multiple-value-bind (ok samplerate channels sample-format) (format-supported-p client (mixed:samplerate pack) (mixed:channels pack) :float)
+         (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) (mixed:channels pack) :float)
            (declare (ignore ok))
            (setf (client drain) client)
            (setf (mixed:channels pack) channels)
            (setf (mixed:samplerate pack) samplerate)
-           (setf (mixed:encoding pack) sample-format)))
+           (setf (mixed:encoding pack) encoding)))
     ;; Initialise the rest
     (unless (render drain)
       (com:check-hresult
        (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
                                          buffer-duration (ecase mode (:shared 0) (:exclusive buffer-duration))
                                          format (cffi:null-pointer)))
-      (setf (event drain) (com:check-last-error
-                              (not (cffi:null-pointer-p (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))))
+      (let ((event (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
+        (com:check-last-error (not (cffi:null-pointer-p event)))
+        (setf (event drain) event))
       (com:check-hresult
         (wasapi:i-audio-client-set-event-handle client (event drain)))
       (when (mixed:program-name drain)
@@ -138,20 +136,23 @@
       (com:check-hresult
         (wasapi:i-audio-client-start client)))))
 
-(cffi:defcallback mix :int ((segment :pointer))
-  (let* ((drain (mixed:pointer->object segment))
-         (render (render drain))
+(defmethod mixed:mix ((drain drain))
+  (let* ((render (render drain))
          (client (client drain))
-         (buffer-size (- (com:with-deref (frames :uint32)
-                           (wasapi:i-audio-client-get-buffer-size client frames))
-                         (com:with-deref (frames :uint32)
-                           (wasapi:i-audio-client-get-current-padding client frames)))))
+         (framesize (mixed:framesize (mixed:pack drain)))
+         (buffer-size (* framesize
+                         (- (com:with-deref (frames :uint32)
+                              (wasapi:i-audio-client-get-buffer-size client frames))
+                            (com:with-deref (frames :uint32)
+                              (wasapi:i-audio-client-get-current-padding client frames))))))
     (mixed:with-buffer-tx (data start size (mixed:pack drain))
-      (let* ((to-write (min buffer-size size))
+      (let* ((size (min buffer-size size))
+             (frames (/ size framesize))
              (buffer (com:with-deref (target :pointer)
-                       (wasapi:i-audio-render-client-get-buffer render to-write target))))
-        (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) to-write)
-        (wasapi:i-audio-render-client-release-buffer render to-write 0)))))
+                       (wasapi:i-audio-render-client-get-buffer render frames target))))
+        (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) size)
+        (wasapi:i-audio-render-client-release-buffer render frames 0)
+        (mixed:finish size)))))
 
 (defmethod mixed:end ((drain drain))
   (when (event drain)
