@@ -97,7 +97,10 @@
   (:write-error      17)
   (:delete-error     18)
   (:value-not-found  19)
-  (:no-driver-cb     20))
+  (:no-driver-cb     20)
+  (:bad-format       32)
+  (:still-playing    33)
+  (:unprepared       34))
 
 (cffi:defcenum (wait-result dword)
   (:abandoned #x00000080)
@@ -196,12 +199,11 @@
     (T (cffi:foreign-bitfield-value 'channel-mask '()))))
 
 (defun encode-wave-format (ptr samplerate channels format)
+  ;; Bittage of more than 16 is not officially supported, and apparently
+  ;; does not work on all targets. TOO BAD!
   (let ((bit-depth (ecase format
-                     ((:int64) 64)
-                     ((:int32) 32)
-                     ((:int24) 32)
-                     ((:int16) 16)
-                     ((:uint8) 8))))
+                     (:int16 16)
+                     (:uint8 8))))
     (setf (waveformat-ex-format-tag ptr) WAVE-FORMAT-PCM)
     (setf (waveformat-ex-size ptr) 22)
     (setf (waveformat-ex-channels ptr) channels)
@@ -214,4 +216,9 @@
 (defun decode-wave-format (ptr)
   (values (waveformat-ex-samples-per-sec ptr)
           (waveformat-ex-channels ptr) 
-          (waveformat-ex-bits-per-sample ptr)))
+          (ecase (waveformat-ex-bits-per-sample ptr)
+            (64 :int64)
+            (32 :int32)
+            (24 :int24)
+            (16 :int16)
+            (8 :uint8))))
