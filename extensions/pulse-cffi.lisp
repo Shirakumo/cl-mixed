@@ -6,7 +6,7 @@
 
 (in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.pulse.cffi
-  (:use #:cl #:cffi)
+  (:use #:cl)
   (:export
    #:libpulse
    #:libpulse-simple
@@ -34,17 +34,17 @@
    #:simple-free))
 (in-package #:org.shirakumo.fraf.mixed.pulse.cffi)
 
-(define-foreign-library libpulse
+(cffi:define-foreign-library libpulse
     (t (:default "libpulse")))
 
-(define-foreign-library libpulse-simple
+(cffi:define-foreign-library libpulse-simple
     (t (:default "libpulse-simple")))
 
 (defconstant +channels-max+ 32)
 
-(defctype size_t #+x86-64 :uint64 #+x86 :uint32)
+(cffi:defctype size_t #+x86-64 :uint64 #+x86 :uint32)
 
-(defcenum sample-format
+(cffi:defcenum sample-format
   :u8
   :alaw
   :ulaw
@@ -61,13 +61,13 @@
   :max
   :invalid)
 
-(defcenum stream-direction
+(cffi:defcenum stream-direction
   :no-direction
   :playback
   :record
   :upload)
 
-(defcenum channel-position
+(cffi:defcenum channel-position
   :invalid
   :mono
   :front-left
@@ -122,26 +122,37 @@
   :top-rear-center
   :max)
 
-(defcstruct (channel-map :class channel-map :conc-name channel-map-)
-    (channels :uint8)
+(cffi:defcenum context-flags
+  (:no-flags)
+  (:no-auto-spawn)
+  (:no-fail))
+
+(cffi:defcstruct (channel-map :class channel-map :conc-name channel-map-)
+  (channels :uint8)
   (map channel-position :count #.+channels-max+))
 
-(defcstruct (sample-spec :class sample-spec :conc-name sample-spec-)
+(cffi:defcstruct (sample-spec :class sample-spec :conc-name sample-spec-)
     (format sample-format)
   (rate :uint32)
   (channels :uint8))
 
-(defcstruct (buffer-attr :class buffer-attr :conc-name buffer-attr-)
+(cffi:defcstruct (buffer-attr :class buffer-attr :conc-name buffer-attr-)
     (maxlength :uint32)
   (length :uint32)
   (prebuf :uint32)
   (minreq :uint32)
   (fragsize :uint32))
 
-(defcfun (strerror "pa_strerror") :string
+(cffi:defcfun (connect "pa_context_connect") :int
+  (context :pointer)
+  (server :string)
+  (flags context-flags)
+  (api :pointer))
+
+(cffi:defcfun (strerror "pa_strerror") :string
   (error :int))
 
-(defcfun (simple-new "pa_simple_new") :pointer
+(cffi:defcfun (simple-new "pa_simple_new") :pointer
   (server :string)
   (name :string)
   (direction stream-direction)
@@ -152,19 +163,19 @@
   (buffer-attributes :pointer)
   (error :pointer))
 
-(defcfun (simple-write "pa_simple_write") :int
+(cffi:defcfun (simple-write "pa_simple_write") :int
   (simple :pointer)
   (data :pointer)
   (bytes size_t)
   (error :pointer))
 
-(defcfun (simple-drain "pa_simple_drain") :int
+(cffi:defcfun (simple-drain "pa_simple_drain") :int
   (simple :pointer)
   (error :pointer))
 
-(defcfun (simple-flush "pa_simple_flush") :int
+(cffi:defcfun (simple-flush "pa_simple_flush") :int
   (simple :pointer)
   (error :pointer))
 
-(defcfun (simple-free "pa_simple_free") :void
+(cffi:defcfun (simple-free "pa_simple_free") :void
   (simple :pointer))

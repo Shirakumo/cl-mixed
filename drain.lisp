@@ -7,8 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass drain (virtual)
-  ((target-samplerate :initform 48000 :initarg :target-samplerate :accessor target-samplerate)
-   (program-name :initform "Mixed" :initarg :program-name :accessor program-name)
+  ((program-name :initform "Mixed" :initarg :program-name :accessor program-name)
    (pack :initform NIL :reader pack)))
 
 (defmethod initialize-instance :after ((drain drain) &key pack)

@@ -13,6 +13,7 @@
   (:export
    #:jack-error
    #:code
+   #:jack-present-p
    #:jack-drain))
 (in-package #:org.shirakumo.fraf.mixed.jack)
 
@@ -26,6 +27,20 @@
     `(let ((,error (progn ,@body)))
        (when (< ,error 0)
          (error 'jack-error :code ,error)))))
+
+(defun jack-present-p ()
+  (handler-case (cffi:use-foreign-library jack:libjack)
+    (error () (return-from 'jack-present-p NIL)))
+  (cffi:with-foreign-object (status 'jack:status)
+    (let* ((client (jack:open-client "mixed-server-probe" '(:no-start-server) status :int 0))
+           (status (cffi:mem-ref status 'jack:status)))
+      (cond ((eql :ok status)
+             (jack:close-client client)
+             T)
+            (T
+             NIL)))))
+
+;; FIXME: close client on FREE
 
 (cffi:defcstruct (data :conc-name data-)
   (handle :pointer)

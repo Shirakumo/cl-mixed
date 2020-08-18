@@ -21,10 +21,12 @@
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix)))
 
 (defmethod mixed:start ((drain out123-drain))
-  (out123:connect (out drain))
-  (out123:start (out drain) :rate (mixed:target-samplerate drain) :channels 2 :encoding :float)
-  (setf (mixed:samplerate (mixed:pack drain)) (out123:rate (out drain)))
-  (setf (mixed:encoding (mixed:pack drain)) (out123:encoding (out drain))))
+  (let ((pack (mixed:pack drain)))
+    (out123:connect (out drain))
+    (out123:start (out drain) :rate (mixed:samplerate pack) :channels (mixed:channels pack) :encoding :float)
+    (setf (mixed:samplerate pack) (out123:rate (out drain)))
+    (setf (mixed:encoding pack) (out123:encoding (out drain)))
+    (setf (mixed:channels pack) (out123:channels (out drain)))))
 
 (cffi:defcallback mix :int ((segment :pointer))
   (let ((drain (mixed:pointer->object segment)))

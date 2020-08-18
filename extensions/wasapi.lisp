@@ -109,11 +109,11 @@
          ;; Attempt to get a buffer as large as our internal ones.
          (buffer-duration (seconds->reference-time (/ (mixed:size pack)
                                                       (mixed:framesize pack)
-                                                      (mixed:target-samplerate drain))))
+                                                      (mixed:samplerate pack))))
          (client (find-audio-client (audio-client-id drain)))
          (format (mix-format client)))
     (unwind-protect
-         (multiple-value-bind (ok samplerate channels sample-format) (format-supported-p client (mixed:target-samplerate drain) 2 :float)
+         (multiple-value-bind (ok samplerate channels sample-format) (format-supported-p client (mixed:samplerate pack) (mixed:channels pack) :float)
            (declare (ignore ok))
            (setf (client drain) client)
            (setf (mixed:channels pack) channels)

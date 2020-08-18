@@ -49,7 +49,7 @@
         (with-error ()
           (alsa:pcm-set-params pcm :float :rw-interleaved
                                (mixed:channels pack)
-                               (mixed:target-samplerate drain)
+                               (mixed:samplerate pack)
                                1 1000))
         ;; Extract actual parameters now.
         (with-error ()

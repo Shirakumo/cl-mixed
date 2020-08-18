@@ -105,43 +105,44 @@
                               (stream '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))
                               (callback '(:struct harmony-coreaudio-cffi:au-render-callback-struct))
                               (unit 'harmony-coreaudio-cffi:audio-unit))
-    (setf (mixed:samplerate (mixed:pack drain)) (mixed:target-samplerate drain))
-    (setf (mixed:encoding (mixed:pack drain)) :float)
-    ;; Prepare needed information
-    (create-component-description description)
-    (create-stream-description stream (mixed:target-samplerate drain) (mixed:channels (mixed:pack drain)))
-    (create-callback-description callback (mixed:handle drain))
-    ;; Search for device
-    (let ((component (harmony-coreaudio-cffi:audio-component-find-next (cffi:null-pointer) description)))
-      (when (cffi:null-pointer-p component)
-        (error "No component found."))
-      (with-error ()
-        (harmony-coreaudio-cffi:audio-component-instance-new component unit))
-      (let ((unit (cffi:mem-ref unit :pointer)))
-        ;; Set unit properties
+    (let ((pack (mixed:pack drain)))
+      (setf (mixed:encoding pack) :float)
+      ;; Prepare needed information
+      (create-component-description description)
+      (create-stream-description stream (mixed:samplerate pack) (mixed:channels pack))
+      (create-callback-description callback (mixed:handle drain))
+      ;; Search for device
+      (let ((component (harmony-coreaudio-cffi:audio-component-find-next (cffi:null-pointer) description)))
+        (when (cffi:null-pointer-p component)
+          (error "No component found."))
         (with-error ()
-          (harmony-coreaudio-cffi:audio-unit-set-property
-           unit
-           harmony-coreaudio-cffi:kAudioUnitProperty_SetRenderCallback
-           harmony-coreaudio-cffi:kAudioUnitScope_Input
-           0
-           callback
-           (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:au-render-callback-struct))))
-        (with-error ()
-          (harmony-coreaudio-cffi:audio-unit-set-property
-           unit
-           harmony-coreaudio-cffi:kAudioUnitProperty_StreamFormat
-           harmony-coreaudio-cffi:kAudioUnitScope_Input
-           0
-           stream
-           (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))))
-        ;; Fire it up!
-        (float-features:with-float-traps-masked ()
+          (harmony-coreaudio-cffi:audio-component-instance-new component unit))
+        (let ((unit (cffi:mem-ref unit :pointer)))
+          ;; Set unit properties
           (with-error ()
-            (harmony-coreaudio-cffi:audio-unit-initialize unit))
+            (harmony-coreaudio-cffi:audio-unit-set-property
+             unit
+             harmony-coreaudio-cffi:kAudioUnitProperty_SetRenderCallback
+             harmony-coreaudio-cffi:kAudioUnitScope_Input
+             0
+             callback
+             (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:au-render-callback-struct))))
           (with-error ()
-            (harmony-coreaudio-cffi:audio-output-unit-start unit)))
-        (setf (audio-unit drain) unit)))))
+            (harmony-coreaudio-cffi:audio-unit-set-property
+             unit
+             harmony-coreaudio-cffi:kAudioUnitProperty_StreamFormat
+             harmony-coreaudio-cffi:kAudioUnitScope_Input
+             0
+             stream
+             (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))))
+          ;; FIXME: check for actual properties selected and propagate to pack?
+          ;; Fire it up!
+          (float-features:with-float-traps-masked ()
+            (with-error ()
+              (harmony-coreaudio-cffi:audio-unit-initialize unit))
+            (with-error ()
+              (harmony-coreaudio-cffi:audio-output-unit-start unit)))
+          (setf (audio-unit drain) unit))))))
 
 (cffi:defcallback mix :int ((segment :pointer)) 1)
 

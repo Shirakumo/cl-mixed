@@ -33,6 +33,7 @@
 (defvar DEFAULT-AUDIO-TYPE "32 bit float mono audio")
 
 (cffi:defbitfield status
+  (:ok #x00)
   (:failure #x01)
   (:invalid-option #x02)
   (:name-not-unique #x04)

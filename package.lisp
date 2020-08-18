@@ -198,7 +198,6 @@
   ;; drain.lisp
   (:export
    #:drain
-   #:target-samplerate
    #:program-name
    #:pack)
   ;; mixer.lisp
