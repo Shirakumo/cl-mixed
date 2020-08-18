@@ -82,12 +82,8 @@
 (define-std-callback virtual-start ((segment :pointer))
   (start (pointer->object segment)))
 
-(define-callback virtual-mix :int ((segment :pointer))
-    0
-  (declare (optimize speed))
-  (if (mix (pointer->object segment))
-      1
-      0))
+(define-std-callback virtual-mix ((segment :pointer))
+  (mix (pointer->object segment)))
 
 (define-std-callback virtual-end ((segment :pointer))
   (end (pointer->object segment)))

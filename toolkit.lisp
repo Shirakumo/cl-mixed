@@ -45,10 +45,25 @@
   (let ((err (gensym "ERROR")))
     `(cffi:defcallback ,name ,return ,args
        (handler-case
-           (locally
-             ,@body)
+           (loop
+              (restart-case
+                  (handler-bind ((error #'invoke-debugger))
+                    (return
+                      (locally
+                          ,@body)))
+                (abort (&optional e)
+                  :report "Abort the callback and report an error."
+                  (declare (ignore e))
+                  (return ,error-return))
+                (continue (&optional e)
+                  :report "Abort the callback and ignore the error."
+                  (declare (ignore e))
+                  (return 1))
+                (retry (&optional e)
+                  :report "Retry the callback."
+                  (declare (ignore e)))))
          (error (,err)
-           (format T "Error in ~a callback: ~a" ',name ,err)
+           (format T "~&Error in ~a callback: ~a~%" ',name ,err)
            ,error-return)))))
 
 (defmacro define-std-callback (name args &body body)
