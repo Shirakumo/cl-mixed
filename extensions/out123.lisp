@@ -30,8 +30,8 @@
 
 (cffi:defcallback mix :int ((segment :pointer))
   (let ((drain (mixed:pointer->object segment)))
-    (mixed:with-buffer-tx (data start end (mixed:pack drain))
-      (mixed:finish (out123:play-directly (out drain) (mixed:data-ptr) (- end start))))
+    (mixed:with-buffer-tx (data start size (mixed:pack drain))
+      (mixed:finish (out123:play-directly (out drain) (mixed:data-ptr) size)))
     1))
 
 (defmethod mixed:end ((drain drain))

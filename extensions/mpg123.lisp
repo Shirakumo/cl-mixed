@@ -30,8 +30,8 @@
 
 (cffi:defcallback mix :int ((segment :pointer))
   (let ((source (mixed:pointer->object segment)))
-    (mixed:with-buffer-tx (data start end (mixed:pack source) :direction :output)
-      (let ((read (mpg123:read-directly (file source) (mixed:data-ptr) (- end start))))
+    (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
+      (let ((read (mpg123:read-directly (file source) (mixed:data-ptr) size)))
         (incf (mixed:byte-position source) read)
         (mixed:finish read)))
     1))

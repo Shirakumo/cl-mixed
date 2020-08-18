@@ -69,10 +69,10 @@
         (setf (mixed:channels pack) (pulse:sample-spec-channels sample-spec))))))
 
 (defmethod mixed:mix ((drain drain))
-  (mixed:with-buffer-tx (data start end (mixed:pack drain))
+  (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (with-error (err)
-      (pulse:simple-write (simple drain) (mixed:data-ptr) (- end start) err))
-    (mixed:finish (- end start))))
+      (pulse:simple-write (simple drain) (mixed:data-ptr) size err))
+    (mixed:finish size)))
 
 (defmethod mixed:end ((drain drain))
   (when (simple drain)

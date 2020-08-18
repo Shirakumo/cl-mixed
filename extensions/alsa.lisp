@@ -64,9 +64,9 @@
         (setf (pcm drain) pcm)))))
 
 (defmethod mixed:mix ((drain drain))
-  (mixed:with-buffer-tx (data start end (mixed:pack drain))
+  (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (let* ((framesize (mixed:framesize (mixed:pack drain)))
-           (played (alsa:pcm-writei (pcm drain) (mixed:data-ptr) (/ (- end start) framesize))))
+           (played (alsa:pcm-writei (pcm drain) (mixed:data-ptr) (/ size framesize))))
       (if (< played 0)
           (check-result
            (alsa:pcm-recover (pcm drain) played 0))

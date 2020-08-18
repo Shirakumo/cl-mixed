@@ -44,8 +44,8 @@
 
 (cffi:defcallback mix :int ((segment :pointer))
   (let ((drain (mixed:pointer->object segment)))
-    (mixed:with-buffer-tx (data start end (mixed:pack drain))
-      (let ((result (oss:fd-write (fd drain) (mixed:data-ptr) (- start end))))
+    (mixed:with-buffer-tx (data start size (mixed:pack drain))
+      (let ((result (oss:fd-write (fd drain) (mixed:data-ptr) size)))
         (when (< result 0)
           (error "Failed to write."))
         (mixed:finish result)))))

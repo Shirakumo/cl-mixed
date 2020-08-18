@@ -58,9 +58,9 @@
            (buffer (cffi:foreign-slot-pointer io-data
                                               '(:struct mixed-coreaudio-cffi:audio-buffer-list)
                                               'harmony-coreaudio-cffi::buffers)))
-      (mixed:with-buffer-tx ((data start end pack :size bytes))
-        (memcpy (harmony-coreaudio-cffi:audio-buffer-data buffer) (mixed:data-ptr) (- start end))
-        (mixed:finish (- start end)))))
+      (mixed:with-buffer-tx ((data start size pack :size bytes))
+        (memcpy (harmony-coreaudio-cffi:audio-buffer-data buffer) (mixed:data-ptr) size)
+        (mixed:finish size))))
   harmony-coreaudio-cffi:no-err)
 
 (defun create-component-description (description)
