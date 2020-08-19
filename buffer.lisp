@@ -24,14 +24,11 @@
 (defmethod allocate-handle ((buffer buffer))
   (calloc '(:struct mixed:buffer)))
 
-(defmethod free-handle ((buffer buffer) handle)
-  (let ((data (unless (mixed:buffer-virtual-p handle)
-                (data buffer))))
-    (lambda ()
-      (when data 
-        (static-vectors:free-static-vector data))
-      (cffi:foreign-free handle)
-      (setf (pointer->object handle) NIL))))
+(defmethod free ((buffer buffer))
+  (unless (mixed:buffer-virtual-p (handle buffer))
+    (when (slot-boundp buffer 'data)
+      (static-vectors:free-static-vector (data buffer))
+      (slot-makunbound buffer 'data))))
 
 (defmethod clear ((buffer buffer))
   (mixed:clear-buffer (handle buffer)))
@@ -49,8 +46,6 @@
       (setf (slot-value buffer 'data) new)
       (setf (mixed:buffer-data (handle buffer)) (static-vectors:static-vector-pointer new))
       (setf (mixed:buffer-size (handle buffer)) (length new))
-      (tg:cancel-finalization buffer)
-      (tg:finalize buffer (free-handle buffer (handle buffer)))
       (static-vectors:free-static-vector old)))
   size)
 

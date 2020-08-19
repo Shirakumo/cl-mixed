@@ -53,5 +53,4 @@
                :static-vectors
                :cffi
                :trivial-features
-               :trivial-garbage
                :documentation-utils))

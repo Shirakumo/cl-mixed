@@ -33,11 +33,9 @@
 (defmethod allocate-handle ((sequence segment-sequence))
   (calloc '(:struct mixed:segment-sequence)))
 
-(defmethod free-handle ((sequence segment-sequence) handle)
-  (lambda ()
-    (mixed:free-segment-sequence handle)
-    (cffi:foreign-free handle)
-    (setf (pointer->object handle) NIL)))
+(defmethod free ((sequence segment-sequence))
+  (when (handle sequence)
+    (mixed:free-segment-sequence (handle sequence))))
 
 (defmethod add ((segment segment) (sequence segment-sequence))
   (with-error-on-failure ()

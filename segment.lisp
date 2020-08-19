@@ -89,11 +89,9 @@
 (defmethod allocate-handle ((segment segment))
   (calloc '(:struct mixed:segment)))
 
-(defmethod free-handle ((segment segment) handle)
-  (lambda ()
-    (mixed:free-segment handle)
-    (cffi:foreign-free handle)
-    (setf (pointer->object handle) NIL)))
+(defmethod free ((segment segment))
+  (when (handle segment)
+    (mixed:free-segment (handle segment))))
 
 (defmethod (setf input-field) (value field location segment)
   (etypecase value

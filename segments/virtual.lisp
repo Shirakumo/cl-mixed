@@ -23,10 +23,7 @@
     (setf (mixed:direct-segment-set handle) (cffi:callback virtual-set))
     (setf (mixed:direct-segment-get handle) (cffi:callback virtual-get))))
 
-(defmethod free-handle ((virtual virtual) handle)
-  (lambda ()
-    (cffi:foreign-free handle)
-    (setf (pointer->object handle) NIL)))
+(defmethod free ((virtual virtual)))
 
 (defmethod info ((virtual virtual)))
 (defmethod start ((virtual virtual)))

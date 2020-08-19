@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defvar *c-object-table* (tg:make-weak-hash-table :test 'eql :weakness :value))
+(defvar *c-object-table* (make-hash-table :test 'eql :weakness :value))
 
 (defmethod handle (thing)
   (etypecase thing
@@ -26,15 +26,16 @@
   (if handle
       (call-next-method)
       (with-cleanup-on-failure (free object)
-        (call-next-method)
-        (tg:finalize object (free-handle object (handle object))))))
+        (call-next-method))))
 
 (defmethod free ((object c-object))
-  (let ((handle (when (slot-boundp object 'handle) (handle object))))
-    (when handle
-      (tg:cancel-finalization object)
-      (setf (handle object) NIL)
-      (funcall (free-handle object handle)))))
+  (error "Don't know how to free ~s" object))
+
+(defmethod free :after ((object c-object))
+  (when (handle object)
+    (setf (pointer->object (handle object)) NIL)
+    (cffi:foreign-free (handle object))
+    (setf (handle object) NIL)))
 
 (defun pointer->object (pointer)
   (let ((address (etypecase pointer
@@ -49,3 +50,15 @@
     (if object
         (setf (gethash address *c-object-table*) object)
         (remhash address *c-object-table*))))
+
+(defmacro with-objects (bindings &body body)
+  `(let ,(mapcar #'first bindings)
+     (unwind-protect
+          (progn
+            ,@(loop for (var init) in bindings
+                    collect `(setf ,var ,init))
+            (let ,(loop for (var) in bindings
+                        collect `(,var ,var))
+              ,@body))
+       ,@(loop for (var) in bindings
+               collect `(when ,var (free ,var))))))

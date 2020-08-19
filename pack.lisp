@@ -29,12 +29,10 @@
 (defmethod allocate-handle ((pack pack))
   (calloc '(:struct mixed:pack)))
 
-(defmethod free-handle ((pack pack) handle)
-  (let ((data (data pack)))
-    (lambda ()
-      (static-vectors:free-static-vector data)
-      (cffi:foreign-free handle)
-      (setf (pointer->object handle) NIL))))
+(defmethod free ((pack pack))
+  (when (slot-boundp pack 'data)
+    (static-vectors:free-static-vector (data pack))
+    (slot-makunbound pack 'data)))
 
 (define-accessor size pack mixed:pack-size)
 (define-accessor encoding pack mixed:pack-encoding)
@@ -54,8 +52,6 @@
       (setf (slot-value pack 'data) new)
       (setf (mixed:pack-data (handle pack)) (static-vectors:static-vector-pointer new))
       (setf (mixed:pack-size (handle pack)) (length new))
-      (tg:cancel-finalization pack)
-      (tg:finalize pack (free-handle pack (handle pack)))
       (static-vectors:free-static-vector old)))
   size)
 
