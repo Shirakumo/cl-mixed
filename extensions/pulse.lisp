@@ -42,6 +42,16 @@
              (pulse:simple-free drain)
              T)))))
 
+(defmacro with-no-interrupts (() &body body)
+  ;; On SBCL using WITHOUT-INTERRUPTS would cause interrupts
+  ;; to be processed explicitly on exit. We want to avoid that.
+  #+sbcl `(let ((sb-sys:*interrupts-enabled* NIL)
+                (sb-kernel:*gc-inhibit* T))
+            ,@body)
+  #+ccl `(ccl:without-interrupts
+           ,@body)
+  #-(or sbcl ccl) `(progn ,@body))
+
 (defclass drain (mixed:drain)
   ((simple :initform NIL :accessor simple)
    (server :initform NIL :initarg :server :accessor server)))
@@ -71,7 +81,8 @@
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (with-error (err)
-      (pulse:simple-write (simple drain) (mixed:data-ptr) size err))
+      (with-no-interrupts ()
+        (pulse:simple-write (simple drain) (mixed:data-ptr) size err)))
     (mixed:finish size)))
 
 (defmethod mixed:end ((drain drain))
