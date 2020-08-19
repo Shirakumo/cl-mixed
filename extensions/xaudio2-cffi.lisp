@@ -133,11 +133,11 @@
    #:voice-get-channel-volumes
    #:voice-set-output-matrix
    #:voice-get-output-matrix
-   #:voice-destro
+   #:voice-destroy
    #:voice-start
    #:voice-stop
    #:voice-submit-source-buffer
-   #:voice-flush-source-buffer
+   #:voice-flush-source-buffers
    #:voice-discontinuit
    #:voice-exit-loop
    #:voice-get-state
@@ -146,7 +146,7 @@
    #:voice-set-source-samplerate
    #:voice-callback
    #:voice-callback-processing-pass-start
-   #:voice-callback-processing-pass-en
+   #:voice-callback-processing-pass-end
    #:voice-callback-stream-end
    #:voice-callback-buffer-start
    #:voice-callback-buffer-end
@@ -154,7 +154,7 @@
    #:voice-callback-error
    #:encode-wave-format
    #:decode-wave-format))
-(in-package #:org.shirakumo.fraf.mixed.wasapi.cffi)
+(in-package #:org.shirakumo.fraf.mixed.xaudio2.cffi)
 
 (cffi:define-foreign-library xaudio2
   (:windows "Windows.Media.Audio.dll"))
@@ -229,7 +229,7 @@
   (:info #x4)
   (:defail #x8)
   (:api-calls #x10)
-  (:function-calls #20)
+  (:function-calls #x20)
   (:timing #x40)
   (:locks #x80)
   (:memory #x100)
@@ -301,7 +301,7 @@
   (device-id wchar :count 256)
   (display-name wchar :count 256)
   (role device-role)
-  (output-format (:struct waveformatextensible)))
+  (output-format (:struct waveformat-extensible)))
 
 (cffi:defcstruct (voice-details :conc-name voice-details-)
   (creation-flags :uint32)
@@ -325,12 +325,12 @@
   (effect-count :uint32)
   (descriptors :pointer))
 
-(cffi:defcstruct filter-parameters
+(cffi:defcstruct (filter-parameters :conc-name filter-parameters-)
   (type filter-type)
   (frequency :float)
   (1/q :float))
 
-(cffi:defcstruct buffer
+(cffi:defcstruct (buffer :conc-name buffer-)
   (flags :uint32)
   (size :uint32)
   (audio-data :pointer)
@@ -341,16 +341,16 @@
   (loop-count :uint32)
   (context :uint64))
 
-(cffi:defcstruct buffer-wma
+(cffi:defcstruct (buffer-wma :conc-name buffer-wma-)
   (cumulative-bytes :pointer)
   (packet-count :uint32))
 
-(cffi:defcstruct voice-state
+(cffi:defcstruct (voice-state :conc-name voice-state-)
   (context :pointer)
   (buffers-queued :uint32)
   (samples-played :uint64))
 
-(cffi:defcstruct performance-data
+(cffi:defcstruct (performance-data :conc-name performance-data-)
   (audio-cycles-since-last-query :uint64)
   (total-cycles-since-last-query :uint64)
   (minimum-cycles-per-quantum :uint32)
@@ -366,7 +366,7 @@
   (active-xma-source-voices :uint32)
   (active-xma-streams :uint32))
 
-(cffi:defcstruct debug-configuration
+(cffi:defcstruct (debug-configuration :conc-name debug-configuration-)
   (trace-mask debug-mask)
   (break-mask debug-mask)
   (log-thread-id :bool)
@@ -426,7 +426,7 @@
   (get-frequency-ratio (ratio :pointer))
   (set-source-samplerate (samplerate :uint32)))
 
-(com:define-comstruct (voice-callback :bare T)
+(com:define-comstruct (voice-callback :bare T :conc-name NIL)
   (processing-pass-start :void (bytes-required :uint32))
   (processing-pass-end :void)
   (stream-end :void)
@@ -437,13 +437,13 @@
 
 (defun channel-mask-for-channel-count (channels)
   (case channels
-    (1 (cffi:foreign-bitfield-value 'channel-mask (:front-center)))
-    (2 (cffi:foreign-bitfield-value 'channel-mask (:front-left :front-right)))
-    (3 (cffi:foreign-bitfield-value 'channel-mask (:front-left :front-center :front-right)))
-    (4 (cffi:foreign-bitfield-value 'channel-mask (:front-left :front-right :back-left :back-right)))
-    (5 (cffi:foreign-bitfield-value 'channel-mask (:front-left :front-right :back-left :back-right :low-frequency)))
-    (6 (cffi:foreign-bitfield-value 'channel-mask (:front-left :front-center :front-right :back-left :back-right :low-frequency)))
-    (T (cffi:foreign-bitfield-value 'channel-mask ()))))
+    (1 (cffi:foreign-bitfield-value 'channel-mask '(:front-center)))
+    (2 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right)))
+    (3 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right)))
+    (4 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right)))
+    (5 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right :low-frequency)))
+    (6 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right :back-left :back-right :low-frequency)))
+    (T (cffi:foreign-bitfield-value 'channel-mask '()))))
 
 (defun encode-wave-format (ptr samplerate channels format)
   (let ((bit-depth (ecase format
