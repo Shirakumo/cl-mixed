@@ -29,12 +29,11 @@
    #:buffer
    #:buffer-data
    #:buffer-size
-   #:buffer-r1-start
-   #:buffer-r1-size
-   #:buffer-r2-start
-   #:buffer-r2-size
-   #:buffer-reserved-start
-   #:buffer-reserved-size
+   #:buffer-size
+   #:buffer-read
+   #:buffer-write
+   #:buffer-reserved
+   #:buffer-full-r2
    #:buffer-virtual-p
    #:pack
    #:pack-data
@@ -42,12 +41,11 @@
    #:pack-encoding
    #:pack-channels
    #:pack-samplerate
-   #:pack-r1-start
-   #:pack-r1-size
-   #:pack-r2-start
-   #:pack-r2-size
-   #:pack-reserved-start
-   #:pack-reserved-size
+   #:pack-size
+   #:pack-read
+   #:pack-write
+   #:pack-reserved
+   #:pack-full-r2
    #:field-info
    #:field-info-field
    #:field-info-description
