@@ -19,7 +19,7 @@
 (defun enumerate-devices ()
   (com:with-com (enumerator (com:create wasapi:CLSID-MMDEVICEENUMERATOR wasapi:IID-IMMDEVICEENUMERATOR))
     (com:with-com (collection (com:with-deref (collection :pointer)
-                                       (wasapi:imm-device-enumerator-enum-audio-endpoints enumerator :render wasapi:DEVICE-STATE-ACTIVE collection)))
+                                (wasapi:imm-device-enumerator-enum-audio-endpoints enumerator :render wasapi:DEVICE-STATE-ACTIVE collection)))
       (loop for i from 0 below (com:with-deref (count :uint)
                                  (wasapi:imm-device-collection-get-count collection count))
             collect (com:with-com (device (com:with-deref (device :pointer)

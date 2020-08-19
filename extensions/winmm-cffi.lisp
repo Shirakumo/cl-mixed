@@ -11,7 +11,6 @@
    #:winmm
    #:WAVE-MAPPER
    #:INFINITE
-   #:channel-mask
    #:mmresult
    #:wait-result
    #:open-flags
@@ -54,27 +53,6 @@
 
 (cffi:defctype word :uint16)
 (cffi:defctype dword :uint32)
-
-(cffi:defbitfield channel-mask
-  (:front-left             #x1)
-  (:front-right            #x2)
-  (:front-center           #x4)
-  (:low-frequency          #x8)
-  (:back-left              #x10)
-  (:back-right             #x20)
-  (:front-left-of-center   #x40)
-  (:front-right-of-center  #x80)
-  (:back-center            #x100)
-  (:side-left              #x200)
-  (:side-right             #x400)
-  (:top-center             #x800)
-  (:top-front-left         #x1000)
-  (:top-front-center       #x2000)
-  (:top-front-right        #x4000)
-  (:top-back-left          #x8000)
-  (:top-back-center        #x10000)
-  (:top-back-right         #x20000)
-  (:reserved               #x80000000))
 
 (cffi:defcenum mmresult
   (:ok               0)
@@ -132,7 +110,7 @@
   (buffer-length dword)
   (bytes-recorded dword)
   (user :pointer)
-  (flags wave-header-flags)
+  (flags :int)
   (loops dword)
   (next :pointer)
   (reserved :pointer))
@@ -188,24 +166,14 @@
   (handle :pointer)
   (milliseconds dword))
 
-(defun channel-mask-for-channel-count (channels)
-  (case channels
-    (1 (cffi:foreign-bitfield-value 'channel-mask '(:front-center)))
-    (2 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right)))
-    (3 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right)))
-    (4 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right)))
-    (5 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right :low-frequency)))
-    (6 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right :back-left :back-right :low-frequency)))
-    (T (cffi:foreign-bitfield-value 'channel-mask '()))))
-
 (defun encode-wave-format (ptr samplerate channels format)
   ;; Bittage of more than 16 is not officially supported, and apparently
   ;; does not work on all targets. TOO BAD!
-  (let ((bit-depth (ecase format
-                     (:int16 16)
-                     (:uint8 8))))
+  (let ((bit-depth (case format
+                     (:uint8 8)
+                     (T 16))))
     (setf (waveformat-ex-format-tag ptr) WAVE-FORMAT-PCM)
-    (setf (waveformat-ex-size ptr) 22)
+    (setf (waveformat-ex-size ptr) 0)
     (setf (waveformat-ex-channels ptr) channels)
     (setf (waveformat-ex-samples-per-sec ptr) samplerate)
     (setf (waveformat-ex-bits-per-sample ptr) bit-depth)
