@@ -15,7 +15,6 @@
   :source-control (:git "https://github.com/Shirakumo/cl-mixed.git")
   :serial T
   :components ((:file "package")
-               (:file "common")
                (:file "tone")
                (:file "space")
                (:file "echo")

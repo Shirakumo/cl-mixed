@@ -192,7 +192,8 @@
    #:handle
    #:c-object
    #:free
-   #:pointer->object)
+   #:pointer->object
+   #:with-objects)
   ;; drain.lisp
   (:export
    #:drain
@@ -225,7 +226,8 @@
    #:start
    #:mix
    #:end
-   #:size)
+   #:size
+   #:with-sequence)
   ;; segment.lisp
   (:export
    #:segment

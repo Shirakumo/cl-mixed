@@ -62,3 +62,14 @@
     (mixed:segment-sequence-end (handle sequence))))
 
 (define-accessor size segment-sequence mixed:segment-sequence-count)
+
+(defmacro with-sequence (name segments &body body)
+  `(let ((,name (make-segment-sequence ,@segments)))
+     (start ,name)
+     (unwind-protect
+          (let ((,name ,name))
+            (flet ((mix (&optional (,name ,name))
+                     (mix ,name)))
+              ,@body))
+       (end ,name)
+       (free ,name))))

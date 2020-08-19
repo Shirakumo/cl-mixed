@@ -31,15 +31,15 @@
 (defun tone (tones &key (type :sine) (samples 500) (output 'org.shirakumo.fraf.mixed.out123:drain))
   (let ((tones (loop for (tone length) in tones
                      collect (list (find-symbol (string tone) #.*package*) length))))
-    (let* ((generator (mixed:make-generator :type type))
-           (distributor (mixed:make-distributor))
-           (drain (mixed:make-packer samples :float 2 44100))
-           (out (make-instance output :pack drain)))
-      (mixed:with-buffers 100 (mono)
+    (mixed:with-objects ((generator (mixed:make-generator :type type))
+                         (distributor (mixed:make-distributor))
+                         (drain (mixed:make-packer samples :float 2 44100))
+                         (out (make-instance output :pack drain)))
+      (mixed:with-buffers samples (mono)
         (mixed:connect generator :mono distributor 0 mono)
         (dotimes (i 2)
           (mixed:connect distributor i drain i NIL))
-        (with-sequence (sequence generator distributor drain out)
+        (mixed:with-sequence sequence (generator distributor drain out)
           (loop with time = 0.0
                 for (tone duration) = (first tones)
                 while tones
