@@ -55,7 +55,7 @@
     (let ((pack (mixed:pack drain)))
       (cffi:with-foreign-objects ((device :pointer)
                                   (format '(:struct winmm:waveformat-ex)))
-        (winmm:encode-wave-format format (mixed:samplerate pack) (mixed:channels pack) :int16)
+        (winmm:encode-wave-format format (mixed:samplerate pack) (mixed:channels pack) (mixed:encoding pack))
         (check-result
          (winmm:wave-out-open device winmm:WAVE-MAPPER format (event drain) (cffi:null-pointer) '(:default-device :callback-event :allow-sync)))
         (setf (device drain) (cffi:mem-ref device :pointer))

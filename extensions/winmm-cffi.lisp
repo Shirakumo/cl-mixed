@@ -48,6 +48,7 @@
   (T (:default "Winmm")))
 
 (defconstant WAVE-FORMAT-PCM #x1)
+(defconstant WAVE-FORMAT-IEEE-FLOAT #x3)
 (defconstant WAVE-MAPPER #xFFFFFFFF)
 (defconstant INFINITE (1- (expt 2 32)))
 
@@ -171,8 +172,11 @@
   ;; does not work on all targets. TOO BAD!
   (let ((bit-depth (case format
                      (:uint8 8)
-                     (T 16))))
-    (setf (waveformat-ex-format-tag ptr) WAVE-FORMAT-PCM)
+                     ((:float :double) 32)
+                     ((:int16 T) 16))))
+    (setf (waveformat-ex-format-tag ptr) (case format
+                                           (:float WAVE-FORMAT-IEEE-FLOAT)
+                                           (T WAVE-FORMAT-PCM)))
     (setf (waveformat-ex-size ptr) 0)
     (setf (waveformat-ex-channels ptr) channels)
     (setf (waveformat-ex-samples-per-sec ptr) samplerate)
@@ -184,9 +188,9 @@
 (defun decode-wave-format (ptr)
   (values (waveformat-ex-samples-per-sec ptr)
           (waveformat-ex-channels ptr) 
-          (ecase (waveformat-ex-bits-per-sample ptr)
-            (64 :int64)
-            (32 :int32)
-            (24 :int24)
-            (16 :int16)
-            (8 :uint8))))
+          (ecase (waveformat-ex-format-tag ptr)
+            (#.WAVE-FORMAT-IEEE-FLOAT :float)
+            (#.WAVE-FORMAT-PCM
+             (ecase (waveformat-ex-bits-per-sample ptr)
+               (16 :int16)
+               (8 :uint8))))))
