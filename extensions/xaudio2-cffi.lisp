@@ -8,9 +8,13 @@
 (defpackage #:org.shirakumo.fraf.mixed.xaudio2.cffi
   (:use #:cl)
   (:local-nicknames
-   (#:com #:org.shirakumo.com-on))
+   (#:com #:org.shirakumo.com-on)
+   (#:com-cffi #:org.shirakumo.com-on.cffi))
   (:export
-   #:xaudio2
+   #:xaudio2.9
+   #:xaudio2.7
+   #:CLSID-XAUDIO2
+   #:IID-IXAUDIO2
    #:KSDATAFORMAT-SUBTYPE-PCM
    #:KSDATAFORMAT-SUBTYPE-IEEE-FLOAT
    #:WAVE-FORMAT-EXTENSIBLE
@@ -100,20 +104,31 @@
    #:debug-configuration-log-function-name
    #:debug-configuration-log-timing
    #:create
-   #:interface
-   #:interface-get-device-count
-   #:interface-get-device-details
-   #:interface-initialize
-   #:interface-register-for-callbacks
-   #:interface-unregister-for-callbacks
-   #:interface-create-source-voice
-   #:interface-create-submix-voice
-   #:interface-create-mastering-voice
-   #:interface-start-engine
-   #:interface-stop-engine
-   #:interface-commit-changes
-   #:interface-get-performance-data
-   #:interface-set-debug-configuration
+   #:2.9-interface
+   #:2.9-interface-register-for-callbacks
+   #:2.9-interface-unregister-for-callbacks
+   #:2.9-interface-create-source-voice
+   #:2.9-interface-create-submix-voice
+   #:2.9-interface-create-mastering-voice
+   #:2.9-interface-start-engine
+   #:2.9-interface-stop-engine
+   #:2.9-interface-commit-changes
+   #:2.9-interface-get-performance-data
+   #:2.9-interface-set-debug-configuration
+   #:2.7-interface
+   #:2.7-interface-get-device-count
+   #:2.7-interface-get-device-details
+   #:2.7-interface-initialize
+   #:2.7-interface-register-for-callbacks
+   #:2.7-interface-unregister-for-callbacks
+   #:2.7-interface-create-source-voice
+   #:2.7-interface-create-submix-voice
+   #:2.7-interface-create-mastering-voice
+   #:2.7-interface-start-engine
+   #:2.7-interface-stop-engine
+   #:2.7-interface-commit-changes
+   #:2.7-interface-get-performance-data
+   #:2.7-interface-set-debug-configuration
    #:voice
    #:voice-get-voice-details
    #:voice-set-output-voices
@@ -156,13 +171,22 @@
    #:decode-wave-format))
 (in-package #:org.shirakumo.fraf.mixed.xaudio2.cffi)
 
-(cffi:define-foreign-library xaudio2
-  (:windows "Windows.Media.Audio.dll"))
+(cffi:define-foreign-library xaudio2.9
+  (:windows (:or "xaudio2_9redist.dll" "xaudio2_9.dll" "xaudio2_8.dll" "Windows.Media.Audio.dll")))
 
+(cffi:define-foreign-library xaudio2.7
+  (:windows (:or "xaudio2_7.dll" "xaudio2.dll")))
+
+(defvar CLSID-XAUDIO2 ;; XAudio 2.7
+  (com:guid #x5a508685 #xa254 #x4fba #x9b #x82 #x9a #x24 #xb0 #x03 #x06 #xaf))
+(defvar IID-IXAUDIO2
+  (com:guid #x8bcf1f58 #x9fe7 #x4583 #x8a #xc6 #xe2 #xad #xc4 #x65 #xc8 #xbb))
 (defvar KSDATAFORMAT-SUBTYPE-PCM
   (com:guid #x00000001 #x0000 #x0010 #x80 #x00 #x00 #xAA #x00 #x38 #x9B #x71))
 (defvar KSDATAFORMAT-SUBTYPE-IEEE-FLOAT
   (com:guid #x00000003 #x0000 #x0010 #x80 #x00 #x00 #xAA #x00 #x38 #x9B #x71))
+(defconstant WAVE-FORMAT-PCM        #x00000001)
+(defconstant WAVE-FORMAT-IEEE-FLOAT #x00000003)
 (defconstant WAVE-FORMAT-EXTENSIBLE #x0000FFFE)
 
 (cffi:defctype word :uint16)
@@ -379,10 +403,22 @@
   (flags :uint32)
   (processor processor))
 
-(com:define-comstruct interface
+(com:define-comstruct 2.7-interface
   (get-device-count (count :pointer))
-  (get-device-details (device :pointer) (details :pointer))
-  (initialize (flags :uint32) (processor :uint32))
+  (get-device-details (device :uint32) (details :pointer))
+  (initialize (flags :uint32) (processor processor))
+  (register-for-callbacks (callback :pointer))
+  (unregister-for-callbacks (callback :pointer))
+  (create-source-voice (voice :pointer) (format :pointer) (flags :uint32) (max-frequency-ratio :float) (callback :pointer) (send-list :pointer) (effect-chain :pointer))
+  (create-submix-voice (voice :pointer) (input-channels :uint32) (input-samplerate :uint32) (flags :uint32) (stage :uint32) (send-list :pointer) (effect-chain :pointer))
+  (create-mastering-voice (voice :pointer) (input-channels :uint32) (input-samplerate :uint32) (flags :uint32) (device-id :uint32) (effect-chain :pointer) (stream-category stream-category))
+  (start-engine)
+  (stop-engine)
+  (commit-changes (operation-set :uint32))
+  (get-performance-data (data :pointer))
+  (set-debug-configuration (configuration :pointer) (reserved :pointer)))
+
+(com:define-comstruct 2.9-interface
   (register-for-callbacks (callback :pointer))
   (unregister-for-callbacks (callback :pointer))
   (create-source-voice (voice :pointer) (format :pointer) (flags :uint32) (max-frequency-ratio :float) (callback :pointer) (send-list :pointer) (effect-chain :pointer))
@@ -426,7 +462,7 @@
   (get-frequency-ratio (ratio :pointer))
   (set-source-samplerate (samplerate :uint32)))
 
-(com:define-comstruct (voice-callback :bare T :conc-name NIL)
+(com:define-comstruct (voice-callback :bare T)
   (processing-pass-start :void (bytes-required :uint32))
   (processing-pass-end :void)
   (stream-end :void)
@@ -483,4 +519,4 @@
                 (32 :int32)
                 (24 :int24)
                 (16 :int16)
-                (8 :int8)))))
+                (8 :uint8)))))
