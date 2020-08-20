@@ -41,6 +41,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (setf (callback drain) NIL)))
 
 (defmethod initialize-instance :after ((drain drain) &key)
+  (com:init)
   (cffi:use-foreign-library xaudio2:xaudio2)
   (let* ((pack (mixed:pack drain))
          (callback (cffi:foreign-alloc '(:struct callback)))
