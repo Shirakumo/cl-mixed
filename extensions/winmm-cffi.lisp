@@ -170,10 +170,11 @@
 (defun encode-wave-format (ptr samplerate channels format)
   ;; Bittage of more than 16 is not officially supported, and apparently
   ;; does not work on all targets. TOO BAD!
-  (let ((bit-depth (case format
+  (let ((bit-depth (ecase format
                      (:uint8 8)
                      ((:float :double) 32)
-                     ((:int16 T) 16))))
+                     (:int16 16)
+                     (T 32))))
     (setf (waveformat-ex-format-tag ptr) (case format
                                            (:float WAVE-FORMAT-IEEE-FLOAT)
                                            (T WAVE-FORMAT-PCM)))
@@ -192,5 +193,6 @@
             (#.WAVE-FORMAT-IEEE-FLOAT :float)
             (#.WAVE-FORMAT-PCM
              (ecase (waveformat-ex-bits-per-sample ptr)
+               (8 :uint8)
                (16 :int16)
-               (8 :uint8))))))
+               (32 :int32))))))

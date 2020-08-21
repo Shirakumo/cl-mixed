@@ -50,19 +50,35 @@
     (cffi:foreign-free (header drain))
     (setf (header drain) NIL)))
 
+(defun permute (&rest possibilities)
+  (cond ((null possibilities)
+         '(()))
+        (T
+         (loop with sub = (apply #'permute (rest possibilities))
+               for item in (first possibilities)
+               append (loop for s in sub
+                            collect (list* item s))))))
+
+(defun queries (pack)
+  (list* (list (mixed:samplerate pack) (mixed:channels pack) (mixed:encoding pack))
+         (permute '(48000 44100 22050 11025 8000) '(2 1) '(:float :int32 :int16 :uint8))))
+
 (defmethod mixed:start ((drain drain))
   (unless (device drain)
     (let ((pack (mixed:pack drain)))
       (cffi:with-foreign-objects ((device :pointer)
                                   (format '(:struct winmm:waveformat-ex)))
-        (winmm:encode-wave-format format (mixed:samplerate pack) (mixed:channels pack) (mixed:encoding pack))
+        (loop for (samplerate channels encoding) in (queries pack)
+              do (winmm:encode-wave-format format samplerate channels encoding)
+                 (when (eql :ok (winmm:wave-out-open 0 winmm:WAVE-MAPPER format (cffi:null-pointer) (cffi:null-pointer) :format-query))
+                   (setf (mixed:samplerate pack) samplerate)
+                   (setf (mixed:channels pack) channels)
+                   (setf (mixed:encoding pack) encoding)
+                   (return))
+              finally (error "No suitable audio format supported by device."))
         (check-result
          (winmm:wave-out-open device winmm:WAVE-MAPPER format (event drain) (cffi:null-pointer) '(:default-device :callback-event :allow-sync)))
         (setf (device drain) (cffi:mem-ref device :pointer))
-        (multiple-value-bind (samplerate channels encoding) (winmm:decode-wave-format format)
-          (setf (mixed:samplerate pack) samplerate)
-          (setf (mixed:channels pack) channels)
-          (setf (mixed:encoding pack) encoding))
         (setf (winmm:wave-header-buffer-length (header drain)) BUFFERSIZE)
         (setf (winmm:wave-header-flags (header drain)) 0)
         (check-result
