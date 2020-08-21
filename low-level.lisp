@@ -27,7 +27,7 @@
 
 (use-foreign-library libmixed)
 
-(defctype size_t #+x86-64 :uint64 #+x86 :uint32)
+(defctype size_t #+64-bit :uint64 #+32-bit :uint32)
 
 (defcenum error
   (:no-error 0)
