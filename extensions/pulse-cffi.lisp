@@ -7,6 +7,7 @@
 (in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.pulse.cffi
   (:use #:cl)
+  (:import-from #:org.shirakumo.fraf.mixed.cffi #:size_t)
   (:export
    #:libpulse
    #:libpulse-simple
@@ -41,8 +42,6 @@
     (t (:default "libpulse-simple")))
 
 (defconstant +channels-max+ 32)
-
-(cffi:defctype size_t #+x86-64 :uint64 #+x86 :uint32)
 
 (cffi:defcenum sample-format
   :u8

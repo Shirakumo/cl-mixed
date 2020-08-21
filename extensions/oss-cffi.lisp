@@ -7,6 +7,7 @@
 (in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.oss.cffi
   (:use #:cl #:cffi)
+  (:import-from #:org.shirakumo.fraf.mixed.cffi #:size_t #:ssize_t)
   (:export
    #:encoding
    #:open-flag
@@ -15,9 +16,6 @@
    #:fd-close
    #:fd-write))
 (in-package #:org.shirakumo.fraf.mixed.oss.cffi)
-
-(defctype size_t #+x86-64 :uint64 #+x86 :uint32)
-(defctype ssize_t #+x86-64 :int64 #+x86 :int32)
 
 (cffi:defcenum encoding
   (:int8   #x00000040)

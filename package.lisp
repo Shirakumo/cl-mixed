@@ -13,6 +13,7 @@
    #:*static*
    #:libmixed
    #:size_t
+   #:ssize_t
    #:error
    #:encoding
    #:layout

@@ -7,6 +7,7 @@
 (in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.alsa.cffi
   (:use #:cl)
+  (:import-from #:org.shirakumo.fraf.mixed.cffi #:size_t)
   (:export
    #:libasound
    #:pcm-stream
@@ -31,8 +32,6 @@
 (cffi:define-foreign-library libasound
   (:unix (:or "libasound.so.2.0.0" "libasound.so.2" "libasound.so"))
   (T (:or (:default "libasound") (:default "asound"))))
-
-(cffi:defctype size_t #+x86-64 :uint64 #+x86 :uint32)
 
 (cffi:defcenum pcm-stream
   :playback
