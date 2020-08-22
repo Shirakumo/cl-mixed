@@ -29,7 +29,7 @@
   (:float  #x00004000)
   (:double  #x00004000)) ; doesn't exist (?)
 
-(cffi:defcfenum open-flag
+(cffi:defcenum open-flag
   (:write-only 1))
 
 (cffi:defcenum ioctl
