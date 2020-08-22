@@ -100,6 +100,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (declaim (inline data-ptr))
 (defun data-ptr (data &optional (start 0))
+  (declare (type (unsigned-byte 32) start))
   (static-vectors:static-vector-pointer data :offset start))
 
 (defmacro with-buffer-tx ((data start size buffer &key (direction :input) ((:size initial-size) #xFFFFFFFF)) &body body)
