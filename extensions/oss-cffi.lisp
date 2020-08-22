@@ -23,11 +23,8 @@
   (:int16  #x00000010)
   (:uint16 #x00000080)
   (:int24  #x00008000)
-  (:uint24 #x00008000) ; doesn't exist (?)
   (:int32  #x00001000)
-  (:uint32 #x00001000) ; doesn't exist (?)
-  (:float  #x00004000)
-  (:double  #x00004000)) ; doesn't exist (?)
+  (:float  #x00004000))
 
 (cffi:defcenum open-flag
   (:write-only 1))
