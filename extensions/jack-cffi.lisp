@@ -21,11 +21,12 @@
    #:port-buffer
    #:set-process-callback
    #:set-sample-rate-callback
-   #:set-shutdown-callback))
+   #:set-shutdown-callback
+   #:get-sample-rate))
 (in-package #:org.shirakumo.fraf.mixed.jack.cffi)
 
-(define-foreign-library libjack
-    (:windows "jack.dll")
+(cffi:define-foreign-library libjack
+  (:windows "jack.dll")
   (:unix "libjack.so")
   (:darwin "libjack.dylib")
   (T (:or (:default "libjack") (:default "jack"))))
@@ -108,3 +109,6 @@
   (client :pointer)
   (callback :pointer)
   (arg :pointer))
+
+(cffi:defcfun (get-sample-rate "jack_get_sample_rate") :uint32
+  (client :pointer))

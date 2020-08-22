@@ -19,18 +19,12 @@
 
 (define-condition jack-error (error)
   ((code :initarg :code :accessor code))
-  (:report (lambda (c s) (format s "Pulse error ~d: ~a"
-                                 (code c) (jack:strerror (code c))))))
-
-(defmacro with-error (() &body body)
-  (let ((error (gensym "ERROR")))
-    `(let ((,error (progn ,@body)))
-       (when (< ,error 0)
-         (error 'jack-error :code ,error)))))
+  (:report (lambda (c s) (format s "Jack error ~d"
+                                 (code c)))))
 
 (defun jack-present-p ()
   (handler-case (cffi:use-foreign-library jack:libjack)
-    (error () (return-from 'jack-present-p NIL)))
+    (error () (return-from jack-present-p NIL)))
   (cffi:with-foreign-object (status 'jack:status)
     (let* ((client (jack:open-client "mixed-server-probe" '(:no-start-server) status :int 0))
            (status (cffi:mem-ref status 'jack:status)))
@@ -45,18 +39,21 @@
 (cffi:defcstruct (data :conc-name data-)
   (handle :pointer)
   (channels :uint8)
-  (ports :pointer))
+  (ports :pointer :count 32))
 
 (defclass drain (mixed:virtual)
   ((client :initform NIL :accessor client)
    (name :initarg :name :initform "mixed" :accessor name)
-   (server :initarg :server :initform "default" :accessor server)))
+   (server :initarg :server :initform "default" :accessor server)
+   (samplerate :initform 44100 :accessor mixed:samplerate)))
 
 (defmethod initialize-instance :after ((drain drain) &key channels)
+  (assert (<= channels 16) (channels))
   (cffi:use-foreign-library jack:libjack)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
-  (let ((data (cffi:foreign-alloc :uint8 :count (+ (cffi:foreign-struct-size '(:struct data))
-                                                   (* :pointer 2 (channels drain))))))
+  (let* ((size (cffi:foreign-type-size '(:struct data)))
+         (data (cffi:foreign-alloc :uint8 :count size)))
+    (static-vectors:fill-foreign-memory data size 0)
     (setf (data-handle data) (mixed:handle drain))
     (setf (data-channels data) channels)
     (setf (mixed-cffi:direct-segment-data (mixed:handle drain)) data))
@@ -65,6 +62,7 @@
           (data (mixed-cffi:direct-segment-data (mixed:handle drain))))
       (when (cffi:null-pointer-p client)
         (error 'jack-error :code (cffi:mem-ref status 'jack:status)))
+      (setf (mixed:samplerate drain) (jack:get-sample-rate client))
       (jack:set-process-callback client (cffi:callback process) data)
       (jack:set-sample-rate-callback client (cffi:callback samplerate) data)
       (jack:set-shutdown-callback client (cffi:callback shutdown) data)
@@ -76,13 +74,25 @@
                (setf (cffi:mem-aref ports :pointer (* 2 i)) port))
       (setf (client drain) client))))
 
-(defmethod (setf mixed:output-field) :after (value (field (eql :buffer)) (location integer) (segment drain))
+(defmethod (setf mixed:input-field) :after (value (field (eql :buffer)) (location integer) (drain drain))
   (let* ((data (mixed-cffi:direct-segment-data (mixed:handle drain)))
          (ports (cffi:foreign-slot-pointer data '(:struct data) 'ports)))
-    (setf (cffi:mem-aref ports :pointer (1+ (* 2 i)))
+    (setf (cffi:mem-aref ports :pointer (1+ (* 2 location)))
           (etypecase value
-            (buffer (mixed:handle buffer))
+            (mixed:buffer (mixed:handle value))
             (null (cffi:null-pointer))))))
+
+(defmethod mixed:channels ((drain drain))
+  (data-channels (mixed-cffi:direct-segment-data (mixed:handle drain))))
+
+(defmethod mixed:info ((drain drain))
+  (list :name "jack-drain"
+        :description "Jack output drain."
+        :flags ()
+        :min-inputs (mixed:channels drain)
+        :max-inputs (mixed:channels drain)
+        :outputs 0
+        :fields ()))
 
 (defmethod mixed:start ((drain drain))
   (if (client drain)
@@ -108,7 +118,8 @@
     1))
 
 (cffi:defcallback samplerate :int ((samplerate :uint32) (data :pointer))
-  ;; FIXME: might need to resample...
+  (let ((drain (mixed:pointer->object (data-handle data))))
+    (setf (mixed:samplerate drain) samplerate))
   1)
 
 (cffi:defcallback shutdown :int ((data :pointer))
@@ -119,3 +130,15 @@
 (defmethod mixed:end ((drain drain))
   (when (client drain)
     (jack:deactivate-client (client drain))))
+
+(defun play (file &key (samples 500))
+  (mixed:with-objects ((source (mixed:make-unpacker samples :float 2 44100))
+                       (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))
+                       (drain (make-instance 'drain :channels 2)))
+    (mixed:with-buffers samples (l r)
+      (mixed:connect source :left drain :left l)
+      (mixed:connect source :right drain :right r)
+      (mixed:with-sequence sequence (mp3 source drain)
+        (format T "~&Playing back on ~d channels @ ~dHz~%"
+                (mixed:channels drain) (mixed:samplerate drain))
+        (loop (mixed:mix sequence))))))
