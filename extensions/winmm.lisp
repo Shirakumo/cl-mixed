@@ -70,7 +70,7 @@
                                   (format '(:struct winmm:waveformat-ex)))
         (loop for (samplerate channels encoding) in (queries pack)
               do (winmm:encode-wave-format format samplerate channels encoding)
-                 (when (eql :ok (winmm:wave-out-open 0 winmm:WAVE-MAPPER format (cffi:null-pointer) (cffi:null-pointer) :format-query))
+                 (when (eql :ok (winmm:wave-out-open (cffi:null-pointer) winmm:WAVE-MAPPER format (cffi:null-pointer) (cffi:null-pointer) :format-query))
                    (setf (mixed:samplerate pack) samplerate)
                    (setf (mixed:channels pack) channels)
                    (setf (mixed:encoding pack) encoding)
