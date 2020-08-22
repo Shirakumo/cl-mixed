@@ -98,9 +98,6 @@
 
 (defmethod initialize-instance :after ((drain drain) &key)
   (com:init)
-  (cffi:use-foreign-library wasapi:avrt))
-
-(defmethod mixed:start ((drain drain))
   ;; FIXME: allow picking a device
   ;; FIXME: allow picking shared/exclusive mode
   (let* ((mode (mode drain))
@@ -117,24 +114,42 @@
            (setf (mixed:samplerate pack) samplerate)
            (setf (mixed:encoding pack) encoding)))
     ;; Initialise the rest
-    (unless (render drain)
-      (com:check-hresult
-       (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
-                                         buffer-duration (ecase mode (:shared 0) (:exclusive buffer-duration))
-                                         format (cffi:null-pointer)))
-      (let ((event (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
-        (com:check-last-error (not (cffi:null-pointer-p event)))
-        (setf (event drain) event))
-      (com:check-hresult
-        (wasapi:i-audio-client-set-event-handle client (event drain)))
-      (when (mixed:program-name drain)
-        (setf (audio-client-label client) (mixed:program-name drain)))
-      (com-cffi:task-mem-free format)
-      (setf (render drain)
-            (com:with-deref (render :pointer)
-              (wasapi:i-audio-client-get-service client wasapi:IID-IAUDIORENDERCLIENT render)))
-      (com:check-hresult
-        (wasapi:i-audio-client-start client)))))
+    (com:check-hresult
+     (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
+                                       buffer-duration (ecase mode (:shared 0) (:exclusive buffer-duration))
+                                       format (cffi:null-pointer)))
+    (when (mixed:program-name drain)
+      (setf (audio-client-label client) (mixed:program-name drain)))
+    (let ((event (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
+      (com:check-last-error (not (cffi:null-pointer-p event)))
+      (setf (event drain) event))
+    (com:check-hresult
+     (wasapi:i-audio-client-set-event-handle client (event drain)))
+    (com-cffi:task-mem-free format)
+    (setf (render drain)
+          (com:with-deref (render :pointer)
+            (wasapi:i-audio-client-get-service client wasapi:IID-IAUDIORENDERCLIENT render)))))
+
+(defmethod mixed:free ((drain drain))
+  (when (event drain)
+    (wasapi:close-handle (event drain))
+    (setf (event drain) NIL))
+  (when (render drain)
+    (wasapi:i-audio-render-client-release (render drain))
+    (setf (render drain) NIL))
+  (when (client drain)
+    (wasapi:i-audio-client-release (client drain))
+    (setf (client drain) NIL)))
+
+(defmethod mixed:start ((drain drain))
+  ;; Fill with nothing first.
+  (let ((buffer (com:with-deref (target :pointer)
+                  (wasapi:i-audio-render-client-get-buffer (render drain) 1 target))))
+    (static-vectors:fill-foreign-memory buffer (mixed:framesize (mixed:pack drain)) 0)
+    (wasapi:i-audio-render-client-release-buffer (render drain) 1 0))
+  (com:check-hresult
+   (wasapi:i-audio-client-start (client drain))
+   :ok :not-stopped))
 
 (defmethod mixed:mix ((drain drain))
   (let* ((render (render drain))
@@ -145,6 +160,13 @@
                               (wasapi:i-audio-client-get-buffer-size client frames))
                             (com:with-deref (frames :uint32)
                               (wasapi:i-audio-client-get-current-padding client frames))))))
+    (loop while (= 0 buffer-size) ;; Wait until we have stuff available again
+          do (wasapi:wait-for-single-object (event drain) 1000)
+             (setf buffer-size (* framesize
+                                  (- (com:with-deref (frames :uint32)
+                                       (wasapi:i-audio-client-get-buffer-size client frames))
+                                     (com:with-deref (frames :uint32)
+                                       (wasapi:i-audio-client-get-current-padding client frames))))))
     (mixed:with-buffer-tx (data start size (mixed:pack drain))
       (let* ((size (min buffer-size size))
              (frames (/ size framesize))
@@ -155,13 +177,4 @@
         (mixed:finish size)))))
 
 (defmethod mixed:end ((drain drain))
-  (when (event drain)
-    (wasapi:close-handle (event drain))
-    (setf (event drain) NIL))
-  (when (render drain)
-    (wasapi:i-audio-render-client-release (render drain))
-    (setf (render drain) NIL))
-  (when (client drain)
-    (wasapi:i-audio-client-stop (client drain))
-    (wasapi:i-audio-client-release (client drain))
-    (setf (client drain) NIL)))
+  (wasapi:i-audio-client-stop (client drain)))
