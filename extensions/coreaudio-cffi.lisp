@@ -4,9 +4,8 @@
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
-(in-package #:cl-user)
 (defpackage #:org.shirakumo.fraf.mixed.coreaudio.cffi
-  (:use #:cl #:cffi)
+  (:use #:cl)
   (:export
    #:audio-unit
    #:audio-toolbox
@@ -14,13 +13,6 @@
    #:kAudioUnitSubType_DefaultOutput
    #:kAudioUnitManufacturer_Apple
    #:kAudioFormatLinearPCM
-   #:kAudioUnitProperty_StreamFormat
-   #:kAudioUnitProperty_SetRenderCallback
-   #:kAudioUnitScope_Input
-   #:kAudioFormatFlagsNativeEndian
-   #:kAudioFormatFlagIsFloat
-   #:kAudioFormatFlagIsPacked
-   #:kAudioFormatFlagsNativeFloatPacked
    #:no-err
    #:os-type
    #:os-status
@@ -85,6 +77,7 @@
    #:audio-component-instance-new
    #:audio-component-instance-dispose
    #:audio-unit-set-property
+   #:audio-unit-get-property
    #:audio-unit-initialize
    #:audio-unit-uninitialize
    #:audio-output-unit-start
@@ -92,26 +85,17 @@
 (in-package #:org.shirakumo.fraf.mixed.coreaudio.cffi)
 
 ;; https://github.com/rweichler/coreaudio-examples/blob/master/CH07_AUGraphSineWave/main.c
-(define-foreign-library audio-unit
-    (:darwin (:framework "AudioUnit")))
+(cffi:define-foreign-library audio-unit
+  (:darwin (:framework "AudioUnit")))
 
-(define-foreign-library audio-toolbox
-    (:darwin (:framework "AudioToolbox")))
+(cffi:define-foreign-library audio-toolbox
+  (:darwin (:framework "AudioToolbox")))
 
 ;; Constants
 (alexandria:define-constant kAudioUnitType_Output "auou" :test 'equal)
 (alexandria:define-constant kAudioUnitSubType_DefaultOutput "def " :test 'equal)
 (alexandria:define-constant kAudioUnitManufacturer_Apple "appl" :test 'equal)
 (alexandria:define-constant kAudioFormatLinearPCM "lpcm" :test 'equal)
-(defconstant kAudioUnitProperty_StreamFormat 8)
-(defconstant kAudioUnitProperty_SetRenderCallback 23)
-(defconstant kAudioUnitScope_Input 1)
-(defconstant kAudioFormatFlagsNativeEndian 0)
-(defconstant kAudioFormatFlagIsFloat #x1)
-(defconstant kAudioFormatFlagIsPacked #x8)
-(defconstant kAudioFormatFlagsNativeFloatPacked (logior kAudioFormatFlagsNativeEndian
-                                                        kAudioFormatFlagIsFloat
-                                                        kAudioFormatFlagIsPacked))
 (defconstant no-err 0)
 
 ;; Types
@@ -135,21 +119,19 @@
   (declare (ignore param))
   (foreign-string-free pointer))
 
-(defctype os-status :int32)
-(defctype audio-component :pointer)
-(defctype component-instance :pointer)
-(defctype component-result :int32)
-(defctype audio-component-instance :pointer)
-(defctype audio-unit component-instance)
-(defctype audio-unit-property-id :uint32)
-(defctype audio-unit-scope :uint32)
-(defctype audio-unit-element :uint32)
-(defctype audio-format-id os-type)
-(defctype audio-format-flags :uint32)
+(cffi:defctype os-status :int32)
+(cffi:defctype audio-component :pointer)
+(cffi:defctype component-instance :pointer)
+(cffi:defctype component-result :int32)
+(cffi:defctype audio-component-instance :pointer)
+(cffi:defctype audio-unit component-instance)
+(cffi:defctype audio-unit-property-id :uint32)
+(cffi:defctype audio-unit-element :uint32)
+(cffi:defctype audio-format-id os-type)
 
 ;; Enums
-(defcenum render-action-flags
-    (:pre-render #.(ash 1 2))
+(cffi:defcenum render-action-flags
+  (:pre-render #.(ash 1 2))
   (:post-render #.(ash 1 3))
   (:output-is-silence #.(ash 1 4))
   (:preflight #.(ash 1 5))
@@ -158,21 +140,36 @@
   (:post-render-error #.(ash 1 8))
   (:do-not-check-render-args #.(ash 1 9)))
 
-;; Structs
-(defcstruct (component-instance-record :conc-name component-instance-record-)
-    (data :long :count 1))
+(cffi:defcenum (audio-property :uint32)
+  (:stream-format 8)
+  (:render-callback 23)
+  (:samples 49))
 
-(defcstruct (audio-component-description :conc-name audio-component-description-)
-    (component-type os-type)
+(cffi:defcenum (audio-scope :uint32)
+  (:out 0)
+  (:in 1))
+
+(cffi:defbitfield (audio-format :uint32)
+  (:native 0)
+  (:float #x1)
+  (:signed #x4)
+  (:packed #x8))
+
+;; Structs
+(cffi:defcstruct (component-instance-record :conc-name component-instance-record-)
+  (data :long :count 1))
+
+(cffi:defcstruct (audio-component-description :conc-name audio-component-description-)
+  (component-type os-type)
   (component-sub-type os-type)
   (component-manufacturer os-type)
   (component-flags :uint32)
   (component-flags-mask :uint32))
 
-(defcstruct (audio-stream-basic-description :conc-name audio-stream-basic-description-)
-    (sample-rate :double)
+(cffi:defcstruct (audio-stream-basic-description :conc-name audio-stream-basic-description-)
+  (sample-rate :double)
   (format-id audio-format-id)
-  (format-flags audio-format-flags)
+  (format-flags audio-format)
   (bytes-per-packet :uint32)
   (frames-per-packet :uint32)
   (bytes-per-frame :uint32)
@@ -180,12 +177,12 @@
   (bits-per-channel :uint32)
   (reserved :uint32))
 
-(defcstruct (au-render-callback-struct :conc-name au-render-callback-struct-)
-    (input-proc :pointer)
+(cffi:defcstruct (au-render-callback-struct :conc-name au-render-callback-struct-)
+  (input-proc :pointer)
   (input-proc-ref-con :pointer))
 
-(defcstruct (smpte-time :conc-name smpte-time-)
-    (subframes :int16)
+(cffi:defcstruct (smpte-time :conc-name smpte-time-)
+  (subframes :int16)
   (subframe-divisor :int16)
   (counter :uint32)
   (type :uint32)
@@ -195,8 +192,8 @@
   (seconds :int16)
   (frames :int16))
 
-(defcstruct (audio-time-stamp :conc-name audio-time-stamp-)
-    (sample-time :double)
+(cffi:defcstruct (audio-time-stamp :conc-name audio-time-stamp-)
+  (sample-time :double)
   (host-time :uint64)
   (rate-scalar :double)
   (word-clock-time :uint64)
@@ -204,43 +201,51 @@
   (flags :uint32)
   (reserved :uint32))
 
-(defcstruct (audio-buffer :conc-name audio-buffer-)
-    (number-channels :uint32)
+(cffi:defcstruct (audio-buffer :conc-name audio-buffer-)
+  (number-channels :uint32)
   (data-byte-size :uint32)
   (data :pointer))
 
-(defcstruct (audio-buffer-list :conc-name audio-buffer-list-)
-    (number-buffers :uint32)
+(cffi:defcstruct (audio-buffer-list :conc-name audio-buffer-list-)
+  (number-buffers :uint32)
   (buffers (:struct audio-buffer) :count 1))
 
 ;; Funcs
-(defcfun (audio-component-find-next "AudioComponentFindNext") audio-component
+(cffi:defcfun (audio-component-find-next "AudioComponentFindNext") audio-component
   (component audio-component)
   (description :pointer))
 
-(defcfun (audio-component-instance-new "AudioComponentInstanceNew") os-status
+(cffi:defcfun (audio-component-instance-new "AudioComponentInstanceNew") os-status
   (component audio-component)
   (output :pointer))
 
-(defcfun (audio-component-instance-dispose "AudioComponentInstanceDispose") os-status
+(cffi:defcfun (audio-component-instance-dispose "AudioComponentInstanceDispose") os-status
   (component audio-component-instance))
 
-(defcfun (audio-unit-set-property "AudioUnitSetProperty") os-status
+(cffi:defcfun (audio-unit-set-property "AudioUnitSetProperty") os-status
   (unit audio-unit)
-  (property audio-unit-property-id)
-  (scope audio-unit-scope)
+  (property audio-property)
+  (scope audio-scope)
   (element audio-unit-element)
   (data :pointer)
   (size :uint32))
 
-(defcfun (audio-unit-initialize "AudioUnitInitialize") os-status
+(cffi:defcfun (audio-unit-get-property "AudioUnitGetProperty") os-status
+  (unit audio-unit)
+  (property audio-property)
+  (scope audio-scope)
+  (element audio-unit-element)
+  (data :pointer)
+  (size :uint32))
+
+(cffi:defcfun (audio-unit-initialize "AudioUnitInitialize") os-status
   (unit audio-unit))
 
-(defcfun (audio-unit-uninitialize "AudioUnitUninitialize") os-status
+(cffi:defcfun (audio-unit-uninitialize "AudioUnitUninitialize") os-status
   (unit audio-unit))
 
-(defcfun (audio-output-unit-start "AudioOutputUnitStart") os-status
+(cffi:defcfun (audio-output-unit-start "AudioOutputUnitStart") os-status
   (unit audio-unit))
 
-(defcfun (audio-output-unit-stop "AudioOutputUnitStop") os-status
+(cffi:defcfun (audio-output-unit-stop "AudioOutputUnitStop") os-status
   (unit audio-unit))

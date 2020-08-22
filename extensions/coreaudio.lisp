@@ -1,11 +1,11 @@
 #|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
+This file is a part of cl-mixed
+(c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
+Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
 
 (in-package #:cl-user)
-(defpackage #:org.shirakumo.fraf.mixed.drains.coreaudio
+(defpackage #:org.shirakumo.fraf.mixed.coreaudio
   (:use #:cl)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed)
@@ -15,7 +15,7 @@
    #:coreaudio-error
    #:code
    #:drain))
-(in-package #:org.shirakumo.fraf.mixed.drains.coreaudio)
+(in-package #:org.shirakumo.fraf.mixed.coreaudio)
 
 (define-condition coreaudio-error (error)
   ((code :initarg :code :accessor code))
@@ -27,14 +27,6 @@
        (when (/= ,error 0)
          (error 'coreaudio-error :code ,error)))))
 
-(defclass drain (mixed:drain)
-  ((audio-unit :initform NIL :accessor audio-unit)))
-
-(defmethod initialize-instance :after ((drain drain) &key)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
-  (cffi:use-foreign-library coreaudio:audio-unit)
-  (cffi:use-foreign-library coreaudio:audio-toolbox))
-
 (defmacro with-no-interrupts (() &body body)
   ;; On SBCL using WITHOUT-INTERRUPTS would cause interrupts
   ;; to be processed explicitly on exit. We want to avoid that.
@@ -45,111 +37,133 @@
            ,@body)
   #-(or sbcl ccl) `(progn ,@body))
 
-(cffi:defcallback buffer-render mixed-coreaudio-cffi:os-status ((handle :pointer)
-                                                                (action-flags :pointer)
-                                                                (time-stamp :pointer)
-                                                                (bus-number :uint32)
-                                                                (frames :uint32)
-                                                                (io-data :pointer))
-  (declare (ignore action-flags time-stamp bus-number))
-  (with-no-interrupts ()
-    (let* ((pack (mixed:pack (mixed:pointer->object handle)))
-           (bytes (* frames (mixed:channels pack) (cffi:foreign-type-size :float)))
-           (buffer (cffi:foreign-slot-pointer io-data
-                                              '(:struct mixed-coreaudio-cffi:audio-buffer-list)
-                                              'harmony-coreaudio-cffi::buffers)))
-      (mixed:with-buffer-tx ((data start size pack :size bytes))
-        (memcpy (harmony-coreaudio-cffi:audio-buffer-data buffer) (mixed:data-ptr) size)
-        (mixed:finish size))))
-  harmony-coreaudio-cffi:no-err)
-
 (defun create-component-description (description)
   ;; This is always the same. Why we need this at all, I don't know. #justapplethings
-  (setf (harmony-coreaudio-cffi:audio-component-description-component-type description)
-        harmony-coreaudio-cffi:kAudioUnitType_Output)
-  (setf (harmony-coreaudio-cffi:audio-component-description-component-sub-type description)
-        harmony-coreaudio-cffi:kAudioUnitSubType_DefaultOutput)
-  (setf (harmony-coreaudio-cffi:audio-component-description-component-manufacturer description)
-        harmony-coreaudio-cffi:kAudioUnitManufacturer_Apple)
-  (setf (harmony-coreaudio-cffi:audio-component-description-component-flags description)
+  (setf (coreaudio:audio-component-description-component-type description)
+        coreaudio:kAudioUnitType_Output)
+  (setf (coreaudio:audio-component-description-component-sub-type description)
+        coreaudio:kAudioUnitSubType_DefaultOutput)
+  (setf (coreaudio:audio-component-description-component-manufacturer description)
+        coreaudio:kAudioUnitManufacturer_Apple)
+  (setf (coreaudio:audio-component-description-component-flags description)
         0)
-  (setf (harmony-coreaudio-cffi:audio-component-description-component-flags-mask description)
+  (setf (coreaudio:audio-component-description-component-flags-mask description)
         0))
 
-(defun create-stream-description (stream samplerate channels)
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-sample-rate stream)
+(defun create-stream-description (stream samplerate channels format)
+  (setf (coreaudio:audio-stream-basic-description-sample-rate stream)
         (coerce samplerate 'double-float))
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-format-id stream)
-        harmony-coreaudio-cffi:kAudioFormatLinearPCM)
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-format-flags stream)
-        harmony-coreaudio-cffi:kAudioFormatFlagsNativeFloatPacked)
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-bytes-per-packet stream)
-        (* 4 channels))
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-frames-per-packet stream)
-        1)
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-bytes-per-frame stream)
-        (* 4 channels))
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-channels-per-frame stream)
+  (setf (coreaudio:audio-stream-basic-description-format-id stream)
+        coreaudio:kAudioFormatLinearPCM)
+  (setf (coreaudio:audio-stream-basic-description-format-flags stream)
+        (ecase format
+          ((:double :float) '(:native :float :packed))
+          ((:int8 :int16 :int24 :int32 :int64) '(:native :signed :packed))
+          ((:uint8 :uint16 :uint24 :uint32 :uint64) '(:native :packed))))
+  (setf (coreaudio:audio-stream-basic-description-bytes-per-frame stream)
+        (* channels (mixed:samplesize format)))
+  (setf (coreaudio:audio-stream-basic-description-channels-per-frame stream)
         channels)
-  (setf (harmony-coreaudio-cffi:audio-stream-basic-description-bits-per-channel stream)
-        (* 4 8)))
+  (setf (coreaudio:audio-stream-basic-description-bits-per-channel stream)
+        (* 8 (mixed:samplesize format)))
+  (setf (coreaudio:audio-stream-basic-description-bytes-per-packet stream)
+        (coreaudio:audio-stream-basic-description-bytes-per-frame stream))
+  (setf (coreaudio:audio-stream-basic-description-frames-per-packet stream)
+        1))
+
+(defun decode-stream-description (stream)
+  (let ((flags (coreaudio:audio-stream-basic-description-format-flags stream))
+        (bits (coreaudio:audio-stream-basic-description-bits-per-channel stream)))
+    (values (round (coreaudio:audio-stream-basic-description-sample-rate stream))
+            (coreaudio:audio-stream-basic-description-channels-per-frame stream)
+            (cond ((find :float flags)
+                   (ecase bits (32 :float) (64 :double)))
+                  ((find :signed flags)
+                   (ecase bits (8 :int8) (16 :int16) (24 :int24) (32 :int32) (64 :int64)))
+                  (T
+                   (ecase bits (8 :uint8) (16 :uint16) (24 :uint24) (32 :uint32) (64 :uint64)))))))
 
 (defun create-callback-description (callback data)
-  (setf (harmony-coreaudio-cffi:au-render-callback-struct-input-proc callback)
+  (setf (coreaudio:au-render-callback-struct-input-proc callback)
         (cffi:callback buffer-render))
-  (setf (harmony-coreaudio-cffi:au-render-callback-struct-input-proc-ref-con callback)
+  (setf (coreaudio:au-render-callback-struct-input-proc-ref-con callback)
         data))
 
-(defmethod mixed:start ((drain drain))
-  (cffi:with-foreign-objects ((description '(:struct harmony-coreaudio-cffi:audio-component-description))
-                              (stream '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))
-                              (callback '(:struct harmony-coreaudio-cffi:au-render-callback-struct))
-                              (unit 'harmony-coreaudio-cffi:audio-unit))
+(defclass drain (mixed:drain)
+  ((audio-unit :initform NIL :accessor audio-unit)))
+
+(defmethod initialize-instance :after ((drain drain) &key)
+  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
+  (cffi:use-foreign-library coreaudio:audio-unit)
+  (cffi:use-foreign-library coreaudio:audio-toolbox)
+  (cffi:with-foreign-objects ((description '(:struct coreaudio:audio-component-description))
+                              (stream '(:struct coreaudio:audio-stream-basic-description))
+                              (callback '(:struct coreaudio:au-render-callback-struct))
+                              (unit 'coreaudio:audio-unit))
     (let ((pack (mixed:pack drain)))
-      (setf (mixed:encoding pack) :float)
       ;; Prepare needed information
       (create-component-description description)
-      (create-stream-description stream (mixed:samplerate pack) (mixed:channels pack))
+      (create-stream-description stream (mixed:samplerate pack) (mixed:channels pack) (mixed:encoding pack))
       (create-callback-description callback (mixed:handle drain))
       ;; Search for device
-      (let ((component (harmony-coreaudio-cffi:audio-component-find-next (cffi:null-pointer) description)))
+      (let ((component (coreaudio:audio-component-find-next (cffi:null-pointer) description)))
         (when (cffi:null-pointer-p component)
           (error "No component found."))
         (with-error ()
-          (harmony-coreaudio-cffi:audio-component-instance-new component unit))
+          (coreaudio:audio-component-instance-new component unit))
         (let ((unit (cffi:mem-ref unit :pointer)))
           ;; Set unit properties
           (with-error ()
-            (harmony-coreaudio-cffi:audio-unit-set-property
-             unit
-             harmony-coreaudio-cffi:kAudioUnitProperty_SetRenderCallback
-             harmony-coreaudio-cffi:kAudioUnitScope_Input
-             0
-             callback
-             (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:au-render-callback-struct))))
+            (coreaudio:audio-unit-set-property unit :render-callback :in 0 callback (cffi:foreign-type-size '(:struct coreaudio:au-render-callback-struct))))
           (with-error ()
-            (harmony-coreaudio-cffi:audio-unit-set-property
-             unit
-             harmony-coreaudio-cffi:kAudioUnitProperty_StreamFormat
-             harmony-coreaudio-cffi:kAudioUnitScope_Input
-             0
-             stream
-             (cffi:foreign-type-size '(:struct harmony-coreaudio-cffi:audio-stream-basic-description))))
-          ;; FIXME: check for actual properties selected and propagate to pack?
+            (coreaudio:audio-unit-set-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
+          ;;;; Trying to read back the actual properties segfaults for some reason. Very cool!
+          ;; (with-error ()
+          ;;   (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
+          ;; (multiple-value-bind (samplerate channels encoding) (decode-stream-description stream)
+          ;;   (setf (mixed:samplerate pack) samplerate)
+          ;;   (setf (mixed:channels pack) channels)
+          ;;   (setf (mixed:encoding pack) encoding))
           ;; Fire it up!
           (float-features:with-float-traps-masked ()
             (with-error ()
-              (harmony-coreaudio-cffi:audio-unit-initialize unit))
-            (with-error ()
-              (harmony-coreaudio-cffi:audio-output-unit-start unit)))
+              (coreaudio:audio-unit-initialize unit)))
           (setf (audio-unit drain) unit))))))
 
-(cffi:defcallback mix :int ((segment :pointer)) 1)
+(defmethod mixed:free ((drain drain))
+  (when (audio-unit drain)
+    (coreaudio:audio-unit-uninitialize (audio-unit drain))
+    (coreaudio:audio-component-instance-dispose (audio-unit drain))))
+
+(defmethod mixed:start ((drain drain))
+  (float-features:with-float-traps-masked ()
+    (with-error ()
+      (coreaudio:audio-output-unit-start (audio-unit drain)))))
+
+(cffi:defcallback buffer-render coreaudio:os-status ((handle :pointer)
+                                                     (action-flags :pointer)
+                                                     (time-stamp :pointer)
+                                                     (bus-number :uint32)
+                                                     (frames :uint32)
+                                                     (io-data :pointer))
+  (declare (ignore action-flags time-stamp bus-number))
+  (declare (type (unsigned-byte 32) frames))
+  (declare (optimize speed))
+  (with-no-interrupts ()
+    (let* ((pack (mixed:pack (mixed:pointer->object handle)))
+           (bytes (* frames (mixed:framesize pack)))
+           (buffer (cffi:foreign-slot-pointer io-data '(:struct coreaudio:audio-buffer-list) 'coreaudio::buffers)))
+      ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
+      ;; underrun on every callback.
+      (when (< (mixed:size pack) bytes)
+        (setf (mixed:size pack) bytes))
+      (mixed:with-buffer-tx (data start size pack :size bytes)
+        (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
+        (mixed:finish size))))
+  coreaudio:no-err)
+
+(cffi:defcallback mix :int ((segment :pointer)) (declare (ignore segment)) 1)
 
 (defmethod end ((drain drain))
-  (let ((unit (audio-unit drain)))
-    (when unit
-      (with-float-traps-masked ()
-        (harmony-coreaudio-cffi:audio-output-unit-stop unit)
-        (harmony-coreaudio-cffi:audio-unit-uninitialize unit)
-        (harmony-coreaudio-cffi:audio-component-instance-dispose unit)))))
+  (float-features:with-float-traps-masked ()
+    (coreaudio:audio-output-unit-stop (audio-unit drain))))
