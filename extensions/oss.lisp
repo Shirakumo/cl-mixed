@@ -35,7 +35,10 @@
     (let* ((format (cffi:foreign-enum-value 'oss:encoding (case (mixed:encoding pack)
                                                             (:uint24 :int24)
                                                             (:uint32 :int32)
-                                                            (:double :float)
+                                                            ;; On my test device, trying to use float
+                                                            ;; just resulted in ungodly garbage, so
+                                                            ;; we simply deny its use here entirely.
+                                                            ((:double :float) :int32)
                                                             (T (mixed:encoding pack)))))
            (format (ioctl fd :sndctl-dsp-setfmt format)))
       (setf (mixed:encoding pack) (cffi:foreign-enum-keyword 'oss:encoding format))
