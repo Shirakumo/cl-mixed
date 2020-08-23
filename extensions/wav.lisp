@@ -112,7 +112,7 @@
                (incf (mixed:byte-position source) read)
                (mixed:finish read))
               (T
-               (setf (mixed:done-p source))))))))
+               (setf (mixed:done-p source) T)))))))
 
 (defmethod mixed:end ((source source))
   (close (file source)))

@@ -24,7 +24,9 @@
   (setf (mixed:encoding (mixed:pack source)) :float))
 
 (defmethod mixed:free ((source source))
-  (flac:disconnect (file source)))
+  (when (file source)
+    (cl-flac:close-file (file source))
+    (setf (file source) NIL)))
 
 (defmethod mixed:start ((source source)))
 
@@ -36,7 +38,7 @@
                (incf (mixed:byte-position source) read)
                (mixed:finish read))
               (T
-               (setf (mixed:done-p source))))))))
+               (setf (mixed:done-p source) T)))))))
 
 (defmethod mixed:end ((source source)))
 

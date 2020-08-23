@@ -9,7 +9,7 @@
 (defclass source (virtual)
   ((pack :initform NIL :reader pack)
    (byte-position :initform 0 :accessor byte-position)
-   (done-p :initofrm NIL :accessor done-p)))
+   (done-p :initform NIL :accessor done-p)))
 
 (defmethod initialize-instance :after ((source source) &key pack)
   (setf (pack source) pack))
