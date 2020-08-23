@@ -18,23 +18,27 @@
   ((file :accessor file)))
 
 (defmethod initialize-instance :after ((source source) &key file)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix))
-  (setf (file source) (cl-flac:make-file file)))
-
-(defmethod mixed:start ((source source))
+  (setf (file source) (cl-flac:make-file file))
   (setf (mixed:samplerate (mixed:pack source)) (flac:samplerate (file source)))
   (setf (mixed:channels (mixed:pack source)) (flac:channels (file source)))
   (setf (mixed:encoding (mixed:pack source)) :float))
 
-(cffi:defcallback mix :int ((segment :pointer))
+(defmethod mixed:free ((source source))
+  (flac:disconnect (file source)))
+
+(defmethod mixed:start ((source source)))
+
+(defmethod mixed:mix ((source source))
   (let ((source (mixed:pointer->object segment)))
     (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
       (let ((read (flac:read-directly (file source) (mixed:data-ptr) size)))
-        (incf (mixed:byte-position source) read)
-        (mixed:finish read)))))
+        (cond ((< 0 read)
+               (incf (mixed:byte-position source) read)
+               (mixed:finish read))
+              (T
+               (setf (mixed:done-p source))))))))
 
-(defmethod mixed:end ((source source))
-  (flac:disconnect (file source)))
+(defmethod mixed:end ((source source)))
 
 (defmethod mixed:seek-to-frame ((source source) position)
   (cl-flac:seek (file source) position))

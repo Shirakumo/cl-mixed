@@ -8,7 +8,8 @@
 
 (defclass source (virtual)
   ((pack :initform NIL :reader pack)
-   (byte-position :initform 0 :accessor byte-position)))
+   (byte-position :initform 0 :accessor byte-position)
+   (done-p :initofrm NIL :accessor done-p)))
 
 (defmethod initialize-instance :after ((source source) &key pack)
   (setf (pack source) pack))
@@ -40,6 +41,7 @@
   (pack drain))
 
 (defmethod seek ((source source) position &key (mode :absolute) (by :frame))
+  (assert (< 0 position))
   (ecase by
     (:second
      (setf position (floor (* position (samplerate (pack source))))))
@@ -51,6 +53,9 @@
      (setf mode :absolute)
      (incf position (/ (byte-position source) (framesize (pack source)))))
     (:absolute))
+  (when (<= (frame-count source) position)
+    (setf (position source) (frame-count source))
+    (setf (done-p source) T))
   (seek-to-frame source position)
   (setf (byte-position source) (* position (framesize (pack source))))
   source)

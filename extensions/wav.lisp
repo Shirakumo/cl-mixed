@@ -13,15 +13,6 @@
    #:source))
 (in-package #:org.shirakumo.fraf.mixed.wav)
 
-(defclass source (mixed:source)
-  ((file :initarg :file :accessor file)
-   (wav-stream :accessor wav-stream)
-   (data-start :accessor data-start)
-   (data-end :accessor data-end)))
-
-(defmethod initialize-instance :after ((source source) &key)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle source)) (cffi:callback mix)))
-
 (defun evenify (int)
   (if (evenp int)
       int
@@ -89,7 +80,13 @@
             (getf data :start)
             (getf data :size))))
 
-(defmethod mixed:start ((source source))
+(defclass source (mixed:source)
+  ((file :initarg :file :accessor file)
+   (wav-stream :accessor wav-stream)
+   (data-start :accessor data-start)
+   (data-end :accessor data-end)))
+
+(defmethod initialize-instance :after ((source source) &key)
   (let ((stream (open (file source) :direction :input
                                     :element-type '(unsigned-byte 8))))
     (multiple-value-bind (channels samplerate encoding start size) (decode-wav-header stream)
@@ -99,15 +96,23 @@
       (setf (data-start source) start)
       (setf (data-end source) (+ start size)))))
 
-(cffi:defcallback mix :int ((segment :pointer))
-  (let* ((source (mixed:pointer->object segment))
-         (stream (wav-stream source)))
+(defmethod mixed:free ((source source))
+  (when (file source)
+    (close (file source))
+    (setf (file source) NIL)))
+
+(defmethod mixed:start ((source source)))
+
+(defmethod mixed:mix ((source source))
+  (let ((stream (wav-stream source)))
     (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
       (let* ((avail (min size (- (data-end source) (file-position stream))))
              (read (- (read-sequence data stream :start start :end (+ start avail)) start)))
-        (incf (mixed:byte-position source) read)
-        (mixed:finish read)))
-    1))
+        (cond ((< 0 read)
+               (incf (mixed:byte-position source) read)
+               (mixed:finish read))
+              (T
+               (setf (mixed:done-p source))))))))
 
 (defmethod mixed:end ((source source))
   (close (file source)))

@@ -249,6 +249,7 @@
    #:source
    #:pack
    #:byte-position
+   #:done-p
    #:seek
    #:seek-to-frame
    #:frame-count)
