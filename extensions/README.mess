@@ -1,0 +1,33 @@
+# cl-mixed extensions
+This directory contains smaller extensions for cl-mixed that implement various useful segments. Most of them implement either an input data format (mp3 etc.), or an output backend (ALSA etc.).
+
+The extensions are in different states of completeness:
+
+- **alsa** (Advanced Linux Sound Architecture)
+  Complete, output only.
+- **coreaudio** (Apple CoreAudio toolkit)
+  Complete, output only.
+- **flac** (FLAC file format)
+  Complete, input only.
+- **jack** (JackAudio toolkit)
+  Not working on SBCL due to a conflict on SIGPIPE.
+- **mpg123** (MP3 file format)
+  Complete, input only.
+- **oss** (Open Sound System, used on BSD)
+  Complete, output only.
+- **out123**
+  Complete, output only.
+- **pulse** (PulseAudio system, used on Linux)
+  Complete, output only.
+- **sdl2**
+  Complete, output only.
+- **wasapi** (Windows Advanced Sound API)
+  Complete, output only.
+- **wav**
+  Complete, input only.
+- **winmm** (Windows Multi Media system)
+  Outputs with extreme artifacts.
+- **xaudio2** (Windows XAudio2 toolkit)
+  Outputs with extreme artifacts and may crash.
+
+Inputs/Outputs are presented with the standardised names of ``source`` and ``drain`` respectively and will implement the corresponding protocols from cl-mixed.
