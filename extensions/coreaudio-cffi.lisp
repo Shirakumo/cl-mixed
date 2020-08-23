@@ -99,25 +99,25 @@
 (defconstant no-err 0)
 
 ;; Types
-(define-foreign-type os-type () ()
+(cffi:define-foreign-type os-type () ()
   (:actual-type :int32))
 
-(define-parse-method os-type ()
+(cffi:define-parse-method os-type ()
   (make-instance 'os-type))
 
-(defmethod translate-to-foreign (string (type os-type))
+(defmethod cffi:translate-to-foreign (string (type os-type))
   (let ((int 0))
     (dotimes (i 4 int)
       (setf (ldb (byte 8 (* (- 3 i) 8)) int) (char-code (aref string i))))))
 
-(defmethod translate-from-foreign (integer (type os-type))
+(defmethod cffi:translate-from-foreign (integer (type os-type))
   (let ((string (make-string 4)))
     (dotimes (i 4 string)
       (setf (aref string i) (code-char (ldb (byte 8 (* (- 3 i) 8)) integer))))))
 
-(defmethod free-translated-object (pointer (type os-type) param)
+(defmethod cffi:free-translated-object (pointer (type os-type) param)
   (declare (ignore param))
-  (foreign-string-free pointer))
+  (cffi:foreign-string-free pointer))
 
 (cffi:defctype os-status :int32)
 (cffi:defctype audio-component :pointer)
