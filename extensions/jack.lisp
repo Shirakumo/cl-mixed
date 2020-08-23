@@ -34,8 +34,6 @@
             (T
              NIL)))))
 
-;; FIXME: close client on FREE
-
 (cffi:defcstruct (data :conc-name data-)
   (handle :pointer)
   (channels :uint8)
@@ -73,6 +71,11 @@
                  (error 'jack-error :code :port-registration-failed))
                (setf (cffi:mem-aref ports :pointer (* 2 i)) port))
       (setf (client drain) client))))
+
+(defmethod mixed:free ((drain drain))
+  (when (client drain)
+    (jack:close-client (client drain))
+    (setf (client drain) NIL)))
 
 (defmethod (setf mixed:input-field) :after (value (field (eql :buffer)) (location integer) (drain drain))
   (let* ((data (mixed-cffi:direct-segment-data (mixed:handle drain)))
@@ -128,8 +131,7 @@
   1)
 
 (defmethod mixed:end ((drain drain))
-  (when (client drain)
-    (jack:deactivate-client (client drain))))
+  (jack:deactivate-client (client drain)))
 
 (defun play (file &key (samples 500))
   (mixed:with-objects ((source (mixed:make-unpacker samples :float 2 44100))
