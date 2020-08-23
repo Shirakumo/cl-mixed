@@ -61,4 +61,5 @@
       (mixed:connect echo-l :mono drain :left lo)
       (mixed:connect echo-r :mono drain :right ro)
       (mixed:with-sequence sequence (mp3 source echo-l echo-r drain out)
-        (loop (mixed:mix sequence))))))
+        (loop until (mixed:done-p mp3)
+              do (mixed:mix sequence))))))

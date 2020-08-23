@@ -18,4 +18,5 @@
       (mixed:with-sequence sequence (mp3 source drain out)
         (format T "~&Playing back on ~d channels @ ~dHz, ~a~%"
                 (mixed:channels drain) (mixed:samplerate drain) (mixed:encoding drain))
-        (loop (mixed:mix sequence))))))
+        (loop until (mixed:done-p mp3)
+              do (mixed:mix sequence))))))

@@ -24,6 +24,7 @@
               for dz = 0 then (- (* height (cos tt)) z)
               for x = (* width (sin tt)) then (+ x dx)
               for z = (* height (cos tt)) then (+ z dz)
+              until (mixed:done-p mp3)
               do (setf (mixed:input-field :location 0 space) (list x 0 z))
                  (when pitch-shift
                    (setf (mixed:input-field :velocity 0 space) (list dx 0 dz)))
