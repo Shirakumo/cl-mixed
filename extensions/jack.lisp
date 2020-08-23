@@ -58,6 +58,8 @@
   (cffi:with-foreign-object (status 'jack:status)
     (let ((client (jack:open-client (name drain) '(:server-name) status :string (server drain)))
           (data (mixed-cffi:direct-segment-data (mixed:handle drain))))
+      #+sbcl
+      (cffi:foreign-funcall "restore_sbcl_signals" :void)
       (when (cffi:null-pointer-p client)
         (error 'jack-error :code (cffi:mem-ref status 'jack:status)))
       (setf (mixed:samplerate drain) (jack:get-sample-rate client))
