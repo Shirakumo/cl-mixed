@@ -106,13 +106,14 @@
 (defmethod mixed:mix ((source source))
   (let ((stream (wav-stream source)))
     (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
-      (let* ((avail (min size (- (data-end source) (file-position stream))))
-             (read (- (read-sequence data stream :start start :end (+ start avail)) start)))
-        (cond ((< 0 read)
-               (incf (mixed:byte-position source) read)
-               (mixed:finish read))
-              (T
-               (setf (mixed:done-p source) T)))))))
+      (when (< 0 size)
+        (let* ((avail (min size (- (data-end source) (file-position stream))))
+               (read (- (read-sequence data stream :start start :end (+ start avail)) start)))
+          (cond ((< 0 read)
+                 (incf (mixed:byte-position source) read)
+                 (mixed:finish read))
+                (T
+                 (setf (mixed:done-p source) T))))))))
 
 (defmethod mixed:end ((source source))
   (close (file source)))
