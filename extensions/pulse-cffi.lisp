@@ -36,10 +36,10 @@
 (in-package #:org.shirakumo.fraf.mixed.pulse.cffi)
 
 (cffi:define-foreign-library libpulse
-    (t (:default "libpulse")))
+  (t (:or (:default "libpulse") "libpulse.so.0")))
 
 (cffi:define-foreign-library libpulse-simple
-    (t (:default "libpulse-simple")))
+  (t (:or (:default "libpulse-simple") "libpulse-simple.so.0")))
 
 (defconstant +channels-max+ 32)
 
