@@ -197,7 +197,7 @@
   :segment-pointer
   :buffer-pointer
   :pack-pointer
-  :segment-sequence-pointer
+  :chain-pointer
   :location-enum
   :frequency-pass-enum
   :repeat-mode-enum
@@ -261,11 +261,6 @@
   (set :pointer)
   (get :pointer)
   (data :pointer))
-
-(defcstruct (segment-sequence :class segment-sequence :conc-name segment-sequence-)
-  (segments :pointer)
-  (count :uint32)
-  (size :uint32))
 
 (defcfun (make-pack "mixed_make_pack") :int
   (frames :uint32)
@@ -519,24 +514,20 @@
   (steps :uint32)
   (segment :pointer))
 
-(defcfun (free-segment-sequence "mixed_free_segment_sequence") :void
+(defcfun (make-segment-chain "mixed_make_segment_chain") :void
   (segment :pointer))
 
-(defcfun (segment-sequence-add "mixed_segment_sequence_add") :int
+(defcfun (chain-add "mixed_chain_add") :int
   (segment :pointer)
   (mixer :pointer))
 
-(defcfun (segment-sequence-remove "mixed_segment_sequence_remove") :int
+(defcfun (chain-add-at "mixed_chain_add_at") :int
+  (i :uint32)
   (segment :pointer)
   (mixer :pointer))
 
-(defcfun (segment-sequence-start "mixed_segment_sequence_start") :int
-  (mixer :pointer))
-
-(defcfun (segment-sequence-mix "mixed_segment_sequence_mix") :int
-  (mixer :pointer))
-
-(defcfun (segment-sequence-end "mixed_segment_sequence_end") :int
+(defcfun (chain-remove-at "mixed_chain_remove_at") :int
+  (i :uint32)
   (mixer :pointer))
 
 (defcfun (load-plugin "mixed_load_plugin") :int

@@ -74,10 +74,6 @@
    #:direct-segment-set
    #:direct-segment-get
    #:direct-segment-data
-   #:segment-sequence
-   #:segment-sequence-segments
-   #:segment-sequence-count
-   #:segment-sequence-size
    #:make-pack
    #:free-pack
    #:clear-pack
@@ -140,12 +136,11 @@
    #:queue-remove
    #:queue-remove-at
    #:queue-clear
-   #:free-segment-sequence
-   #:segment-sequence-add
-   #:segment-sequence-remove
-   #:segment-sequence-start
-   #:segment-sequence-mix
-   #:segment-sequence-end
+   #:make-segment-chain
+   #:cahin-add
+   #:cahin-add-at
+   #:cahin-remove
+   #:cahin-remove-at
    #:load-plugin
    #:close-plugin
    #:register-segment
@@ -217,18 +212,6 @@
    #:transfer
    #:clear
    #:framesize)
-  ;; segment-sequence.lisp
-  (:export
-   #:segment-sequence
-   #:make-segment-sequence
-   #:segments
-   #:add
-   #:withdraw
-   #:start
-   #:mix
-   #:end
-   #:size
-   #:with-sequence)
   ;; segment.lisp
   (:export
    #:segment
@@ -265,6 +248,15 @@
    #:channels
    #:make-basic-mixer
    #:volume)
+  ;; segments/chain.lisp
+  (:export
+   #:chain
+   #:segments
+   #:make-chain
+   #:bypass
+   #:add
+   #:withdraw
+   #:with-chain)
   ;; segments/channel-convert.lisp
   (:export
    #:channel-convert

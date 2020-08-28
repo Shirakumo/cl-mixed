@@ -18,7 +18,7 @@
       (mixed:connect source :right void 0 ri)
       (mixed:connect space :left drain :left lo)
       (mixed:connect space :right drain :right ro)
-      (mixed:with-sequence sequence (mp3 source void space drain out)
+      (mixed:with-chain chain (mp3 source void space drain out)
         (loop for tt = 0 then (+ tt speed)
               for dx = 0 then (- (* width (sin tt)) x)
               for dz = 0 then (- (* height (cos tt)) z)
@@ -28,4 +28,4 @@
               do (setf (mixed:input-field :location 0 space) (list x 0 z))
                  (when pitch-shift
                    (setf (mixed:input-field :velocity 0 space) (list dx 0 dz)))
-                 (mixed:mix sequence))))))
+                 (mixed:mix chain))))))

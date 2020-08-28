@@ -15,8 +15,8 @@
       (mixed:connect source :left drain :left l)
       (mixed:connect source :right drain :right r)
       (mixed:start out)
-      (mixed:with-sequence sequence (mp3 source drain out)
+      (mixed:with-chain chain (mp3 source drain out)
         (format T "~&Playing back on ~d channels @ ~dHz, ~a~%"
                 (mixed:channels drain) (mixed:samplerate drain) (mixed:encoding drain))
         (loop until (mixed:done-p mp3)
-              do (mixed:mix sequence))))))
+              do (mixed:mix chain))))))

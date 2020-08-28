@@ -39,7 +39,7 @@
         (mixed:connect generator :mono distributor 0 mono)
         (dotimes (i 2)
           (mixed:connect distributor i drain i NIL))
-        (mixed:with-sequence sequence (generator distributor drain out)
+        (mixed:with-chain chain (generator distributor drain out)
           (loop with time = 0.0
                 for (tone duration) = (first tones)
                 while tones
