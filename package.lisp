@@ -34,7 +34,6 @@
    #:buffer-read
    #:buffer-write
    #:buffer-reserved
-   #:buffer-full-r2
    #:buffer-virtual-p
    #:pack
    #:pack-data
@@ -46,7 +45,6 @@
    #:pack-read
    #:pack-write
    #:pack-reserved
-   #:pack-full-r2
    #:field-info
    #:field-info-field
    #:field-info-description

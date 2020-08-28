@@ -210,15 +210,14 @@
   :resample-type-enum)
 
 (declaim (ftype (function (cffi:foreign-pointer) (unsigned-byte 32))
-                buffer-size buffer-read buffer-write buffer-reserved buffer-full-r2
-                pack-size pack-read pack-write pack-reserved pack-full-r2))
+                buffer-size buffer-read buffer-write buffer-reserved
+                pack-size pack-read pack-write pack-reserved))
 (defcstruct (buffer :class buffer :conc-name buffer-)
   (data :pointer)
   (size :uint32)
   (read :uint32)
   (write :uint32)
   (reserved :uint32)
-  (full-r2 :char)
   (virtual-p :char))
 
 (defcstruct (pack :class pack :conc-name pack-)
@@ -227,7 +226,6 @@
   (read :uint32)
   (write :uint32)
   (reserved :uint32)
-  (full-r2 :char)
   (encoding encoding)
   (channels :uint8)
   (samplerate :uint32))
