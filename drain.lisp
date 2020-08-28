@@ -22,8 +22,8 @@
   (list :name (string (class-name (class-of drain)))
         :description "Output drain."
         :flags ()
-        :min-inputs 1
-        :max-inputs 1
+        :min-inputs 0
+        :max-inputs 0
         :outputs 0
         :fields ()))
 

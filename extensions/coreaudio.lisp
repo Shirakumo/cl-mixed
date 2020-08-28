@@ -132,8 +132,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod mixed:free ((drain drain))
   (when (audio-unit drain)
-    (coreaudio:audio-unit-uninitialize (audio-unit drain))
-    (coreaudio:audio-component-instance-dispose (audio-unit drain))))
+    (float-features:with-float-traps-masked ()
+      (coreaudio:audio-unit-uninitialize (audio-unit drain))
+      (coreaudio:audio-component-instance-dispose (audio-unit drain)))))
 
 (defmethod mixed:start ((drain drain))
   (float-features:with-float-traps-masked ()

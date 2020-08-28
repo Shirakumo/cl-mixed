@@ -25,7 +25,7 @@
         :flags ()
         :min-inputs 0
         :max-inputs 0
-        :outputs 1
+        :outputs 0
         :fields ()))
 
 (defmethod output-field ((field (eql :pack)) (location (eql 0)) (drain drain))

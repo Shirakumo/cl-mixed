@@ -7,12 +7,9 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass unpacker (segment)
-  ((pack :initarg :pack :reader pack))
-  (:default-initargs
-   :pack (error "PACK required.")
-   :samplerate *default-samplerate*))
+  ((pack :initarg :pack :initform (error "PACK required") :reader pack)))
 
-(defmethod initialize-instance :after ((unpacker unpacker) &key samplerate)
+(defmethod initialize-instance :after ((unpacker unpacker) &key (samplerate *default-samplerate*))
   (with-error-on-failure ()
     (mixed:make-segment-unpacker (handle (pack unpacker)) samplerate (handle unpacker))))
 
@@ -27,3 +24,9 @@
 (define-delegated-slot-accessor samplerate unpacker pack)
 (define-field-accessor volume unpacker :float :volume)
 (define-field-accessor bypass unpacker :bool :bypass)
+
+(defmethod input-field ((field (eql :pack)) (location (eql 0)) (unpacker unpacker))
+  (pack unpacker))
+
+(defmethod input ((location (eql 0)) (unpacker unpacker))
+  (pack unpacker))

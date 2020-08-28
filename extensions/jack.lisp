@@ -135,6 +135,7 @@
 (defmethod mixed:end ((drain drain))
   (jack:deactivate-client (client drain)))
 
+#++
 (defun play (file &key (samples 500))
   (mixed:with-objects ((source (mixed:make-unpacker samples :float 2 44100))
                        (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))
