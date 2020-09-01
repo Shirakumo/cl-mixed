@@ -135,10 +135,10 @@
    #:queue-remove-at
    #:queue-clear
    #:make-segment-chain
-   #:cahin-add
-   #:cahin-add-at
-   #:cahin-remove
-   #:cahin-remove-at
+   #:chain-add
+   #:chain-add-at
+   #:chain-remove
+   #:chain-remove-at
    #:load-plugin
    #:close-plugin
    #:register-segment

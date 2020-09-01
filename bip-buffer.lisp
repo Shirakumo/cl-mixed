@@ -25,8 +25,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (declare (optimize speed))
   (with-buffer-fields (read write full-r2) buffer
     (if full-r2
-        (if (< read size)
-            (- size read)
+        (if (< read (mixed:buffer-size buffer))
+            (- (mixed:buffer-size buffer) read)
             write)
         (- write read))))
 
@@ -38,7 +38,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
            (- read write))
           ((= write (mixed:buffer-size buffer))
            read)
-          (- (mixed:buffer-size buffer) write))))
+          (T
+           (- (mixed:buffer-size buffer) write)))))
 
 (declaim (ftype (function (bip-buffer (unsigned-byte 32)) (values (unsigned-byte 32) (unsigned-byte 32))) request-write))
 (defun request-write (buffer size)
@@ -68,35 +69,42 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (let ((buffer (handle buffer)))
     (when (< (mixed:buffer-reserved buffer) size)
       (error "Overcommit."))
-    (incf (mixed:buffer-write buffer) size)
-    (setf (mixed:buffer-reserved buffer) 0)))
+    (mixed:buffer-finish-write size buffer)))
 
 (declaim (ftype (function (bip-buffer (unsigned-byte 32)) (values (unsigned-byte 32) (unsigned-byte 32))) request-read))
 (defun request-read (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
-  (with-buffer-fields (read write full-r2) buffer
-    (let ((available (if full-r2
-                         (- (mixed:buffer-size buffer) read)
-                         (- (mixed:buffer-write buffer) read))))
-      (cond ((< 0 available)
-             (values read (min size available)))
-            (full-r2
-             (setf (mixed:buffer-read buffer) 0)
-             (values 0 (min size (mixed:buffer-write buffer))))
-            (T
-             (values 0 0))))))
+  ;; Annoying: this function needs to CAS on a foreign structure, but we cannot
+  ;; do that portably (Atomics cannot promise it, for instance). So we have to
+  ;; call out to the foreign function and then figure out the actual offset from
+  ;; pointer comparisons...
+  (let ((handle (handle buffer)))
+    (cffi:with-foreign-objects ((area :pointer)
+                                (rsize :uint32))
+      (setf (cffi:mem-ref rsize :uint32) size)
+      (mixed:buffer-request-read area rsize handle)
+      (let ((off (- (cffi:pointer-address (cffi:mem-ref area :pointer))
+                    (cffi:pointer-address (mixed:buffer-data handle)))))
+        ;; Need to make sure to get the element count out of float buffers rather
+        ;; than the byte offset we get with the pointer difference.
+        (values (if (typep buffer 'buffer) (/ off 4) off)
+                (cffi:mem-ref rsize :uint32))))))
 
 (defun finish-read (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
   (with-buffer-fields (read write full-r2) buffer
-    (when (< (if full-r2
-                 (- (mixed:buffer-size buffer) read)
-                 (- write read))
-             size)
-      (error "Overcommit."))
-    (setf (mixed:buffer-read buffer) (+ read size))))
+    (cond (full-r2
+           (if (< (- (mixed:buffer-size buffer) read) size)
+               (error "Overcommit.")
+               (setf (mixed:buffer-read buffer) (+ read size))))
+          ((< read write)
+           (if (< (- write read) (mixed:buffer-size buffer))
+               (error "Overcommit.")
+               (setf (mixed:buffer-read buffer) (+ read size))))
+          ((< 0 size)
+           (error "Overcommit")))))
 
 (declaim (inline data-ptr))
 (defun data-ptr (data &optional (start 0))

@@ -67,8 +67,7 @@
   (setf (field :attenuation space) value))
 
 (defmethod add ((new segment) (segment space-mixer))
-  (let ((buffer (aref (outputs new) 0))
-        (location (length (inputs segment))))
+  (let ((buffer (aref (outputs new) 0)))
     (add buffer segment)
     new))
 

@@ -54,7 +54,7 @@
      (incf position (/ (byte-position source) (framesize (pack source)))))
     (:absolute))
   (when (<= (frame-count source) position)
-    (setf (position source) (frame-count source))
+    (setf (byte-position source) (* (frame-count source) (framesize (pack source))))
     (setf (done-p source) T))
   (seek-to-frame source position)
   (setf (byte-position source) (* position (framesize (pack source))))

@@ -512,21 +512,25 @@
   (steps :uint32)
   (segment :pointer))
 
-(defcfun (make-segment-chain "mixed_make_segment_chain") :void
+(defcfun (make-segment-chain "mixed_make_segment_chain") :int
   (segment :pointer))
 
 (defcfun (chain-add "mixed_chain_add") :int
   (segment :pointer)
-  (mixer :pointer))
+  (chain :pointer))
 
 (defcfun (chain-add-at "mixed_chain_add_at") :int
   (i :uint32)
   (segment :pointer)
-  (mixer :pointer))
+  (chain :pointer))
+
+(defcfun (chain-remove "mixed_chain_remove") :int
+  (segment :pointer)
+  (chain :pointer))
 
 (defcfun (chain-remove-at "mixed_chain_remove_at") :int
   (i :uint32)
-  (mixer :pointer))
+  (chain :pointer))
 
 (defcfun (load-plugin "mixed_load_plugin") :int
   (file :string))

@@ -12,7 +12,7 @@
 (defmethod initialize-instance :after ((segment chain) &key segments)
   (with-error-on-failure ()
     (mixed:make-segment-chain (handle segment)))
-  (map NIL (lambda (s) (add s segment))))
+  (map NIL (lambda (s) (add s segment)) segments))
 
 (defun make-chain (&rest segments)
   (make-instance 'chain :segments segments))
@@ -24,6 +24,13 @@
     (mixed:chain-add (handle segment) (handle chain)))
   (vector-push-extend segment (segments chain))
   segment)
+
+(defmethod withdraw ((i integer) (chain chain))
+  (with-error-on-failure ()
+    (mixed:chain-remove-at i (handle chain)))
+  (let ((segment (aref (segments chain) i)))
+    (vector-remove-pos i (segments chain))
+    segment))
 
 (defmethod withdraw ((segment segment) (chain chain))
   (with-error-on-failure ()
