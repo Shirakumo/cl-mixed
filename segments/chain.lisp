@@ -39,12 +39,11 @@
   segment)
 
 (defmacro with-chain (name segments &body body)
-  `(let ((,name (make-chain ,@segments)))
+  `(with-objects ((,name (make-chain ,@segments)))
      (start ,name)
      (unwind-protect
           (let ((,name ,name))
             (flet ((mix (&optional (,name ,name))
                      (mix ,name)))
               ,@body))
-       (end ,name)
-       (free ,name))))
+       (end ,name))))

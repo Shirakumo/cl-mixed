@@ -9,8 +9,6 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defclass bip-buffer ()
   ())
 
-;;;; FIXME: !!! THIS IS NOT YET PORTED RIGHT !!!
-
 (defmacro with-buffer-fields ((read write full-r2) buffer &body body)
   `(let* ((,buffer (handle ,buffer))
           (,read (mixed:buffer-read ,buffer))
@@ -83,13 +81,14 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (cffi:with-foreign-objects ((area :pointer)
                                 (rsize :uint32))
       (setf (cffi:mem-ref rsize :uint32) size)
-      (mixed:buffer-request-read area rsize handle)
-      (let ((off (- (cffi:pointer-address (cffi:mem-ref area :pointer))
-                    (cffi:pointer-address (mixed:buffer-data handle)))))
-        ;; Need to make sure to get the element count out of float buffers rather
-        ;; than the byte offset we get with the pointer difference.
-        (values (if (typep buffer 'buffer) (/ off 4) off)
-                (cffi:mem-ref rsize :uint32))))))
+      (if (< 0 (mixed:buffer-request-read area rsize handle))
+          (let ((off (- (cffi:pointer-address (cffi:mem-ref area :pointer))
+                        (cffi:pointer-address (mixed:buffer-data handle)))))
+            ;; Need to make sure to get the element count out of float buffers rather
+            ;; than the byte offset we get with the pointer difference.
+            (values (if (typep buffer 'buffer) (/ off 4) off)
+                    (cffi:mem-ref rsize :uint32)))
+          (values 0 0)))))
 
 (defun finish-read (buffer size)
   (declare (optimize speed))
