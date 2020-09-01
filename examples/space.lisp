@@ -6,14 +6,14 @@
 
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
-(defun space (file &key (samples 500) (width 100) (height 50) (speed 0.001) pitch-shift (output 'org.shirakumo.fraf.mixed.out123:drain))
-  (mixed:with-objects ((source (mixed:make-unpacker samples :float 2 44100))
-                       (drain (mixed:make-packer samples :float 2 44100))
+(defun space (file &key (samplerate 44100) (width 100) (height 50) (speed 0.001) pitch-shift (output 'org.shirakumo.fraf.mixed.out123:drain))
+  (mixed:with-objects ((source (mixed:make-unpacker :samplerate samplerate))
+                       (drain (mixed:make-packer :samplerate samplerate))
                        (void (mixed:make-void))
                        (space (mixed:make-space-mixer :samplerate 44100))
                        (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))
                        (out (make-instance output :pack drain)))
-    (mixed:with-buffers samples (li ri lo ro)
+    (mixed:with-buffers 500 (li ri lo ro)
       (mixed:connect source :left space 0 li)
       (mixed:connect source :right void 0 ri)
       (mixed:connect space :left drain :left lo)

@@ -20,7 +20,7 @@
       (setf (mixed:pack-channels handle) channels)
       (setf (mixed:pack-samplerate handle) samplerate))))
 
-(defun make-pack (frames encoding channels samplerate)
+(defun make-pack (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)))
   (make-instance 'pack :frames frames
                        :encoding encoding
                        :channels channels

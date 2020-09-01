@@ -28,14 +28,14 @@
     (E5   659.25)
     (F5   698.46)))
 
-(defun tone (tones &key (type :sine) (samples 500) (output 'org.shirakumo.fraf.mixed.out123:drain))
+(defun tone (tones &key (type :sine) (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain))
   (let ((tones (loop for (tone length) in tones
                      collect (list (find-symbol (string tone) #.*package*) length))))
-    (mixed:with-objects ((generator (mixed:make-generator :type type))
+    (mixed:with-objects ((generator (mixed:make-generator :type type :samplerate samplerate))
                          (distributor (mixed:make-distributor))
-                         (drain (mixed:make-packer samples :float 2 44100))
+                         (drain (mixed:make-packer :samplerate samplerate))
                          (out (make-instance output :pack drain)))
-      (mixed:with-buffers samples (mono)
+      (mixed:with-buffers 500 (mono)
         (mixed:connect generator :mono distributor 0 mono)
         (dotimes (i 2)
           (mixed:connect distributor i drain i NIL))
