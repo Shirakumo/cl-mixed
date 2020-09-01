@@ -78,13 +78,16 @@
   (direct-info segment))
 
 (defmethod start ((segment segment))
-  (mixed:segment-start (handle segment)))
+  (with-error-on-failure ()
+    (mixed:segment-start (handle segment))))
 
 (defmethod mix ((segment segment))
-  (mixed:segment-mix (handle segment)))
+  (with-error-on-failure ()
+    (mixed:segment-mix (handle segment))))
 
 (defmethod end ((segment segment))
-  (mixed:segment-end (handle segment)))
+  (with-error-on-failure ()
+    (mixed:segment-end (handle segment))))
 
 (defmethod allocate-handle ((segment segment))
   (calloc '(:struct mixed:segment)))

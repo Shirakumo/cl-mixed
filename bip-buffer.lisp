@@ -51,7 +51,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                     (values write (mixed:buffer-reserved buffer)))
                    ((< 0 read)
                     (setf (mixed:buffer-reserved buffer) (min size read))
-                    (setf (mixed:buffer-write buffer) #x8000000)
+                    (setf (mixed:buffer-write buffer) #x80000000)
                     (values 0 (mixed:buffer-reserved buffer)))
                    (T
                     (values 0 0)))))
