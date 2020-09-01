@@ -23,6 +23,7 @@
                (:file "pack")
                (:file "segment")
                (:file "generic")
+               (:file "bundle")
                (:file "drain")
                (:file "source")
                (:module "segments"

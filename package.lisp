@@ -181,6 +181,9 @@
    #:clear
    #:with-buffers
    #:transfer)
+  ;; bundle.lisp
+  (:export
+   #:bundle)
   ;; c-object.lisp
   (:export
    #:handle
