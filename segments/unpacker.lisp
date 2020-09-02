@@ -13,7 +13,7 @@
   (with-error-on-failure ()
     (mixed:make-segment-unpacker (handle (pack unpacker)) samplerate (handle unpacker))))
 
-(defun make-unpacker (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)) (source-samplerate source-samplerate))
+(defun make-unpacker (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)) (source-samplerate samplerate))
   (make-instance 'unpacker :pack (make-pack :frames frames :encoding encoding :channels channels :samplerate source-samplerate)
                            :samplerate samplerate))
 
