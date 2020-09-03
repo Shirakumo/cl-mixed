@@ -31,11 +31,15 @@
   (handler-case (progn (cffi:use-foreign-library pulse:libpulse)
                        (cffi:use-foreign-library pulse:libpulse-simple))
     (error () (return-from pulse-present-p NIL)))
-  (cffi:with-foreign-object (err :int)
+  (cffi:with-foreign-objects ((err :int)
+                              (sample-spec '(:struct pulse:sample-spec)))
+    (setf (pulse:sample-spec-format sample-spec) :int16)
+    (setf (pulse:sample-spec-rate sample-spec) 44100)
+    (setf (pulse:sample-spec-channels sample-spec) 2)
     (let ((drain (pulse:simple-new
-                  (cffi:null-pointer) (cffi:null-pointer)
-                  :playback (cffi:null-pointer) (cffi:null-pointer)
-                  (cffi:null-pointer) (cffi:null-pointer) (cffi:null-pointer)
+                  (cffi:null-pointer) "mixed"
+                  :playback (cffi:null-pointer) "mixed"
+                  sample-spec (cffi:null-pointer) (cffi:null-pointer)
                   err)))
       (cond ((cffi:null-pointer-p drain)
              NIL)
