@@ -57,8 +57,8 @@
   (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
     (flet ((marr (count)
              (if (< 128 count)
-                 (make-array 0 :adjustable T :fill-pointer T)
-                 (make-array count))))
+                 (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)
+                 (make-array count :initial-element NIL))))
       (setf (slot-value segment 'outputs) (marr outputs))
       (setf (slot-value segment 'inputs) (marr max-inputs)))))
 

@@ -22,8 +22,7 @@
   (let ((buffers (outputs new))
         (location (length (inputs segment))))
     (loop for i from 0 below (channels segment)
-          do (setf (input-field :buffer (+ i location) segment)
-                   (aref buffers i)))
+          do (setf (input-field :buffer (+ i location) segment) (aref buffers i)))
     new))
 
 (defmethod withdraw ((old segment) (segment basic-mixer))
@@ -31,6 +30,5 @@
         (inputs (inputs segment)))
     (loop for i from 0 below (channels segment)
           for location = (position (aref buffers i) inputs)
-          do (setf (input-field :buffer location segment)
-                   NIL))
+          do (setf (input-field :buffer location segment) NIL))
     old))

@@ -41,7 +41,7 @@
   (pack drain))
 
 (defmethod seek ((source source) position &key (mode :absolute) (by :frame))
-  (assert (< 0 position))
+  (assert (<= 0 position))
   (ecase by
     (:second
      (setf position (floor (* position (samplerate (pack source))))))

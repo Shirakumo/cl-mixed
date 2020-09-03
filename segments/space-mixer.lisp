@@ -67,9 +67,9 @@
   (setf (field :attenuation space) value))
 
 (defmethod add ((new segment) (segment space-mixer))
-  (setf (input-field (1+ (length (inputs segment))) :buffer segment) (output 0 new))
+  (setf (input-field :buffer (1+ (length (inputs segment))) segment) (output 0 new))
   new)
 
 (defmethod withdraw ((old segment) (segment space-mixer))
-  (setf (input-field (position (output 0 old) (inputs segment)) :buffer segment segment) NIL)
+  (setf (input-field :buffer (position (output 0 old) (inputs segment)) segment) NIL)
   old)
