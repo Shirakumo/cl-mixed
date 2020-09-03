@@ -77,18 +77,40 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   ;; do that portably (Atomics cannot promise it, for instance). So we have to
   ;; call out to the foreign function and then figure out the actual offset from
   ;; pointer comparisons...
+  ;;
+  ;; Also the pointer diffing seems to give garbage results somehow, so this is
+  ;; not a possible alternative.
+  #+(or)
   (let ((handle (handle buffer)))
     (cffi:with-foreign-objects ((area :pointer)
                                 (rsize :uint32))
       (setf (cffi:mem-ref rsize :uint32) size)
       (if (< 0 (mixed:buffer-request-read area rsize handle))
-          (let ((off (- (cffi:pointer-address (cffi:mem-ref area :pointer))
-                        (cffi:pointer-address (mixed:buffer-data handle)))))
+          (let ((off (the (unsigned-byte 32)
+                          (- (cffi:pointer-address (cffi:mem-ref area :pointer))
+                             (cffi:pointer-address (mixed:buffer-data handle))))))
             ;; Need to make sure to get the element count out of float buffers rather
             ;; than the byte offset we get with the pointer difference.
-            (values (if (typep buffer 'buffer) (/ off 4) off)
+            (print off)
+            (values (if (typep buffer 'buffer) (truncate off 4) off)
                     (cffi:mem-ref rsize :uint32)))
-          (values 0 0)))))
+          (values 0 0))))
+  (with-buffer-fields (read write full-r2) buffer
+    (cond (full-r2
+           (let ((available (- (mixed:buffer-size buffer) read)))
+             (cond ((< 0 available)
+                    (values read (min size available)))
+                   ((< 0 write)
+                    ;; FIXME: This should be CASed.
+                    (setf (mixed:buffer-write buffer) write)
+                    (setf (mixed:buffer-read buffer) 0)
+                    (values 0 (min size write)))
+                   (T
+                    (values 0 0)))))
+          ((< read write)
+           (values read (min size (- write read))))
+          (T
+           (values 0 0)))))
 
 (defun finish-read (buffer size)
   (declare (optimize speed))
@@ -99,7 +121,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (error "Overcommit.")
                (setf (mixed:buffer-read buffer) (+ read size))))
           ((< read write)
-           (if (< (- write read) (mixed:buffer-size buffer))
+           (if (< (- write read) size)
                (error "Overcommit.")
                (setf (mixed:buffer-read buffer) (+ read size))))
           ((< 0 size)
