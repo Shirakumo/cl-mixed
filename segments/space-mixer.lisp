@@ -66,10 +66,10 @@
 (defmethod (setf attenuation) (value (space space-mixer))
   (setf (field :attenuation space) value))
 
-(defmethod add ((new segment) (segment basic-mixer))
-  (setf (input-field :buffer (1+ (length (inputs segment)))) (output 0 new))
+(defmethod add ((new segment) (segment space-mixer))
+  (setf (input-field (1+ (length (inputs segment))) :buffer segment) (output 0 new))
   new)
 
-(defmethod withdraw ((old segment) (segment basic-mixer))
-  (setf (input-field :buffer (position (output 0 old) (inputs segment)) segment) NIL)
+(defmethod withdraw ((old segment) (segment space-mixer))
+  (setf (input-field (position (output 0 old) (inputs segment)) :buffer segment segment) NIL)
   old)
