@@ -13,8 +13,8 @@
   (with-error-on-failure ()
     (mixed:make-segment-packer (handle (pack packer)) samplerate (handle packer))))
 
-(defun make-packer (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)) (target-samplerate samplerate))
-  (make-instance 'packer :pack (make-pack :frames frames :encoding encoding :channels channels :samplerate target-samplerate)
+(defun make-packer (&key pack (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)) (target-samplerate samplerate))
+  (make-instance 'packer :pack (or pack (make-pack :frames frames :encoding encoding :channels channels :samplerate target-samplerate))
                          :samplerate samplerate))
 
 (define-delegated-slot-accessor data packer pack)
