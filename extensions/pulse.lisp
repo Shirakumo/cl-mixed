@@ -28,7 +28,8 @@
        (error 'pulse-error :code (cffi:mem-ref ,errorvar :int)))))
 
 (defun pulse-present-p ()
-  (handler-case (cffi:use-foreign-library pulse:libpulse)
+  (handler-case (progn (cffi:use-foreign-library pulse:libpulse)
+                       (cffi:use-foreign-library pulse:libpulse-simple))
     (error () (return-from pulse-present-p NIL)))
   (cffi:with-foreign-object (err :int)
     (let ((drain (pulse:simple-new
