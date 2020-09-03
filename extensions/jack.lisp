@@ -41,7 +41,7 @@
 
 (defclass drain (mixed:virtual)
   ((client :initform NIL :accessor client)
-   (name :initarg :name :initform "mixed" :accessor name)
+   (program-name :initarg :program-name :initform "mixed" :accessor program-name)
    (server :initarg :server :initform "default" :accessor server)
    (samplerate :initform 44100 :accessor mixed:samplerate)))
 
@@ -56,7 +56,7 @@
     (setf (data-channels data) channels)
     (setf (mixed-cffi:direct-segment-data (mixed:handle drain)) data))
   (cffi:with-foreign-object (status 'jack:status)
-    (let ((client (jack:open-client (name drain) '(:server-name) status :string (server drain)))
+    (let ((client (jack:open-client (program-name drain) '(:server-name) status :string (server drain)))
           (data (mixed-cffi:direct-segment-data (mixed:handle drain))))
       #+sbcl
       (cffi:foreign-funcall "restore_sbcl_signals" :void)
