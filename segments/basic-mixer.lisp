@@ -7,8 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defclass basic-mixer (segment)
-  ((channels :initarg :channels :accessor channels))
-  (:default-initargs :channels 1))
+  ((channels :initarg :channels :initform 2 :accessor channels)))
 
 (defmethod initialize-instance :after ((mixer basic-mixer) &key)
   (with-error-on-failure ()
