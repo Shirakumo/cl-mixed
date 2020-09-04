@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass bundle ()
+(defclass bundle (virtual)
   ((segments :reader segments)))
 
 (defmethod initialize-instance :after ((bundle bundle) &key segment-class segment-initargs (channels 2))
@@ -32,11 +32,19 @@
   (map 'vector (lambda (s) (aref (outputs s) 0)) (segments bundle)))
 
 (defmethod info ((bundle bundle))
-  (let ((info (info (aref (segments bundle) 0))))
-    (setf (getf info :min-inputs) (length (segments bundle)))
-    (setf (getf info :max-inputs) (length (segments bundle)))
-    (setf (getf info :outputs) (length (segments bundle)))
-    info))
+  (if (aref (segments bundle) 0)
+      (let ((info (info (aref (segments bundle) 0))))
+        (setf (getf info :min-inputs) (length (segments bundle)))
+        (setf (getf info :max-inputs) (length (segments bundle)))
+        (setf (getf info :outputs) (length (segments bundle)))
+        info)
+      (list :name "bundle"
+            :description "Bundle of segments"
+            :flags ()
+            :min-inputs 0
+            :max-inputs 0
+            :outputs 0
+            :fields ())))
 
 (defmethod start ((bundle bundle))
   (loop for segment across (segments bundle)
