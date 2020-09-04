@@ -217,6 +217,7 @@
   ;; segment.lisp
   (:export
    #:segment
+   #:revalidate
    #:inputs
    #:outputs
    #:info

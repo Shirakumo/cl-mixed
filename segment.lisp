@@ -54,13 +54,7 @@
 
 (defmethod initialize-instance :around ((segment segment) &key)
   (call-next-method)
-  (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
-    (flet ((marr (count)
-             (if (< 128 count)
-                 (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)
-                 (make-array count :initial-element NIL))))
-      (setf (slot-value segment 'outputs) (marr outputs))
-      (setf (slot-value segment 'inputs) (marr max-inputs)))))
+  (revalidate segment))
 
 (defmethod info ((segment segment))
   (unless (direct-info segment)
@@ -76,6 +70,16 @@
                   :outputs (mixed:segment-info-outputs info)
                   :fields (decode-field-info info)))))
   (direct-info segment))
+
+(defmethod revalidate ((segment segment))
+  (setf (direct-info segment) NIL)
+  (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
+    (flet ((marr (count)
+             (if (< 128 count)
+                 (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)
+                 (make-array count :initial-element NIL))))
+      (setf (slot-value segment 'outputs) (marr outputs))
+      (setf (slot-value segment 'inputs) (marr max-inputs)))))
 
 (defmethod start ((segment segment))
   (with-error-on-failure ()
