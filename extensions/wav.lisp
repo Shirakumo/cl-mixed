@@ -112,7 +112,7 @@
           (cond ((< 0 read)
                  (incf (mixed:byte-position source) read)
                  (mixed:finish read))
-                (T
+                ((= 0 (mixed:available-read (mixed:pack source)))
                  (setf (mixed:done-p source) T))))))))
 
 (defmethod mixed:end ((source source))
