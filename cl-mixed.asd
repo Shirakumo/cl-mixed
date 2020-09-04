@@ -23,12 +23,12 @@
                (:file "pack")
                (:file "segment")
                (:file "generic")
-               (:file "bundle")
                (:file "drain")
                (:file "source")
                (:file "mixer")
                (:module "segments"
                 :components ((:file "basic-mixer")
+                             (:file "bundle")
                              (:file "chain")
                              (:file "channel-convert")
                              (:file "delay")
