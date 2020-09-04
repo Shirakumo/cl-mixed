@@ -33,9 +33,11 @@
     (mixed:segment-set-in field location (cffi:null-pointer) (handle mixer)))
   (cond ((< location (length (inputs mixer)))
          (setf (aref (inputs mixer) location) value)
-         (push location (free-locations mixer)))
+         ;; FIXME: inefficient as hell.
+         (setf (free-locations mixer) (sort (list* location (free-locations mixer)) #'<)))
         (T
          (loop for i from (length (inputs mixer)) to location
                do (push i (free-locations mixer)))
+         (setf (free-locations mixer) (sort (list* location (free-locations mixer)) #'<))
          (vector-insert-pos location value (inputs mixer))))
   value)
