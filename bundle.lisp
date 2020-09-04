@@ -21,6 +21,9 @@
           (setf (aref segments i) segment))
     (setf (slot-value bundle 'segments) segments)))
 
+(defun make-bundle (channels class &rest initargs)
+  (make-instance 'bundle :segment-class class :segment-initargs initargs :channels channels))
+
 (defmethod inputs ((bundle bundle))
   (map 'vector (lambda (s) (aref (inputs s) 0)) (segments bundle)))
 

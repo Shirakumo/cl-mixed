@@ -183,7 +183,8 @@
    #:transfer)
   ;; bundle.lisp
   (:export
-   #:bundle)
+   #:bundle
+   #:make-bundle)
   ;; c-object.lisp
   (:export
    #:handle
