@@ -10,18 +10,19 @@
   ((segments :reader segments)))
 
 (defmethod initialize-instance :after ((bundle bundle) &key segment-class segment-initargs (channels 2))
-  (let ((segments (make-array channels)))
+  (let ((segments (make-array channels :initial-element NIL)))
     (when (<= channels 0) (error "Cannot make a bundle with less than 1 channel."))
-    (loop for i from 0 below channels
-          for segment = (apply #'make-instance segment-class segment-initargs)
-          do (unless (and (= 1 (getf (info segment) :outputs))
-                          (<= 1 (getf (info segment) :max-inputs)))
-               (unwind-protect (error "The segment does not have a 1:1 in/out mapping and can't be used for a bundle.")
-                 (free segment)))
-          (setf (aref segments i) segment))
+    (when segment-class
+      (loop for i from 0 below channels
+            for segment = (apply #'make-instance segment-class segment-initargs)
+            do (unless (and (= 1 (getf (info segment) :outputs))
+                            (<= 1 (getf (info segment) :max-inputs)))
+                 (unwind-protect (error "The segment does not have a 1:1 in/out mapping and can't be used for a bundle.")
+                   (free segment)))
+               (setf (aref segments i) segment)))
     (setf (slot-value bundle 'segments) segments)))
 
-(defun make-bundle (channels class &rest initargs)
+(defun make-bundle (channels &optional class &rest initargs)
   (make-instance 'bundle :segment-class class :segment-initargs initargs :channels channels))
 
 (defmethod inputs ((bundle bundle))

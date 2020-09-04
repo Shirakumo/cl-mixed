@@ -23,6 +23,8 @@
                (setf (field field instance) value)))
     instance))
 
+(defmethod channels ((mixer space-mixer)) 1)
+
 (define-vector-field-accessor location space-mixer :space-location)
 (define-vector-field-accessor velocity space-mixer :space-velocity)
 (define-vector-field-accessor direction space-mixer :space-direction)
