@@ -18,7 +18,8 @@
                (:file "tone")
                (:file "space")
                (:file "echo")
-               (:file "play"))
+               (:file "play")
+               (:file "mixer"))
   :depends-on (:cl-mixed
                :cl-mixed-out123
                :cl-mixed-mpg123))

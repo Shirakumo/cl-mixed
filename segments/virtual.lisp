@@ -43,20 +43,16 @@
   (aref (outputs segment) location))
 
 (defmethod (setf input-field) ((value buffer) (field (eql :buffer)) (location integer) (segment virtual))
-  (vector-insert-pos location value (inputs segment))
-  value)
+  (setf (aref (inputs segment) location) value))
 
 (defmethod (setf output-field) ((value buffer) (field (eql :buffer)) (location integer) (segment virtual))
-  (vector-insert-pos location value (outputs segment))
-  value)
+  (setf (aref (outputs segment) location) value))
 
 (defmethod (setf input-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
-  (vector-remove-pos location (inputs segment))
-  value)
+  (setf (aref (inputs segment) location) value))
 
 (defmethod (setf output-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
-  (vector-remove-pos location (outputs segment))
-  value)
+  (setf (aref (inputs segment) location) value))
 
 (define-callback virtual-free :void ((segment :pointer))
     NIL

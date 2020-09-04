@@ -26,6 +26,7 @@
                (:file "bundle")
                (:file "drain")
                (:file "source")
+               (:file "mixer")
                (:module "segments"
                 :components ((:file "basic-mixer")
                              (:file "chain")

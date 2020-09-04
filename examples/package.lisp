@@ -12,6 +12,7 @@
    (#:out123 #:org.shirakumo.fraf.out123)
    (#:mpg123 #:org.shirakumo.fraf.mpg123))
   (:export
+   #:mixer
    #:play
    #:echo
    #:space

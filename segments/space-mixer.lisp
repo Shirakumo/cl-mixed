@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defclass space-mixer (segment)
+(defclass space-mixer (mixer)
   ()
   (:default-initargs
    :samplerate *default-samplerate*))
@@ -67,7 +67,7 @@
   (setf (field :attenuation space) value))
 
 (defmethod add ((new segment) (segment space-mixer))
-  (setf (input-field :buffer (1+ (length (inputs segment))) segment) (output 0 new))
+  (setf (input-field :buffer T segment) (output 0 new))
   new)
 
 (defmethod withdraw ((old segment) (segment space-mixer))

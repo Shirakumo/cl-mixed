@@ -121,13 +121,13 @@
 (defmethod (setf input-field) ((value buffer) (field (eql :buffer)) (location integer) (segment segment))
   (with-error-on-failure ()
     (mixed:segment-set-in field location (handle value) (handle segment)))
-  (vector-insert-pos location value (inputs segment))
+  (setf (aref (inputs segment) location) value)
   value)
 
 (defmethod (setf input-field) ((value null) (field (eql :buffer)) (location integer) (segment segment))
   (with-error-on-failure ()
     (mixed:segment-set-in field location (cffi:null-pointer) (handle segment)))
-  (vector-remove-pos location (inputs segment))
+  (setf (aref (inputs segment) location) NIL)
   value)
 
 (defmethod output-field ((field (eql :buffer)) (location symbol) (segment segment))
@@ -142,13 +142,13 @@
 (defmethod (setf output-field) ((value buffer) (field (eql :buffer)) (location integer) (segment segment))
   (with-error-on-failure ()
     (mixed:segment-set-out field location (handle value) (handle segment)))
-  (vector-insert-pos location value (outputs segment))
+  (setf (aref (outputs segment) location) value)
   value)
 
 (defmethod (setf output-field) ((value null) (field (eql :buffer)) (location integer) (segment segment))
   (with-error-on-failure ()
     (mixed:segment-set-out field location (cffi:null-pointer) (handle segment)))
-  (vector-remove-pos location (outputs segment))
+  (setf (aref (outputs segment) location) value)
   value)
 
 (defmethod (setf field) (value field (segment segment))
