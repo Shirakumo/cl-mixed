@@ -48,4 +48,4 @@
   (cl-mpg123:seek (file source) position :mode :absolute :by :frame))
 
 (defmethod mixed:frame-count ((source source))
-  (cl-mpg123:frame-count (file source)))
+  (cl-mpg123:sample-count (file source)))
