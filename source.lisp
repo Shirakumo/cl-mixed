@@ -14,6 +14,15 @@
 (defmethod initialize-instance :after ((source source) &key pack)
   (setf (pack source) pack))
 
+(defmethod print-object ((source source) stream)
+  (print-unreadable-object (source stream :type T)
+    (cond ((done-p source)
+           (write-string "DONE" stream))
+          ((null (frame-count source))
+           (write-string "STREAM" stream))
+          (T
+           (format stream "~2d%" (floor (* (/ (byte-position source) (framesize source) (frame-count source)) 100)))))))
+
 (defmethod (setf pack) (thing (source source))
   (etypecase thing
     ((or null pack) (setf (slot-value source 'pack) thing))
@@ -59,6 +68,9 @@
   (seek-to-frame source position)
   (setf (byte-position source) (* position (framesize (pack source))))
   source)
+
+(defmethod framesize ((source source))
+  (framesize (pack source)))
 
 (defgeneric seek-to-frame (source position))
 (defgeneric frame-count (source))
