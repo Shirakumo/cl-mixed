@@ -13,7 +13,7 @@
 
 (defmethod initialize-instance :after ((segment speed-change) &key speed-factor)
   (with-error-on-failure ()
-    (mixed:make-segment-speed-change speed-factor (handle segment))))
+    (mixed:make-segment-speed-change (float speed-factor 0d0) (handle segment))))
 
 (defun make-speed-change (&rest args &key speed-factor)
   (declare (ignore speed-factor))
