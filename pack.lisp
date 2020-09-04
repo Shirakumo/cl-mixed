@@ -34,15 +34,15 @@
     (static-vectors:free-static-vector (data pack))
     (slot-makunbound pack 'data)))
 
-(declaim (ftype (function (T) (unsigned-byte 8)) channels))
-(declaim (ftype (function (T) (unsigned-byte 16)) framesize))
-(declaim (ftype (function (T) (unsigned-byte 32)) samplerate))
-(declaim (ftype (function (T) (unsigned-byte 32)) size))
-
 (define-accessor size pack mixed:pack-size)
 (define-accessor encoding pack mixed:pack-encoding)
 (define-accessor channels pack mixed:pack-channels)
 (define-accessor samplerate pack mixed:pack-samplerate)
+
+(declaim (ftype (function (T) (unsigned-byte 8)) channels))
+(declaim (ftype (function (T) (unsigned-byte 16)) framesize))
+(declaim (ftype (function (T) (unsigned-byte 32)) samplerate))
+(declaim (ftype (function (T) (unsigned-byte 32)) size))
 
 (defmethod clear ((pack pack))
   (mixed:clear-pack (handle pack)))

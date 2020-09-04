@@ -36,7 +36,7 @@
 
 (defmethod start ((bundle bundle))
   (loop for segment across (segments bundle)
-        do (stert segment)))
+        do (start segment)))
 
 (defmethod mix ((bundle bundle))
   (loop for segment across (segments bundle)

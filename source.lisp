@@ -28,17 +28,17 @@
         :outputs 0
         :fields ()))
 
-(defmethod output-field ((field (eql :pack)) (location (eql 0)) (drain drain))
-  (pack drain))
+(defmethod output-field ((field (eql :pack)) (location (eql 0)) (source source))
+  (pack source))
 
-(defmethod (setf output-field) ((value pack) (field (eql :pack)) (location (eql 0)) (drain drain))
-  (setf (pack drain) value))
+(defmethod (setf output-field) ((value pack) (field (eql :pack)) (location (eql 0)) (source source))
+  (setf (pack source) value))
 
-(defmethod (setf output-field) ((value null) (field (eql :pack)) (location (eql 0)) (drain drain))
-  (setf (pack drain) value))
+(defmethod (setf output-field) ((value null) (field (eql :pack)) (location (eql 0)) (source source))
+  (setf (pack source) value))
 
-(defmethod output ((location (eql 0)) (drain drain))
-  (pack drain))
+(defmethod output ((location (eql 0)) (source source))
+  (pack source))
 
 (defmethod seek ((source source) position &key (mode :absolute) (by :frame))
   (assert (<= 0 position))
