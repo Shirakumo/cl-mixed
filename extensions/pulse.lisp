@@ -89,10 +89,11 @@
 
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
-    (with-error (err)
-      (with-no-interrupts ()
-        (pulse:simple-write (simple drain) (mixed:data-ptr) size err)))
-    (mixed:finish size)))
+    (when (< 0 size)
+      (with-error (err)
+        (with-no-interrupts ()
+          (pulse:simple-write (simple drain) (mixed:data-ptr) size err)))
+      (mixed:finish size))))
 
 (defmethod mixed:end ((drain drain))
   (with-error (err)
