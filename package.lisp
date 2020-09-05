@@ -238,6 +238,7 @@
    #:done-p
    #:seek
    #:seek-to-frame
+   #:frame-position
    #:frame-count)
   ;; toolkit.lisp
   (:export

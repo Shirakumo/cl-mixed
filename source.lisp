@@ -72,5 +72,8 @@
 (defmethod framesize ((source source))
   (framesize (pack source)))
 
+(defmethod frame-position ((source source))
+  (/ (byte-position source) (framesize source)))
+
 (defgeneric seek-to-frame (source position))
 (defgeneric frame-count (source))
