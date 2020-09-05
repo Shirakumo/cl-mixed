@@ -33,12 +33,11 @@
              found label))))
 
 (defun decode-block (stream)
-  (let ((start (file-position stream))
-        (label (decode-label stream))
+  (let ((label (decode-label stream))
+        (start (file-position stream))
         (size (decode-int stream 4)))
     (list* :label label
-           :start start
-           :size size
+           :start (+ start 4)
            :end (+ start size)
            (cond ((string= label "fmt ")
                   (list :audio-format (decode-int stream 2)
@@ -78,7 +77,7 @@
             (getf format :samplerate)
             (determine-sample-format format)
             (getf data :start)
-            (getf data :size))))
+            (getf data :end))))
 
 (defclass source (mixed:source)
   ((file :initarg :file :accessor file)
@@ -89,12 +88,12 @@
 (defmethod initialize-instance :after ((source source) &key)
   (let ((stream (open (file source) :direction :input
                                     :element-type '(unsigned-byte 8))))
-    (multiple-value-bind (channels samplerate encoding start size) (decode-wav-header stream)
+    (multiple-value-bind (channels samplerate encoding start end) (decode-wav-header stream)
       (setf (mixed:samplerate (mixed:pack source)) samplerate)
       (setf (mixed:channels (mixed:pack source)) channels)
       (setf (mixed:encoding (mixed:pack source)) encoding)
       (setf (data-start source) start)
-      (setf (data-end source) (+ start size)))))
+      (setf (data-end source) end))))
 
 (defmethod mixed:free ((source source))
   (when (file source)
