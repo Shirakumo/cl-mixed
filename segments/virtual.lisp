@@ -65,7 +65,7 @@
     (let ((info (cffi:foreign-alloc '(:struct mixed:segment-info))))
       (setf (mixed:segment-info-name info) name)
       (setf (mixed:segment-info-description info) description)
-      (setf (mixed:segment-info-flags info) (encode-flags flags))
+      (setf (mixed:segment-info-flags info) flags)
       (setf (mixed:segment-info-min-inputs info) min-inputs)
       (setf (mixed:segment-info-max-inputs info) max-inputs)
       (setf (mixed:segment-info-outputs info) outputs)
