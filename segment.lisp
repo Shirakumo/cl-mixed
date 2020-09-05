@@ -6,23 +6,6 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defun decode-flags (integer)
-  (etypecase integer
-    (list integer)
-    (integer
-     (loop for flag in (cffi:foreign-enum-keyword-list 'mixed:info-flags)
-           when (/= 0 (logand integer (cffi:foreign-enum-value 'mixed:info-flags flag)))
-           collect flag))))
-
-(Defun encode-flags (flags)
-  (etypecase flags
-    (integer flags)
-    (list
-     (loop with integer = 0
-           for flag in flags
-           do (setf integer (logior integer (cffi:foreign-enum-value 'mixed:info-flags flag)))
-           finally (return integer)))))
-
 (defun decode-field-info (info)
   (loop for field = (cffi:foreign-slot-pointer info '(:struct mixed:segment-info) 'mixed::fields)
         then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct mixed:field-info)))
@@ -30,8 +13,7 @@
         until (mixed:field-info-flags field)
         collect (list :field (mixed:field-info-field field)
                       :description (mixed:field-info-description field)
-                      :flags (decode-flags
-                              (mixed:field-info-flags field))
+                      :flags (mixed:field-info-flags field)
                       :type (mixed:field-info-type field)
                       :type-count (mixed:field-info-type-count field))))
 
@@ -42,7 +24,7 @@
         do (destructuring-bind (&key fieldno description flags type type-count) fieldspec
              (setf (mixed:field-info-field field) fieldno)
              (setf (mixed:field-info-description field) description)
-             (setf (mixed:field-info-flags field) (encode-flags flags))
+             (setf (mixed:field-info-flags field) flags)
              (setf (mixed:field-info-type field) (or type :unknown))
              (setf (mixed:field-info-type-count field) (or type-count 1)))))
 
@@ -64,7 +46,7 @@
       (setf (direct-info segment)
             (list :name (mixed:segment-info-name info)
                   :description (mixed:segment-info-description info)
-                  :flags (decode-flags (mixed:segment-info-flags info))
+                  :flags (mixed:segment-info-flags info)
                   :min-inputs (mixed:segment-info-min-inputs info)
                   :max-inputs (mixed:segment-info-max-inputs info)
                   :outputs (mixed:segment-info-outputs info)
@@ -72,8 +54,10 @@
   (direct-info segment))
 
 (defmethod revalidate ((segment segment))
+  (declare (optimize speed))
   (setf (direct-info segment) NIL)
   (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
+    (declare (type (unsigned-byte 32) outputs max-inputs))
     (flet ((marr (count)
              (if (< 128 count)
                  (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)

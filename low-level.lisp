@@ -175,7 +175,15 @@
   (:left-rear 2)
   (:right-rear 3)
   (:center 4)
-  (:subwoofer 5))
+  (:subwoofer 5)
+  (:left-front-bottom 0)
+  (:right-front-bottom 1)
+  (:left-rear-bottom 2)
+  (:right-rear-bottom 3)
+  (:left-front-top 6)
+  (:right-front-top 7)
+  (:left-rear-top 8)
+  (:right-rear-top 9))
 
 (defcenum field-type
   (:unknown 0)
@@ -233,7 +241,7 @@
 (defcstruct (field-info :class field-info :conc-name field-info-)
   (field :uint32)
   (description :string)
-  (flags :int)
+  (flags info-flags)
   (type field-type)
   (type-count :uint32))
 
