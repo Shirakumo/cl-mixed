@@ -31,15 +31,14 @@
 (defmethod mixed:start ((source source)))
 
 (defmethod mixed:mix ((source source))
-  (let ((source (mixed:pointer->object segment)))
-    (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
-      (when (< 0 size)
-        (let ((read (flac:read-directly (file source) (mixed:data-ptr) size)))
-          (cond ((< 0 read)
-                 (incf (mixed:byte-position source) read)
-                 (mixed:finish read))
-                ((= 0 (mixed:available-read (mixed:pack source)))
-                 (setf (mixed:done-p source) T))))))))
+  (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
+    (when (< 0 size)
+      (let ((read (flac:read-directly (file source) (mixed:data-ptr) size)))
+        (cond ((< 0 read)
+               (incf (mixed:byte-position source) read)
+               (mixed:finish read))
+              ((= 0 (mixed:available-read (mixed:pack source)))
+               (setf (mixed:done-p source) T)))))))
 
 (defmethod mixed:end ((source source)))
 
