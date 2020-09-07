@@ -390,7 +390,7 @@
    #:rolloff
    #:volume
    #:field
-   #:attenutation)
+   #:attenuation)
   ;; segments/speed-change.lisp
   (:export
    #:speed-change

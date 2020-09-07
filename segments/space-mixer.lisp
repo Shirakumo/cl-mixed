@@ -43,7 +43,7 @@
 (defmethod field ((field (eql :attenuation)) (segment space-mixer))
   (cffi:with-foreign-object (value-ptr :pointer)
     (with-error-on-failure ()
-      (mixed:segment-get field value-ptr segment))
+      (mixed:segment-get :space-attenuation value-ptr (handle segment)))
     (loop with int = (cffi:mem-ref value-ptr :int)
           for keyword in (cffi:foreign-enum-keyword-list 'mixed:attenuation)
           do (when (= int (cffi:foreign-enum-value 'mixed:attenuation keyword))
@@ -54,12 +54,12 @@
   (cffi:with-foreign-object (value-ptr :pointer)
     (etypecase value
       (keyword
-       (setf (cffi:mem-ref value-ptr :int)
+       (setf (cffi:mem-ref value-ptr 'mixed:size_t)
              (cffi:foreign-enum-value 'mixed:attenuation value)))
       (cffi:foreign-pointer
        (setf (cffi:mem-ref value-ptr :pointer) value)))
     (with-error-on-failure ()
-      (mixed:segment-get field value-ptr segment)))
+      (mixed:segment-set :space-attenuation value-ptr (handle segment))))
   value)
 
 (defmethod attenuation ((space space-mixer))

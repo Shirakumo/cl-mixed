@@ -127,10 +127,10 @@
   :linear-interpolation)
 
 (defcenum attenuation
-  (:no-attenuation 1)
-  :inverse-attenuation
-  :linear-attenuation
-  :exponential-attenuation)
+  (:none 1)
+  :inverse
+  :linear
+  :exponential)
 
 (defcenum fade-type
   (:linear 1)
