@@ -19,5 +19,5 @@
   (declare (ignore speed-factor))
   (apply #'make-instance 'speed-change args))
 
-(define-field-accessor speed-factor speed-change :float :speed-factor)
+(define-field-accessor speed-factor speed-change :double :speed-factor)
 (define-field-accessor bypass speed-change :bool :bypass)
