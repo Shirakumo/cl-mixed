@@ -6,7 +6,7 @@
 
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defvar *c-object-table* (make-hash-table :test 'eql :weakness :value))
+(defvar *c-object-table* (make-hash-table :test 'eql))
 
 (defmethod handle (thing)
   (etypecase thing
