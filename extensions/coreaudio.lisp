@@ -150,17 +150,16 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (declare (ignore action-flags time-stamp bus-number))
   (declare (type (unsigned-byte 32) frames))
   (declare (optimize speed))
-  (with-no-interrupts ()
-    (let* ((pack (mixed:pack (mixed:pointer->object handle)))
-           (bytes (* frames (mixed:framesize pack)))
-           (buffer (cffi:foreign-slot-pointer io-data '(:struct coreaudio:audio-buffer-list) 'coreaudio::buffers)))
-      ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
-      ;; underrun on every callback.
-      (when (< (mixed:size pack) bytes)
-        (setf (mixed:size pack) bytes))
-      (mixed:with-buffer-tx (data start size pack :size bytes)
-        (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
-        (mixed:finish size))))
+  (let* ((pack (mixed:pack (mixed:pointer->object handle)))
+         (bytes (* frames (mixed:framesize pack)))
+         (buffer (cffi:foreign-slot-pointer io-data '(:struct coreaudio:audio-buffer-list) 'coreaudio::buffers)))
+    ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
+    ;; underrun on every callback.
+    (when (< (mixed:size pack) bytes)
+      (setf (mixed:size pack) bytes))
+    (mixed:with-buffer-tx (data start size pack :size bytes)
+      (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
+      (mixed:finish size)))
   coreaudio:no-err)
 
 (cffi:defcallback mix :int ((segment :pointer)) (declare (ignore segment)) 1)
