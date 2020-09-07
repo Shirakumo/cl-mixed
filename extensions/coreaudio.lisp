@@ -156,6 +156,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
     ;; underrun on every callback.
     (when (< (mixed:size pack) bytes)
+      (format *error-output* "~&[Harmony] CoreAudio: requested ~d bytes of data, resizing.~%" bytes)
       (setf (mixed:size pack) bytes))
     (mixed:with-buffer-tx (data start size pack :size bytes)
       (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
