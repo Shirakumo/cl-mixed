@@ -47,7 +47,7 @@
                         :block-align (decode-int stream 2)
                         :bits-per-sample (decode-int stream 2)))
                  (T
-                  (file-position stream (evenify (+ start size)))
+                  (file-position stream (evenify (+ start size 4)))
                   NIL)))))
 
 (defun determine-sample-format (format)
