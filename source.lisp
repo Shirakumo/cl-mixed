@@ -62,11 +62,13 @@
      (setf mode :absolute)
      (incf position (/ (byte-position source) (framesize (pack source)))))
     (:absolute))
-  (when (<= (frame-count source) position)
-    (setf (byte-position source) (* (frame-count source) (framesize (pack source))))
-    (setf (done-p source) T))
   (seek-to-frame source position)
-  (setf (byte-position source) (* position (framesize (pack source))))
+  (cond ((<= (frame-count source) position)
+         (setf (byte-position source) (* (frame-count source) (framesize (pack source))))
+         (setf (done-p source) T))
+        (T
+         (setf (byte-position source) (* position (framesize (pack source))))
+         (setf (done-p source) NIL)))
   source)
 
 (defmethod framesize ((source source))
