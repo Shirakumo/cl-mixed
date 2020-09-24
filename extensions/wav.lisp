@@ -32,23 +32,24 @@
       (error "Not a valid RIFF file: encountered ~s instead of ~s."
              found label))))
 
+(defun decode-block-type (type stream)
+  (when (string= type "fmt ")
+    (list :audio-format (decode-int stream 2)
+          :channels (decode-int stream 2)
+          :samplerate (decode-int stream 4)
+          :byterate (decode-int stream 4)
+          :block-align (decode-int stream 2)
+          :bits-per-sample (decode-int stream 2))))
+
 (defun decode-block (stream)
   (let ((label (decode-label stream))
         (start (file-position stream))
         (size (decode-int stream 4)))
-    (list* :label label
-           :start (+ start 4)
-           :end (+ start size)
-           (cond ((string= label "fmt ")
-                  (list :audio-format (decode-int stream 2)
-                        :channels (decode-int stream 2)
-                        :samplerate (decode-int stream 4)
-                        :byterate (decode-int stream 4)
-                        :block-align (decode-int stream 2)
-                        :bits-per-sample (decode-int stream 2)))
-                 (T
-                  (file-position stream (evenify (+ start size 4)))
-                  NIL)))))
+    (prog1 (list* :label label
+                  :start (+ start 4)
+                  :end (+ start size)
+                  (decode-block-type label stream))
+      (file-position stream (evenify (+ start size 4))))))
 
 (defun determine-sample-format (format)
   (case (getf format :audio-format)
