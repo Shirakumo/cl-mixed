@@ -87,22 +87,24 @@
    (data-end :accessor data-end)))
 
 (defmethod initialize-instance :after ((source source) &key)
-  (let ((stream (open (file source) :direction :input
-                                    :element-type '(unsigned-byte 8))))
-    (setf (wav-stream source) stream)
-    (multiple-value-bind (channels samplerate encoding start end) (decode-wav-header stream)
-      (setf (mixed:samplerate (mixed:pack source)) samplerate)
-      (setf (mixed:channels (mixed:pack source)) channels)
-      (setf (mixed:encoding (mixed:pack source)) encoding)
-      (setf (data-start source) start)
-      (setf (data-end source) end))))
+  (mixed:start source))
 
 (defmethod mixed:free ((source source))
   (when (wav-stream source)
     (close (wav-stream source))
     (setf (wav-stream source) NIL)))
 
-(defmethod mixed:start ((source source)))
+(defmethod mixed:start ((source source))
+  (unless (wav-stream source)
+    (let ((stream (open (file source) :direction :input
+                                      :element-type '(unsigned-byte 8))))
+      (setf (wav-stream source) stream)
+      (multiple-value-bind (channels samplerate encoding start end) (decode-wav-header stream)
+        (setf (mixed:samplerate (mixed:pack source)) samplerate)
+        (setf (mixed:channels (mixed:pack source)) channels)
+        (setf (mixed:encoding (mixed:pack source)) encoding)
+        (setf (data-start source) start)
+        (setf (data-end source) end)))))
 
 (defmethod mixed:mix ((source source))
   (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
@@ -117,7 +119,8 @@
                (setf (mixed:done-p source) T)))))))
 
 (defmethod mixed:end ((source source))
-  (close (wav-stream source)))
+  (close (wav-stream source))
+  (setf (wav-stream source) NIL))
 
 (defmethod mixed:seek-to-frame ((source source) position)
   (file-position (wav-stream source)

@@ -19,19 +19,22 @@
 
 (defmethod initialize-instance :after ((source source) &key file)
   (setf (file source) (mpg123:make-file file :buffer-size NIL))
-  (mpg123:connect (file source))
-  (mpg123:scan (file source))
-  (multiple-value-bind (rate channels encoding) (mpg123:file-format (file source))
-    (setf (mixed:samplerate (mixed:pack source)) rate)
-    (setf (mixed:channels (mixed:pack source)) channels)
-    (setf (mixed:encoding (mixed:pack source)) encoding)))
+  ;; Early start to set pack properties
+  (mixed:start source))
 
 (defmethod mixed:free ((source source))
   (when (file source)
     (mpg123:disconnect (file source))
     (setf (file source) NIL)))
 
-(defmethod mixed:start ((source source)))
+(defmethod mixed:start ((source source))
+  (unless (mpg123:connected (file source))
+    (mpg123:connect (file source))
+    (mpg123:scan (file source))
+    (multiple-value-bind (rate channels encoding) (mpg123:file-format (file source))
+      (setf (mixed:samplerate (mixed:pack source)) rate)
+      (setf (mixed:channels (mixed:pack source)) channels)
+      (setf (mixed:encoding (mixed:pack source)) encoding))))
 
 (defmethod mixed:mix ((source source))
   (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
@@ -48,7 +51,8 @@
                 ((= 0 (mixed:available-read (mixed:pack source)))
                  (setf (mixed:done-p source) T))))))))
 
-(defmethod mixed:end ((source source)))
+(defmethod mixed:end ((source source))
+  (mpg123:disconnect (file source)))
 
 (defmethod mixed:seek-to-frame ((source source) position)
   (cl-mpg123:seek (file source) position :mode :absolute :by :frame))
