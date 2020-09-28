@@ -82,7 +82,7 @@
 
 (defclass source (mixed:source)
   ((file :initarg :file :accessor file)
-   (wav-stream :accessor wav-stream)
+   (wav-stream :initform NIL :accessor wav-stream)
    (data-start :accessor data-start)
    (data-end :accessor data-end)))
 
