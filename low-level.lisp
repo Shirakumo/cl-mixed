@@ -10,6 +10,16 @@
 (defvar *static* (make-pathname :name NIL :type NIL :defaults (merge-pathnames "static/" *here*)))
 (pushnew *static* cffi:*foreign-library-directories*)
 
+#+windows
+(progn
+  (define-foreign-library winpthread
+    (:windows "libwinpthread-1.dll"))
+  (define-foreign-library gcc-s
+    (:windows "libgcc_s_seh-1.dll"))
+
+  (use-foreign-library winpthread)
+  (use-foreign-library gcc-s))
+
 (define-foreign-library libmixed
   (:darwin
    (:or "libmixed2.dylib" "libmixed.dylib"
