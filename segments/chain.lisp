@@ -26,15 +26,17 @@
   segment)
 
 (defmethod withdraw ((i integer) (chain chain))
-  (with-error-on-failure ()
-    (mixed:chain-remove-at i (handle chain)))
+  (when (handle chain)
+    (with-error-on-failure ()
+      (mixed:chain-remove-at i (handle chain))))
   (let ((segment (aref (segments chain) i)))
     (vector-remove-pos i (segments chain))
     segment))
 
 (defmethod withdraw ((segment segment) (chain chain))
-  (with-error-on-failure ()
-    (mixed:chain-remove (handle segment) (handle chain)))
+  (when (handle chain)
+    (with-error-on-failure ()
+      (mixed:chain-remove (handle segment) (handle chain))))
   (vector-remove segment (segments chain))
   segment)
 
