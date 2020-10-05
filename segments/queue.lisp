@@ -9,11 +9,12 @@
 (defclass queue (segment)
   ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
 
-(defmethod initialize-instance :after ((segment queue) &key inputs outputs)
+(defmethod initialize-instance :after ((segment queue) &key inputs outputs bypass)
   (with-error-on-failure ()
     (mixed:make-segment-queue (handle segment)))
   (when inputs (setf (in-count segment) inputs))
-  (when outputs (setf (in-count segment) outputs)))
+  (when outputs (setf (in-count segment) outputs))
+  (setf (bypass segment) bypass))
 
 (defun make-queue (&rest args)
   (apply #'make-instance 'queue args))

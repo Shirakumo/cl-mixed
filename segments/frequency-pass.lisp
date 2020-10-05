@@ -12,9 +12,10 @@
    :pass :low
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment frequency-pass) &key pass cutoff samplerate)
+(defmethod initialize-instance :after ((segment frequency-pass) &key pass cutoff samplerate bypass)
   (with-error-on-failure ()
-    (mixed:make-segment-frequency-pass pass cutoff samplerate (handle segment))))
+    (mixed:make-segment-frequency-pass pass cutoff samplerate (handle segment)))
+  (setf (bypass segment) bypass))
 
 (defun make-frequency-pass (&rest args &key pass cutoff samplerate)
   (declare (ignore pass cutoff samplerate))

@@ -11,9 +11,10 @@
   (:default-initargs
    :steps (error "STEPS required.")))
 
-(defmethod initialize-instance :after ((segment quantize) &key steps)
+(defmethod initialize-instance :after ((segment quantize) &key steps bypass)
   (with-error-on-failure ()
-    (mixed:make-segment-quantize steps (handle segment))))
+    (mixed:make-segment-quantize steps (handle segment)))
+  (setf (bypass segment) bypass))
 
 (defun make-quantize (&rest args &key steps)
   (declare (ignore steps))
