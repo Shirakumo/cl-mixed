@@ -524,6 +524,7 @@
 (defcfun (make-segment-channel-convert "mixed_make_segment_channel_convert") :int
   (in :uint8)
   (out :uint8)
+  (samplerate :uint32)
   (segment :pointer))
 
 (defcfun (make-segment-quantize "mixed_make_segment_quantize") :int

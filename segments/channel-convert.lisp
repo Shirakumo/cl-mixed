@@ -10,12 +10,13 @@
   ()
   (:default-initargs
    :in (error "IN required.")
-   :out (error "OUT required.")))
+   :out (error "OUT required.")
+   :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment channel-convert) &key in out)
+(defmethod initialize-instance :after ((segment channel-convert) &key in out samplerate)
   (with-error-on-failure ()
-    (mixed:make-segment-channel-convert in out (handle segment))))
+    (mixed:make-segment-channel-convert in out samplerate (handle segment))))
 
-(defun make-channel-convert (&rest args &key in out)
-  (declare (ignore in out))
+(defun make-channel-convert (&rest args &key in out samplerate)
+  (declare (ignore in out samplerate))
   (apply #'make-instance 'channel-convert args))
