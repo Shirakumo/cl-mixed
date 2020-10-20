@@ -82,6 +82,3 @@
 
 (defmethod channel-order ((source source))
   *default-channel-order*)
-
-(defmethod match-channel-order ((source source) (order (eql T)) &key (old-order *default-channel-order*))
-  (match-channel-order (pack drain) (channel-order drain) :old-order old-order :side :out))
