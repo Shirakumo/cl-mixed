@@ -177,7 +177,9 @@
                                          (:in (inputs segment))
                                          (:out (outputs segment)))
                           collect (cons (normalize-channel c) a))))
-      (loop for it from 0
+      (loop for it from 0 below (length segments)
             for c in new-order
             for a = (cdr (assoc (normalize-channel c) segments))
-            do (setf (input-field :buffer it segment) a)))))
+            do (if a
+                   (setf (input-field :buffer it segment) a)
+                   (error "No corresponding source segment to map to ~a" c))))))
