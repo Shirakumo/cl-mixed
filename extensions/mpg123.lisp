@@ -24,7 +24,8 @@
 
 (defmethod mixed:free ((source source))
   (when (file source)
-    (mpg123:disconnect (file source))
+    (when (mpg123:connected (file source))
+      (mpg123:disconnect (file source)))
     (setf (file source) NIL)))
 
 (defmethod mixed:start ((source source))
