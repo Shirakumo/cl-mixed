@@ -94,7 +94,8 @@
    (client :initform NIL :accessor client)
    (render :initform NIL :accessor render)
    (event :initform NIL :accessor event)
-   (audio-client-id :initform NIL :initarg :audio-client-id :accessor audio-client-id)))
+   (audio-client-id :initform NIL :initarg :audio-client-id :accessor audio-client-id)
+   (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
 
 (defmethod initialize-instance :after ((drain drain) &key)
   (com:init)
@@ -105,14 +106,16 @@
          ;; Attempt to get a buffer as large as our internal ones.
          (buffer-duration (seconds->reference-time (/ (mixed:size pack) (mixed:framesize pack) (mixed:samplerate pack))))
          (client (find-audio-client (audio-client-id drain)))
-         (format (mix-format client)))
+         (format (mix-format client))
+         (channels (or (mixed:channel-order drain) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
     (unwind-protect
-         (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) (mixed:channels pack) :float)
+         (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
            (declare (ignore ok))
            (setf (client drain) client)
-           (setf (mixed:channels pack) channels)
+           (setf (mixed:channels pack) (length channels))
            (setf (mixed:samplerate pack) samplerate)
-           (setf (mixed:encoding pack) encoding)))
+           (setf (mixed:encoding pack) encoding)
+           (setf (mixed:channel-order drain) channels)))
     ;; Initialise the rest
     (com:check-hresult
      (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
@@ -178,9 +181,3 @@
 
 (defmethod mixed:end ((drain drain))
   (wasapi:i-audio-client-stop (client drain)))
-
-(defmethod mixed:channel-order ((drain drain))
-  (case (mixed:channels (mixed:pack drain))
-    ((4 8) '(:left-front :right-front :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))
-    ((5 9) '(:left-front :right-front :subwoofer :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))
-    (T '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))))
