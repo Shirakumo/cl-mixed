@@ -356,6 +356,8 @@
     (4 (compose-channel-mask :front-left :front-right :back-left :back-right))
     (5 (compose-channel-mask :front-left :front-right :back-left :back-right :low-frequency))
     (6 (compose-channel-mask :front-left :front-center :front-right :back-left :back-right :low-frequency))
+    (8 (compose-channel-mask :front-left :front-right :back-left :back-right :top-front-left :top-front-right :top-back-left :top-back-right))
+    (10 (compose-channel-mask :front-left :front-center :front-right :back-left :back-right :low-frequency :top-front-left :top-front-right :top-back-left :top-back-right))
     (T (compose-channel-mask))))
 
 (defun encode-wave-format (ptr samplerate channels format)

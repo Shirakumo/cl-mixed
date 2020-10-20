@@ -178,3 +178,9 @@
 
 (defmethod mixed:end ((drain drain))
   (wasapi:i-audio-client-stop (client drain)))
+
+(defmethod mixed:channel-order ((drain drain))
+  (case (mixed:channels (mixed:pack drain))
+    ((4 8) '(:left-front :right-front :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))
+    ((5 9) '(:left-front :right-front :subwoofer :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))
+    (T '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-front-top :right-front-top :left-rear-top :right-rear-top))))

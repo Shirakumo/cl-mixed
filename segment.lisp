@@ -163,3 +163,21 @@
       (setf (output source-location source) buffer)
       (setf buffer (output source-location source)))
   (setf (input drain-location drain) buffer))
+
+(defmethod match-channel-order ((segment segment) new-order &key (old-order *default-channel-order*) (side :in))
+  (flet ((normalize-channel (c)
+           (case c
+             ((:left :left-front) :left-front-bottom)
+             ((:right :right-front) :right-front-bottom)
+             (:left-rear :left-rear-bottom)
+             (:right-rear :right-rear-bottom)
+             (T c))))
+    (let ((segments (loop for c in old-order
+                          for a across (ecase side
+                                         (:in (inputs segment))
+                                         (:out (outputs segment)))
+                          collect (cons (normalize-channel c) a))))
+      (loop for it from 0
+            for c in new-order
+            for a = (cdr (assoc (normalize-channel c) segments))
+            do (setf (input-field :buffer it segment) a)))))

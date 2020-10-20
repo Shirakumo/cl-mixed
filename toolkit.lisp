@@ -7,6 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defvar *default-samplerate* 44100)
+(defvar *default-channel-order* '(:left-front-bottom :right-front-bottom :left-rear-bottom :right-rear-bottom :center :subwoofer :left-front-top :right-front-top :left-rear-top :right-rear-top))
 
 (define-condition mixed-error (error)
   ((error-code :initarg :error-code :accessor error-code))

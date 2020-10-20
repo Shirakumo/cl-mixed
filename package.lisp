@@ -196,7 +196,8 @@
   (:export
    #:drain
    #:program-name
-   #:pack)
+   #:pack
+   #:channel-order)
   ;; mixer.lisp
   (:export
    #:mixer
@@ -229,7 +230,8 @@
    #:field
    #:input
    #:output
-   #:connect)
+   #:connect
+   #:match-channel-order)
   ;; source.lisp
   (:export
    #:source
@@ -243,6 +245,7 @@
   ;; toolkit.lisp
   (:export
    #:*default-samplerate*
+   #:*default-channel-order*
    #:mixed-error
    #:error-code
    #:samplesize)

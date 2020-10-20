@@ -38,3 +38,11 @@
 
 (defmethod output ((location (eql 0)) (drain drain))
   (pack drain))
+
+(defgeneric channel-order (drain))
+
+(defmethod channel-order ((drain drain))
+  *default-channel-order*)
+
+(defmethod match-channel-order ((drain drain) (order (eql T)) &key (old-order *default-channel-order*))
+  (match-channel-order (pack drain) (channel-order drain) :old-order old-order :side :in))
