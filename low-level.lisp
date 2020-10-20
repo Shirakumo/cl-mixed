@@ -190,10 +190,14 @@
   (:right-front-bottom 1)
   (:left-rear-bottom 2)
   (:right-rear-bottom 3)
+  (:center-front 4)
   (:left-front-top 6)
   (:right-front-top 7)
   (:left-rear-top 8)
-  (:right-rear-top 9))
+  (:right-rear-top 9)
+  (:center-rear 10)
+  (:left-side 11)
+  (:right-side 12))
 
 (defcenum field-type
   (:unknown 0)

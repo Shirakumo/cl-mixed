@@ -248,7 +248,8 @@
    #:*default-channel-order*
    #:mixed-error
    #:error-code
-   #:samplesize)
+   #:samplesize
+   #:guess-channel-order-from-count)
   ;; segments/basic-mixer.lisp
   (:export
    #:basic-mixer

@@ -250,3 +250,17 @@
                   (incf ,i)))
            (map NIL #',thunk ,sequence))
          ,result))))
+
+(defun guess-channel-order-from-count (channels)
+  (ecase channels
+    (1 '(:center)) ; mono
+    (2 '(:left-front :right-front)) ; stereo
+    (3 '(:left-front :right-front :center)) ; 3.0
+    (4 '(:left-front :right-front :left-rear :right-rear)) ; 4.0
+    (5 '(:left-front :right-front :center :left-rear :right-rear)) ; 5.1
+    (6 '(:left-front :right-front :center :subwoofer :left-rear :right-rear)) ; 6.0
+    (7 '(:left-front :right-front :center :subwoofer :center-rear :left-side :right-side)) ; 6.1
+    (8 '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-side :right-side)) ; 7.1
+    (9 '(:left-front :right-front :center :left-rear :right-rear :left-side :right-side :left-front-top :right-front-top)) ; 9.0
+    (10 '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-side :right-side :left-front-top :right-front-top)) ; 9.1
+    ))
