@@ -125,7 +125,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           ;;   (setf (mixed:channels pack) channels)
           ;;   (setf (mixed:encoding pack) encoding))
           ;; Fire it up!
-          (float-features:with-float-traps-masked ()
+          (float-features:with-float-traps-masked T
             (with-error ()
               (coreaudio:audio-unit-initialize unit)))
           (setf (audio-unit drain) unit))))))
