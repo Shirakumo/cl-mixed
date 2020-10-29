@@ -171,7 +171,14 @@
              ((:right :right-front) :right-front-bottom)
              (:left-rear :left-rear-bottom)
              (:right-rear :right-rear-bottom)
-             (T c))))
+             (T c)))
+         (channel-alternatives (c)
+           (case c
+             (:left-side '(:left-side :left-rear-bottom :left-rear-top))
+             (:right-side '(:right-side :right-rear-bottom :right-rear-top))
+             (:left-rear-bottom '(:left-rear-bottom :left-side :left-rear-top))
+             (:right-rear-bottom '(:right-rear-bottom :right-side :right-rear-top))
+             (T (list c)))))
     (let ((segments (loop for c in old-order
                           for a across (ecase side
                                          (:in (inputs segment))
@@ -179,7 +186,8 @@
                           collect (cons (normalize-channel c) a))))
       (loop for it from 0 below (length segments)
             for c in new-order
-            for a = (cdr (assoc (normalize-channel c) segments))
+            for a = (loop for cc in (channel-alternatives c)
+                          thereis (cdr (assoc (normalize-channel cc) segments)))
             do (if a
                    (setf (input-field :buffer it segment) a)
                    (error "No corresponding source segment to map to ~a" c))))))
