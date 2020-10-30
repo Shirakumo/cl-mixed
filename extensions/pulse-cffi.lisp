@@ -69,17 +69,17 @@
 (cffi:defcenum channel-position
   :invalid
   :mono
-  :front-left
-  :front-right
-  :front-center
-  :rear-center
-  :rear-left
-  :rear-right
-  :lfe
-  :front-left-of-center
-  :front-right-of-center
-  :side-left
-  :side-right
+  :left-front
+  :right-front
+  :center
+  :center-rear
+  :left-rear
+  :right-rear
+  :subwoofer
+  :left-center
+  :right-center
+  :left-side
+  :right-side
   :aux0
   :aux1
   :aux2
@@ -112,13 +112,13 @@
   :aux29
   :aux30
   :aux31
-  :top-center
-  :top-front-left
-  :top-front-right
-  :top-front-center
-  :top-rear-left
-  :top-rear-right
-  :top-rear-center
+  :center-top
+  :left-front-top
+  :right-front-top
+  :center-front-top
+  :left-rear-top
+  :right-rear-top
+  :center-rear-top
   :max)
 
 (cffi:defcenum context-flags
