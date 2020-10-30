@@ -110,7 +110,7 @@
   (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
     (when (< 0 size)
       (let* ((stream (wav-stream source))
-             (avail (min size (- (data-end source) (file-position stream))))
+             (avail (max 0 (min size (- (data-end source) (max (data-start source) (file-position stream))))))
              (read (- (read-sequence data stream :start start :end (+ start avail)) start)))
         (cond ((< 0 read)
                (incf (mixed:byte-position source) read)
@@ -125,7 +125,7 @@
 (defmethod mixed:seek-to-frame ((source source) position)
   (file-position (wav-stream source)
                  (min (data-end source)
-                      (+ (data-start source) (* position (mixed:framesize (mixed:pack source)))))))
+                      (+ (data-start source) (max 0 (* position (mixed:framesize (mixed:pack source))))))))
 
 (defmethod mixed:frame-count ((source source))
   (/ (- (data-end source) (data-start source)) (mixed:framesize (mixed:pack source))))
