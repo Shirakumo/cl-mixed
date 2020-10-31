@@ -72,6 +72,7 @@
       (setf (pulse:sample-spec-format sample-spec) :float)
       (setf (pulse:sample-spec-rate sample-spec) (mixed:samplerate pack))
       (setf (pulse:sample-spec-channels sample-spec) (mixed:channels pack))
+      (setf channel-map (pulse:channel-map-init channel-map))
       (setf (pulse:channel-map-channels channel-map) (mixed:channels pack))
       (loop with ptr = (cffi:foreign-slot-pointer channel-map '(:struct pulse:channel-map) 'pulse::map)
             for i from 0 below (mixed:channels pack)

@@ -28,6 +28,7 @@
    #:buffer-attr-minreq
    #:buffer-attr-fragsize
    #:strerror
+   #:channel-map-init
    #:simple-new
    #:simple-write
    #:simple-drain
@@ -67,8 +68,8 @@
   :upload)
 
 (cffi:defcenum channel-position
-  :invalid
-  :mono
+  (:invalid -1)
+  (:mono 0)
   :left-front
   :right-front
   :center
@@ -147,6 +148,12 @@
   (server :string)
   (flags context-flags)
   (api :pointer))
+
+(cffi:defcfun (channel-map-init "pa_channel_map_init") :pointer
+  (map :pointer))
+
+(cffi:defcfun (channel-map-init-stereo "pa_channel_map_init_stereo") :pointer
+  (map :pointer))
 
 (cffi:defcfun (strerror "pa_strerror") :string
   (error :int))
