@@ -90,10 +90,10 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
         data))
 
 (defclass drain (mixed:drain)
-  ((audio-unit :initform NIL :accessor audio-unit)))
+  ((audio-unit :initform NIL :accessor audio-unit)
+   (semaphore :initform (bt:make-semaphore :name "CoreAudio sync") :reader semaphore)))
 
 (defmethod initialize-instance :after ((drain drain) &key)
-  (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (cffi:use-foreign-library coreaudio:audio-unit)
   (cffi:use-foreign-library coreaudio:audio-toolbox)
   (cffi:with-foreign-objects ((description '(:struct coreaudio:audio-component-description))
@@ -150,7 +150,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (declare (ignore action-flags time-stamp bus-number))
   (declare (type (unsigned-byte 32) frames))
   (declare (optimize speed))
-  (let* ((pack (mixed:pack (mixed:pointer->object handle)))
+  (let* ((drain (mixed:pointer->object handle))
+         (pack (mixed:pack drain))
          (bytes (* frames (mixed:framesize pack)))
          (buffer (cffi:foreign-slot-pointer io-data '(:struct coreaudio:audio-buffer-list) 'coreaudio::buffers)))
     ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
@@ -160,10 +161,13 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
       (setf (mixed:size pack) bytes))
     (mixed:with-buffer-tx (data start size pack :size bytes)
       (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
-      (mixed:finish size)))
+      (mixed:finish size))
+    (bt:signal-semaphore (semaphore drain)))
   coreaudio:no-err)
 
-(cffi:defcallback mix :int ((segment :pointer)) (declare (ignore segment)) 1)
+(defmethod mix ((drain drain))
+  (when (= 0 (mixed:available-write (mixed:pack drain)))
+    (bt:wait-on-semaphore (semaphore drain) :timeout 0.1)))
 
 (defmethod end ((drain drain))
   (float-features:with-float-traps-masked ()

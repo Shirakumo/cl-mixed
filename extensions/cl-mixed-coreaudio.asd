@@ -17,5 +17,6 @@
   :components ((:file "coreaudio-cffi")
                (:file "coreaudio"))
   :depends-on (:cl-mixed
+               :bordeaux-threads
                :float-features
                :cffi))
