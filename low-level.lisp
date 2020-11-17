@@ -127,7 +127,8 @@
   :out-count
   :current-segment
   :speed-factor
-  :quantize-steps)
+  :quantize-steps
+  :mix)
 
 (defcenum resample-type
   (:sinc-best-quality 0)

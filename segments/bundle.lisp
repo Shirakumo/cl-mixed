@@ -131,4 +131,5 @@
   (define-delegate max-distance)
   (define-delegate rolloff)
   (define-delegate speed-factor)
-  (define-delegate pan))
+  (define-delegate pan)
+  (define-delegate wet))

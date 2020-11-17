@@ -296,7 +296,8 @@
    #:cutoff
    #:frequency-pass
    #:samplerate
-   #:bypass)
+   #:bypass
+   #:wet)
   ;; segments/gate.lisp
   (:export
    #:gate
@@ -351,13 +352,15 @@
    #:make-pitch
    #:pitch
    #:samplerate
-   #:bypass)
+   #:bypass
+   #:wet)
   ;; segments/quantize.lisp
   (:export
    #:quantize
    #:make-quantize
    #:steps
-   #:bypass)
+   #:bypass
+   #:wet)
   ;; segments/queue.lisp
   (:export
    #:queue

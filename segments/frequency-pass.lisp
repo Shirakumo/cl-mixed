@@ -12,9 +12,10 @@
    :pass :low
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment frequency-pass) &key pass cutoff samplerate bypass)
+(defmethod initialize-instance :after ((segment frequency-pass) &key pass cutoff samplerate bypass wet)
   (with-error-on-failure ()
     (mixed:make-segment-frequency-pass pass cutoff samplerate (handle segment)))
+  (when wet (setf (wet segment) wet))
   (setf (bypass segment) bypass))
 
 (defun make-frequency-pass (&rest args &key pass cutoff samplerate)
@@ -25,3 +26,4 @@
 (define-field-accessor frequency-pass frequency-pass mixed:frequency-pass :frequency-pass)
 (define-field-accessor samplerate frequency-pass :float :samplerate)
 (define-field-accessor bypass frequency-pass :bool :bypass)
+(define-field-accessor wet frequency-pass :float :mix)
