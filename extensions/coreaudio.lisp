@@ -132,12 +132,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 
 (defmethod mixed:free ((drain drain))
   (when (audio-unit drain)
-    (float-features:with-float-traps-masked ()
+    (float-features:with-float-traps-masked T
       (coreaudio:audio-unit-uninitialize (audio-unit drain))
       (coreaudio:audio-component-instance-dispose (audio-unit drain)))))
 
 (defmethod mixed:start ((drain drain))
-  (float-features:with-float-traps-masked ()
+  (float-features:with-float-traps-masked T
     (with-error ()
       (coreaudio:audio-output-unit-start (audio-unit drain)))))
 
@@ -170,5 +170,5 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     (bt:wait-on-semaphore (semaphore drain) :timeout 0.1)))
 
 (defmethod end ((drain drain))
-  (float-features:with-float-traps-masked ()
+  (float-features:with-float-traps-masked T
     (coreaudio:audio-output-unit-stop (audio-unit drain))))
