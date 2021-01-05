@@ -121,6 +121,7 @@
    #:create-event
    #:close-handle
    #:set-event
+   #:reset-event
    #:compose-channel-mask
    #:channel-mask-for-channel-count
    #:IID-IAudioClient
@@ -341,6 +342,9 @@
   (object handle))
 
 (cffi:defcfun (set-event "SetEvent") :bool
+  (event handle))
+
+(cffi:defcfun (reset-event "ResetEvent") :bool
   (event handle))
 
 (defun encode-wave-format (ptr samplerate channels format)

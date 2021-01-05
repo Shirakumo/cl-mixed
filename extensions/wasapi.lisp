@@ -156,6 +156,7 @@
     (when (< 0 size)
       (let* ((render (render drain))
              (client (client drain))
+             (event (event drain))
              (framesize (mixed:framesize (mixed:pack drain)))
              (buffer-size (* framesize
                              (- (com:with-deref (frames :uint32)
@@ -163,12 +164,14 @@
                                 (com:with-deref (frames :uint32)
                                   (wasapi:i-audio-client-get-current-padding client frames))))))
         (loop while (= 0 buffer-size) ;; Wait until we have stuff available again
-              do (wasapi:wait-for-single-object (event drain) 1000)
+              do (wasapi:wait-for-single-object event 1000)
                  (setf buffer-size (* framesize
                                       (- (com:with-deref (frames :uint32)
                                            (wasapi:i-audio-client-get-buffer-size client frames))
                                          (com:with-deref (frames :uint32)
                                            (wasapi:i-audio-client-get-current-padding client frames))))))
+        ;; We shouldn't have to do this, but if we don't it seems to spinlock above. Cool.
+        (wasapi:reset-event event)
         (let* ((size (min buffer-size size))
                (frames (/ size framesize))
                (buffer (com:with-deref (target :pointer)
