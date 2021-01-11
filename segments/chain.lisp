@@ -41,6 +41,14 @@
   (vector-remove segment (segments chain))
   segment)
 
+(defmethod clear ((chain chain))
+  (loop for i downfrom (1- (length (segments chain))) to 0
+        do (when (handle chain)
+             (with-error-on-failure ()
+               (mixed:chain-remove-at i (handle chain))))
+           (setf (aref (segments chain) i) NIL))
+  (setf (fill-pointer (segments chain)) 0))
+
 (defmacro with-chain (name segments &body body)
   `(with-objects ((,name (make-chain ,@segments)))
      (start ,name)
