@@ -327,12 +327,14 @@
 (defcfun (buffer-from-pack "mixed_buffer_from_pack") :int
   (pack :pointer)
   (buffers :pointer)
-  (volume :float))
+  (volume :pointer)
+  (target-volume :float))
 
 (defcfun (buffer-to-pack "mixed_buffer_to_pack") :int
   (buffers :pointer)
   (pack :pointer)
-  (volume :float))
+  (volume :pointer)
+  (target-volume :float))
 
 (defcfun (transfer-buffer "mixed_buffer_transfer") :int
   (from :pointer)
