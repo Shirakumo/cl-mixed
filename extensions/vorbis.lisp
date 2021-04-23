@@ -9,8 +9,8 @@
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi)
-   (#:vorbis #:org.shirakumo.vorbis)
-   (#:vorbis-cffi #:org.shirakumo.vorbis.cffi))
+   (#:vorbis #:org.shirakumo.fraf.vorbis)
+   (#:vorbis-cffi #:org.shirakumo.fraf.vorbis.cffi))
   (:export
    #:source))
 (in-package #:org.shirakumo.fraf.mixed.vorbis)
