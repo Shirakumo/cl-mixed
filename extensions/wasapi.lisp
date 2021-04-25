@@ -83,8 +83,9 @@
 (defun (setf audio-client-label) (label audio-client)
   (com:with-com (session (com:with-deref (session :pointer)
                            (wasapi:i-audio-client-get-service audio-client wasapi:IID-IAUDIOSESSIONCONTROL session)))
-    (com:with-wstring (label label)
-      (wasapi:i-audio-session-control-set-display-name session label (cffi:null-pointer)))
+    (ignore-errors
+     (com:with-wstring (label label)
+       (wasapi:i-audio-session-control-set-display-name session label (cffi:null-pointer))))
     label))
 
 (defclass drain (mixed:drain)
