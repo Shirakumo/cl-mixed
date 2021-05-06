@@ -7,7 +7,7 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
 (defvar *default-samplerate* 44100)
-(defvar *default-channel-order* '(:left-front-bottom :right-front-bottom :left-rear-bottom :right-rear-bottom :center :subwoofer :left-front-top :right-front-top :left-rear-top :right-rear-top))
+(defvar *default-channel-order* '(:left-front-bottom :right-front-bottom :left-rear-bottom :right-rear-bottom :center-front :subwoofer :left-side :right-side :left-front-top :right-front-top :left-rear-top :right-rear-top :center-rear))
 
 (define-condition mixed-error (error)
   ((error-code :initarg :error-code :accessor error-code))
@@ -257,8 +257,8 @@
     (2 '(:left-front :right-front)) ; stereo
     (3 '(:left-front :right-front :center)) ; 3.0
     (4 '(:left-front :right-front :left-rear :right-rear)) ; 4.0
-    (5 '(:left-front :right-front :center :left-rear :right-rear)) ; 5.1
-    (6 '(:left-front :right-front :center :subwoofer :left-rear :right-rear)) ; 6.0
+    (5 '(:left-front :right-front :center :left-rear :right-rear)) ; 5.0
+    (6 '(:left-front :right-front :center :subwoofer :left-rear :right-rear)) ; 5.1
     (7 '(:left-front :right-front :center :subwoofer :center-rear :left-side :right-side)) ; 6.1
     (8 '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-side :right-side)) ; 7.1
     (9 '(:left-front :right-front :center :left-rear :right-rear :left-side :right-side :left-front-top :right-front-top)) ; 9.0
