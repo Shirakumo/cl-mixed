@@ -171,6 +171,7 @@
              ((:right :right-front) :right-front-bottom)
              (:left-rear :left-rear-bottom)
              (:right-rear :right-rear-bottom)
+             (:center :center-front)
              (T c)))
          (channel-alternatives (c)
            (case c
@@ -178,6 +179,8 @@
              (:right-side '(:right-side :right-rear-bottom :right-rear-top))
              (:left-rear-bottom '(:left-rear-bottom :left-side :left-rear-top))
              (:right-rear-bottom '(:right-rear-bottom :right-side :right-rear-top))
+             (:center-front '(:center-front :center :center-rear))
+             (:center-rear '(:center-rear :center :center-front))
              (T (list c)))))
     (let ((segments (loop for c in old-order
                           for a across (ecase side
