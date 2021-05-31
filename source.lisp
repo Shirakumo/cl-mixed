@@ -8,7 +8,7 @@
 
 (defclass source (virtual)
   ((pack :initform NIL :reader pack)
-   (byte-position :initform 0 :accessor byte-position)
+   (frame-position :initform 0 :accessor frame-position)
    (done-p :initform NIL :accessor done-p)))
 
 (defmethod initialize-instance :after ((source source) &key pack)
@@ -21,7 +21,7 @@
           ((null (frame-count source))
            (write-string "STREAM" stream))
           (T
-           (format stream "~2d%" (floor (* (/ (byte-position source) (framesize source) (frame-count source)) 100)))))))
+           (format stream "~2d%" (floor (* (/ (frame-position source) (frame-count source)) 100)))))))
 
 (defmethod (setf pack) (thing (source source))
   (etypecase thing
@@ -60,22 +60,25 @@
   (ecase mode
     (:relative
      (setf mode :absolute)
-     (incf position (/ (byte-position source) (framesize (pack source)))))
+     (incf position (frame-position source)))
     (:absolute))
   (seek-to-frame source position)
   (cond ((<= (frame-count source) position)
-         (setf (byte-position source) (* (frame-count source) (framesize (pack source))))
+         (setf (frame-position source) (frame-count source))
          (setf (done-p source) T))
         (T
-         (setf (byte-position source) (* position (framesize (pack source))))
+         (setf (frame-position source) position)
          (setf (done-p source) NIL)))
   source)
 
 (defmethod framesize ((source source))
   (framesize (pack source)))
 
-(defmethod frame-position ((source source))
-  (/ (byte-position source) (framesize source)))
+(defmethod byte-position ((source source))
+  (* (frame-position source) (framesize (pack source))))
+
+(defmethod (setf byte-position) (position (source source))
+  (setf (frame-position source) (floor position (framesize (pack source)))))
 
 (defgeneric seek-to-frame (source position))
 (defgeneric frame-count (source))
