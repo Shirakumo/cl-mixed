@@ -194,3 +194,8 @@
             do (if a
                    (setf (input-field :buffer it segment) a)
                    (error "No corresponding source segment to map to ~a" c))))))
+
+(defgeneric volume (thing))
+(defgeneric (setf volume) (volume thing))
+(declaim (ftype (function (T) single-float) volume))
+(declaim (ftype (function (single-float T) single-float) (setf volume)))
