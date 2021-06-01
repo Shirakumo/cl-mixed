@@ -56,7 +56,7 @@
   (mpg123:disconnect (file source)))
 
 (defmethod mixed:seek-to-frame ((source source) position)
-  (cl-mpg123:seek (file source) position :mode :absolute :by :frame))
+  (cl-mpg123:seek (file source) position :mode :absolute :by :sample))
 
 (defmethod mixed:frame-count ((source source))
   (cl-mpg123:sample-count (file source)))
