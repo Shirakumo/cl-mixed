@@ -10,7 +10,8 @@
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi))
   (:export
-   #:source))
+   #:source
+   #:in-memory-source))
 (in-package #:org.shirakumo.fraf.mixed.wav)
 
 (defun evenify (int)
@@ -86,7 +87,7 @@
    (data-start :accessor data-start)
    (data-end :accessor data-end)))
 
-(defmethod initialize-instance :after ((source source) &key)
+(defmethod initialize-instance :after ((source source) &key file)
   (mixed:start source))
 
 (defmethod mixed:free ((source source))
@@ -129,3 +130,53 @@
 
 (defmethod mixed:frame-count ((source source))
   (/ (- (data-end source) (data-start source)) (mixed:framesize (mixed:pack source))))
+
+(defclass in-memory-source (mixed:source)
+  ((buffer :accessor buffer)
+   (index :initform 0 :accessor mixed:byte-position)
+   (framesize :accessor mixed:framesize)))
+
+(defmethod initialize-instance :after ((source in-memory-source) &key file)
+  (with-open-file (stream file :direction :input
+                               :element-type '(unsigned-byte 8))
+    (multiple-value-bind (channels samplerate encoding start end) (decode-wav-header stream)
+      (setf (mixed:samplerate (mixed:pack source)) samplerate)
+      (setf (mixed:channels (mixed:pack source)) channels)
+      (setf (mixed:encoding (mixed:pack source)) encoding)
+      (setf (mixed:framesize source) (mixed:framesize (mixed:pack source)))
+      (file-position stream start)
+      (let ((buffer (make-array (- end start) :element-type '(unsigned-byte 8))))
+        (read-sequence buffer stream)
+        (setf (buffer source) buffer)))))
+
+(defmethod mixed:start ((source in-memory-source)))
+
+(defmethod mixed:mix ((source in-memory-source))
+  (declare (optimize speed))
+  (let ((pack (mixed:pack source)))
+    (mixed:with-buffer-tx (data start size pack :direction :output)
+      (when (< 0 size)
+        (let* ((buffer (buffer source))
+               (index (mixed:byte-position source))
+               (avail (max 0 (min size (- (length buffer) index)))))
+          (declare (type (simple-array (unsigned-byte 8) (*)) data buffer))
+          (declare (type (unsigned-byte 32) index))
+          (cond ((< 0 avail)
+                 (replace data buffer :start1 start :start2 index :end1 (+ start avail))
+                 (setf (mixed:byte-position source) (+ index avail))
+                 (mixed:finish avail))
+                ((<= (mixed:available-read pack) 2)
+                 (setf (mixed:done-p source) T))))))))
+
+(defmethod mixed:end ((source in-memory-source)))
+
+(defmethod mixed:seek-to-frame ((source in-memory-source) position)
+  (setf (mixed:byte-position source) (max 0 (min (length (buffer source)) (* position (mixed:framesize source))))))
+
+(defmethod mixed:frame-position ((source in-memory-source))
+  (/ (mixed:byte-position source)
+     (mixed:framesize source)))
+
+(defmethod mixed:frame-count ((source in-memory-source))
+  (/ (length (buffer source))
+     (mixed:framesize source)))
