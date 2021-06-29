@@ -48,8 +48,8 @@
 
 (defmethod mixed:seek-to-frame ((source source) position)
   (let ((file (file source)))
-    (vorbis:seek file (* position (vorbis:channels file)))))
+    (vorbis:seek file position)))
 
 (defmethod mixed:frame-count ((source source))
   (let ((file (file source)))
-    (floor (vorbis:sample-count file) (vorbis:channels file))))
+    (* (vorbis:sample-count file) (vorbis:channels file))))
