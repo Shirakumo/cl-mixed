@@ -146,8 +146,9 @@
   (:samples 49))
 
 (cffi:defcenum (audio-scope :uint32)
-  (:out 0)
-  (:in 1))
+  (:global 0)
+  (:in 1)
+  (:out 2))
 
 (cffi:defbitfield (audio-format :uint32)
   (:native 0)

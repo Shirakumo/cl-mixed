@@ -119,6 +119,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           (with-error ()
             (coreaudio:audio-unit-set-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
           ;; Read back actual properties
+          (setf (cffi:mem-ref size :uint32) (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description)))
           (with-error ()
             (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream size))
           (multiple-value-bind (samplerate channels encoding) (decode-stream-description stream)
