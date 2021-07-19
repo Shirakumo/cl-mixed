@@ -99,7 +99,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (cffi:with-foreign-objects ((description '(:struct coreaudio:audio-component-description))
                               (stream '(:struct coreaudio:audio-stream-basic-description))
                               (callback '(:struct coreaudio:au-render-callback-struct))
-                              (unit 'coreaudio:audio-unit))
+                              (unit 'coreaudio:audio-unit)
+                              (size :uint32))
     (let ((pack (mixed:pack drain)))
       ;; Prepare needed information
       (create-component-description description)
@@ -118,12 +119,12 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           (with-error ()
             (coreaudio:audio-unit-set-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
           ;;;; Trying to read back the actual properties segfaults for some reason. Very cool!
-          ;; (with-error ()
-          ;;   (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
-          ;; (multiple-value-bind (samplerate channels encoding) (decode-stream-description stream)
-          ;;   (setf (mixed:samplerate pack) samplerate)
-          ;;   (setf (mixed:channels pack) channels)
-          ;;   (setf (mixed:encoding pack) encoding))
+          (with-error ()
+            (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream size))
+          (multiple-value-bind (samplerate channels encoding) (decode-stream-description stream)
+            (setf (mixed:samplerate pack) samplerate)
+            (setf (mixed:channels pack) channels)
+            (setf (mixed:encoding pack) encoding))
           ;; Fire it up!
           (float-features:with-float-traps-masked T
             (with-error ()

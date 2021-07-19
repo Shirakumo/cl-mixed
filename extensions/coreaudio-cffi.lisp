@@ -236,7 +236,7 @@
   (scope audio-scope)
   (element audio-unit-element)
   (data :pointer)
-  (size :uint32))
+  (size :pointer))
 
 (cffi:defcfun (audio-unit-initialize "AudioUnitInitialize") os-status
   (unit audio-unit))
