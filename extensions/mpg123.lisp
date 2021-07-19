@@ -15,7 +15,7 @@
 (in-package #:org.shirakumo.fraf.mixed.mpg123)
 
 (defclass source (mixed:source)
-  ((file :accessor file)))
+  ((file :initform NIL :accessor file)))
 
 (defmethod initialize-instance :after ((source source) &key file)
   (setf (file source) (mpg123:make-file file :buffer-size NIL))
