@@ -118,7 +118,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
             (coreaudio:audio-unit-set-property unit :render-callback :in 0 callback (cffi:foreign-type-size '(:struct coreaudio:au-render-callback-struct))))
           (with-error ()
             (coreaudio:audio-unit-set-property unit :stream-format :in 0 stream (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description))))
-          ;;;; Trying to read back the actual properties segfaults for some reason. Very cool!
+          ;; Read back actual properties
           (with-error ()
             (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream size))
           (multiple-value-bind (samplerate channels encoding) (decode-stream-description stream)
