@@ -164,12 +164,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                (error "Failed to start render thread.")))))
 
 (defmethod mixed:mix ((drain drain))
-  (loop with pack = (mixed:pack drain)
-        until (< (* 2 (mixed:framesize pack)) (mixed:available-write pack))
-        do (when (= 0 (mixed:available-read pack))
-             (mixed:clear pack))
-           (bt:with-lock-held ((lock drain))
-             (bt:condition-wait (cvar drain) (lock drain) :timeout 0.1))))
+  (let ((pack (mixed:pack drain)))
+    (bt:with-lock-held ((lock drain))
+      (bt:condition-wait (cvar drain) (lock drain) :timeout 0.01)
+      (when (= 0 (mixed:available-read pack))
+        (mixed:clear pack)))))
 
 (defmethod mixed:end ((drain drain))
   (let ((thread (thread drain)))
