@@ -16,7 +16,7 @@
                                  (mixed:error-string (error-code c))))))
 
 (defmacro with-error-on-failure ((&optional (datum ''mixed-error) &rest args) &body body)
-  `(when (= 0 (progn ,@body))
+  `(when (= 0 (the (unsigned-byte 32) (progn ,@body)))
      (error ,datum ,@args)))
 
 (defmacro with-cleanup-on-failure (cleanup &body body)

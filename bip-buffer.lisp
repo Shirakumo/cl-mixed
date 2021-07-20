@@ -43,6 +43,17 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defun request-write (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
+  (let ((handle (handle buffer)))
+    (cffi:with-foreign-objects ((area :pointer)
+                                (rsize :uint32))
+      (setf (cffi:mem-ref rsize :uint32) size)
+      (if (< 0 (mixed:pack-request-write area rsize handle))
+          (let ((off (#+sbcl sb-ext:truly-the #-sbcl the (unsigned-byte 32)
+                             (- (cffi:pointer-address (cffi:mem-ref area :pointer))
+                                (cffi:pointer-address (mixed:buffer-data handle))))))
+            (values off (cffi:mem-ref rsize :uint32)))
+          (values 0 0))))
+  #+(OR)
   (with-buffer-fields (read write full-r2) buffer
     (cond ((not full-r2)
            (let ((available (- (mixed:buffer-size buffer) write)))
@@ -64,10 +75,9 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defun finish-write (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
-  (let ((buffer (handle buffer)))
-    (when (< (mixed:buffer-reserved buffer) size)
-      (error "Overcommit."))
-    (mixed:buffer-finish-write size buffer)))
+  ;; Annoying: need to call to C because of lack of SAP CAS.
+  (with-error-on-failure ()
+    (mixed:buffer-finish-write size (handle buffer))))
 
 (declaim (ftype (function (bip-buffer (unsigned-byte 32)) (values (unsigned-byte 32) (unsigned-byte 32))) request-read))
 (defun request-read (buffer size)
@@ -81,10 +91,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           (let ((off (#+sbcl sb-ext:truly-the #-sbcl the (unsigned-byte 32)
                           (- (cffi:pointer-address (cffi:mem-ref area :pointer))
                              (cffi:pointer-address (mixed:buffer-data handle))))))
-            ;; Need to make sure to get the element count out of float buffers rather
-            ;; than the byte offset we get with the pointer difference.
-            (values off
-                    (cffi:mem-ref rsize :uint32)))
+            (values off (cffi:mem-ref rsize :uint32)))
           (values 0 0))))
   ;; Annoying: this function needs to CAS on a foreign structure, but we cannot
   ;; do that portably (Atomics cannot promise it, for instance). So we have to
@@ -114,14 +121,17 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
   (with-buffer-fields (read write full-r2) buffer
     (cond (full-r2
            (if (< (- (mixed:buffer-size buffer) read) size)
-               (error "Overcommit.")
+               (error "Overcommit: ~a available, ~a requested.~%  R: ~a W: ~a R2: ~a"
+                      (- (mixed:buffer-size buffer) read) size read write full-r2)
                (setf (mixed:buffer-read buffer) (+ read size))))
           ((< read write)
            (if (< (- write read) size)
-               (error "Overcommit.")
+               (error "Overcommit: ~a available, ~a requested.~%  R: ~a W: ~a R2: ~a"
+                      (- write read) size read write full-r2)
                (setf (mixed:buffer-read buffer) (+ read size))))
           ((< 0 size)
-           (error "Overcommit")))))
+           (error "Overcommit: 0 available, ~a requested.~%  R: ~a W: ~a R2: ~a"
+                  size read write full-r2)))))
 
 (declaim (inline data-ptr))
 (defun data-ptr (data &optional (start 0))
