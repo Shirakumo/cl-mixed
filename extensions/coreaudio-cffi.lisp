@@ -200,6 +200,12 @@
   (:signed #x4)
   (:packed #x8))
 
+(cffi:defcenum (run-loop-result :int32)
+  (:finished 1)
+  (:stopped 2)
+  (:timed-out 3)
+  (:handled-source 4))
+
 ;; Structs
 (cffi:defcstruct (component-instance-record :conc-name component-instance-record-)
   (data :long :count 1))
@@ -246,19 +252,19 @@
   (flags :uint32)
   (reserved :uint32))
 
-(cffi:defcstruct (audio-buffer :conc-name audio-buffer-)
-  (number-channels :uint32)
-  (data-byte-size :uint32)
-  (data :pointer))
-
-(cffi:defcstruct (audio-buffer-list :conc-name audio-buffer-list-)
-  (number-buffers :uint32)
-  (buffers (:struct audio-buffer) :count 1))
-
 (cffi:defcstruct (audio-object-property-address :conc-name audio-object-property-address-)
   (selector :uint32)
   (scope :uint32)
   (element :uint32))
+
+(cffi:defcstruct (audio-buffer :conc-name audio-buffer-)
+  (capacity :uint32)
+  (data :pointer)
+  (size :uint32)
+  (user-data :pointer)
+  (packet-description-capacity :uint32)
+  (packet-descriptions :pointer)
+  (packet-description-count :uint32))
 
 ;; Funcs
 (cffi:defcfun (audio-object-get-property-data "AudioObjectGetPropertyData") os-status
@@ -307,3 +313,67 @@
 
 (cffi:defcfun (audio-output-unit-stop "AudioOutputUnitStop") os-status
   (unit audio-unit))
+
+(cffi:defcfun (audio-queue-new-output "AudioQueueNewOutput") os-status
+  (description :pointer)
+  (callback :pointer)
+  (data :pointer)
+  (run-loop :pointer)
+  (mode :pointer)
+  (flags :uint32)
+  (queue :pointer))
+
+(cffi:defcfun (audio-queue-dispose "AudioQueueDispose") os-status
+  (queue :pointer)
+  (immediate :boolean))
+
+(cffi:defcfun (audio-queue-allocate-buffer "AudioQueueAllocateBuffer") os-status
+  (queue :pointer)
+  (byte-size :uint32)
+  (buffer :pointer))
+
+(cffi:defcfun (audio-queue-free-buffer "AudioQueueFreeBuffer") os-status
+  (queue :pointer)
+  (buffer :pointer))
+
+(cffi:defcfun (audio-queue-set-property "AudioQueueSetProperty") os-status
+  (queue :pointer)
+  (property :uint32)
+  (address :pointer)
+  (size :uint32))
+
+(cffi:defcfun (audio-queue-enqueue-buffer "AudioQueueEnqueueBuffer") os-status
+  (queue :pointer)
+  (buffer :pointer)
+  (packets :uint32)
+  (descriptions :pointer))
+
+(cffi:defcfun (audio-queue-enqueue-buffer* "AudioQueueEnqueueBufferWithParameters") os-status
+  (queue :pointer)
+  (buffer :pointer)
+  (packets :uint32)
+  (descriptions :pointer)
+  (start :uint32)
+  (remaining :uint32)
+  (param-count :uint32)
+  (param-values :pointer)
+  (start-time :pointer)
+  (time-stamp :pointer))
+
+(cffi:defcfun (audio-queue-start "AudioQueueStart") os-status
+  (queue :pointer)
+  (start-time :pointer))
+
+(cffi:defcfun (audio-queue-stop "AudioQueueStop") os-status
+  (queue :pointer)
+  (immediate :boolean))
+
+(cffi:defcfun (run-loop "CFRunLoopRunInMode") run-loop-result
+  (mode :pointer)
+  (seconds :double)
+  (return-after-source-handled :bool))
+
+(cffi:defcfun (get-current-run-loop "CFRunLoopGetCurrent") :pointer)
+
+(cffi:defcfun (cfstr "__CFStringMakeConstantString") :pointer
+  (string :string))
