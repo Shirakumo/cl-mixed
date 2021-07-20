@@ -73,28 +73,24 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defun request-read (buffer size)
   (declare (optimize speed))
   (declare (type (unsigned-byte 32) size))
-  ;; Annoying: this function needs to CAS on a foreign structure, but we cannot
-  ;; do that portably (Atomics cannot promise it, for instance). So we have to
-  ;; call out to the foreign function and then figure out the actual offset from
-  ;; pointer comparisons...
-  ;;
-  ;; Also the pointer diffing seems to give garbage results somehow, so this is
-  ;; not a possible alternative.
-  #+(or)
   (let ((handle (handle buffer)))
     (cffi:with-foreign-objects ((area :pointer)
                                 (rsize :uint32))
       (setf (cffi:mem-ref rsize :uint32) size)
-      (if (< 0 (mixed:buffer-request-read area rsize handle))
-          (let ((off (the (unsigned-byte 32)
+      (if (< 0 (mixed:pack-request-read area rsize handle))
+          (let ((off (#+sbcl sb-ext:truly-the #-sbcl the (unsigned-byte 32)
                           (- (cffi:pointer-address (cffi:mem-ref area :pointer))
                              (cffi:pointer-address (mixed:buffer-data handle))))))
             ;; Need to make sure to get the element count out of float buffers rather
             ;; than the byte offset we get with the pointer difference.
-            (print off)
-            (values (if (typep buffer 'buffer) (truncate off 4) off)
+            (values off
                     (cffi:mem-ref rsize :uint32)))
           (values 0 0))))
+  ;; Annoying: this function needs to CAS on a foreign structure, but we cannot
+  ;; do that portably (Atomics cannot promise it, for instance). So we have to
+  ;; call out to the foreign function and then figure out the actual offset from
+  ;; pointer comparisons...
+  #+(OR)
   (with-buffer-fields (read write full-r2) buffer
     (cond (full-r2
            (let ((available (- (mixed:buffer-size buffer) read)))
