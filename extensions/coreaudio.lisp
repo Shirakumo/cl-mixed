@@ -122,9 +122,8 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
                               (stream '(:struct coreaudio:audio-stream-basic-description))
                               (callback '(:struct coreaudio:au-render-callback-struct))
                               (unit 'coreaudio:audio-unit)
+                              (frames :uint32)
                               (size :uint32))
-    (setf (cffi:mem-ref size :uint32) (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description)))
-    (dotimes (i (cffi:mem-ref size :uint32)) (setf (cffi:mem-aref stream :uint8 i) 0))
     ;; Search for device
     (let ((component (coreaudio:audio-component-find-next (cffi:null-pointer) (create-component-description description))))
       (when (cffi:null-pointer-p component)
@@ -135,6 +134,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
             (pack (mixed:pack drain)))
         (setf (mixed:samplerate pack) (get-default-device-sample-rate))
         (format *error-output* "~& [CoreAudio] Matching default device sample rate ~d~%" (mixed:samplerate pack))
+        (setf (cffi:mem-ref size :uint32) (cffi:foreign-type-size '(:struct coreaudio:audio-stream-basic-description)))
         (with-error ()
           (coreaudio:audio-unit-get-property unit :stream-format :in 0 stream size))
         (format *error-output* "~& [CoreAudio] Audio unit is preset to ~a~%" (decode-stream-description stream))
@@ -153,6 +153,11 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
           (setf (mixed:samplerate pack) samplerate)
           (setf (mixed:channels pack) channels)
           (setf (mixed:encoding pack) encoding))
+        (setf (cffi:mem-ref size :uint32) (cffi:foreign-type-size :uint32))
+        (with-error ()
+          (coreaudio:audio-unit-get-property unit :maximum-frames-per-slice :global 0 frames size))
+        (setf (mixed:size pack) (* (cffi:mem-ref frames :uint32) (mixed:framesize pack)))
+        (format *error-output* "~& [CoreAudio] Resizing pack to fit ~a~%" (mixed:size pack))
         ;; Fire it up!
         (float-features:with-float-traps-masked T
           (with-error ()
@@ -186,7 +191,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
     ;; We /have/ to adjust the size of the pack to fit what they request here or we're //fucked// and will
     ;; underrun on every callback.
     (when (< (mixed:size pack) bytes)
-      (format *error-output* "~&[Harmony] CoreAudio: requested ~d bytes of data, resizing.~%" bytes)
+      (format *error-output* "~& [CoreAudio] Requested ~d bytes of data, resizing buffer.~%" bytes)
       (setf (mixed:size pack) bytes))
     (mixed:with-buffer-tx (data start size pack :size bytes)
       (static-vectors:replace-foreign-memory (coreaudio:audio-buffer-data buffer) (mixed:data-ptr) size)
