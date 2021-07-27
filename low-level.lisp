@@ -128,7 +128,9 @@
   :current-segment
   :speed-factor
   :quantize-steps
-  :mix)
+  :mix
+  :plane-location
+  :plane-velocity)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -465,6 +467,10 @@
   (segment :pointer))
 
 (defcfun (make-segment-space-mixer "mixed_make_segment_space_mixer") :int
+  (samplerate :uint32)
+  (segment :pointer))
+
+(defcfun (make-segment-plane-mixer "mixed_make_segment_plane_mixer") :int
   (samplerate :uint32)
   (segment :pointer))
 

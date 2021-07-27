@@ -120,6 +120,7 @@
    #:make-segment-noise
    #:make-segment-packer
    #:make-segment-pitch
+   #:make-segment-plane-mixer
    #:make-segment-quantize
    #:make-segment-quantize
    #:make-segment-queue
@@ -354,6 +355,22 @@
    #:samplerate
    #:bypass
    #:wet)
+  ;; segments/plane-mixer.lisp
+  (:export
+   #:plane-mixer
+   #:make-plane-mixer
+   #:location
+   #:velocity
+   #:input-location
+   #:input-velocity
+   #:soundspeed
+   #:doppler-factor
+   #:min-distance
+   #:max-distance
+   #:rolloff
+   #:volume
+   #:field
+   #:attenuation)
   ;; segments/quantize.lisp
   (:export
    #:quantize

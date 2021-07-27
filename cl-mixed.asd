@@ -42,6 +42,7 @@
                              (:file "null")
                              (:file "packer")
                              (:file "pitch")
+                             (:file "plane-mixer")
                              (:file "quantize")
                              (:file "queue")
                              (:file "repeat")

@@ -116,40 +116,36 @@
      (define-field-reader ,name ,class ,type ,enum)
      (define-field-writer ,name ,class ,type ,enum)))
 
-(defun ptr->vec (value-ptr)
-  (let ((value (make-array 3 :initial-element 0.0f0 :element-type 'single-float)))
-    (setf (aref value 0) (cffi:mem-aref value-ptr :float 0))
-    (setf (aref value 1) (cffi:mem-aref value-ptr :float 1))
-    (setf (aref value 2) (cffi:mem-aref value-ptr :float 2))
-    value))
+(defun ptr->vec (value-ptr &optional (size 3))
+  (let ((value (make-array size :initial-element 0.0f0 :element-type 'single-float)))
+    (dotimes (i size value)
+      (setf (aref value i) (cffi:mem-aref value-ptr :float i)))))
 
-(defun vec->ptr (value value-ptr)
+(defun vec->ptr (value value-ptr &optional (size 3))
   (etypecase value
     (cons
-     (destructuring-bind (x y z) value
-       (setf (cffi:mem-aref value-ptr :float 0) (coerce x 'single-float))
-       (setf (cffi:mem-aref value-ptr :float 1) (coerce y 'single-float))
-       (setf (cffi:mem-aref value-ptr :float 2) (coerce z 'single-float))))
+     (loop for i from 0 below size
+           for v in value
+           do (setf (cffi:mem-aref value-ptr :float i) (coerce v 'single-float))))
     (vector
-     (setf (cffi:mem-aref value-ptr :float 0) (coerce (aref value 0) 'single-float))
-     (setf (cffi:mem-aref value-ptr :float 1) (coerce (aref value 1) 'single-float))
-     (setf (cffi:mem-aref value-ptr :float 2) (coerce (aref value 2) 'single-float)))))
+     (dotimes (i size)
+       (setf (cffi:mem-aref value-ptr :float i) (coerce (aref value i) 'single-float))))))
 
-(defmacro define-vector-field-accessor (name class enum)
+(defmacro define-vector-field-accessor (name class enum &optional (size 3))
   (let ((value-ptr (gensym "VALUE-PTR"))
         (value (gensym "VALUE"))
         (segment (gensym  "SEGMENT"))
         (field (intern (string name) "KEYWORD")))
     `(progn
        (defmethod field ((field (eql ,field)) (,segment ,class))
-         (cffi:with-foreign-object (,value-ptr :float 3)
+         (cffi:with-foreign-object (,value-ptr :float ,size)
            (with-error-on-failure ()
              (mixed:segment-get ,enum ,value-ptr (handle ,segment)))
-           (ptr->vec ,value-ptr)))
+           (ptr->vec ,value-ptr ,size)))
 
        (defmethod (setf field) (,value (field (eql ,field)) (,segment ,class))
-         (cffi:with-foreign-object (,value-ptr :float 3)
-           (vec->ptr ,value ,value-ptr)
+         (cffi:with-foreign-object (,value-ptr :float ,size)
+           (vec->ptr ,value ,value-ptr ,size)
            (with-error-on-failure ()
              (mixed:segment-set ,enum ,value-ptr (handle ,segment))))
          ,value)
@@ -160,21 +156,21 @@
        (defmethod (setf ,name) (,value (,segment ,class))
          (setf (field ,field ,segment) ,value)))))
 
-(defmacro define-input-vector-field-accessor (name class field enum)
+(defmacro define-input-vector-field-accessor (name class field enum &optional (size 3))
   (let ((value-ptr (gensym "VALUE-PTR"))
         (value (gensym "VALUE"))
         (location (gensym "LOCATION"))
         (segment (gensym  "SEGMENT")))
     `(progn
        (defmethod input-field ((field (eql ,field)) ,location (,segment ,class))
-         (cffi:with-foreign-object (,value-ptr :float 3)
+         (cffi:with-foreign-object (,value-ptr :float ,size)
            (with-error-on-failure ()
              (mixed:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
-           (ptr->vec ,value-ptr)))
+           (ptr->vec ,value-ptr ,size)))
 
        (defmethod (setf input-field) (,value (field (eql ,field)) ,location (,segment ,class))
-         (cffi:with-foreign-object (,value-ptr :float 3)
-           (vec->ptr ,value ,value-ptr)
+         (cffi:with-foreign-object (,value-ptr :float ,size)
+           (vec->ptr ,value ,value-ptr ,size)
            (with-error-on-failure ()
              (mixed:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
          ,value)
