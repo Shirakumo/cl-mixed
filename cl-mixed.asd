@@ -51,6 +51,8 @@
                              (:file "unpacker")
                              (:file "virtual")
                              (:file "volume-control")))
+               (:module "extensions"
+                :components ((:file "dummy")))
                (:file "documentation"))
   :depends-on (:alexandria
                :static-vectors
