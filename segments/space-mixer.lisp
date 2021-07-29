@@ -32,6 +32,9 @@
 
 (define-input-vector-field-accessor input-location space-mixer :location :space-location)
 (define-input-vector-field-accessor input-velocity space-mixer :velocity :space-velocity)
+(define-input-field-accessor input-min-distance space-mixer :min-distance :space-min-distance :float)
+(define-input-field-accessor input-max-distance space-mixer :max-distance :space-max-distance :float)
+(define-input-field-accessor input-rolloff space-mixer :rolloff :space-rolloff :float)
 
 (define-field-accessor soundspeed space-mixer :float :space-soundspeed)
 (define-field-accessor doppler-factor space-mixer :float :space-doppler-factor)

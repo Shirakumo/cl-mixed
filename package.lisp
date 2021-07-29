@@ -363,6 +363,9 @@
    #:velocity
    #:input-location
    #:input-velocity
+   #:input-min-distance
+   #:input-max-distance
+   #:input-rolloff
    #:soundspeed
    #:doppler-factor
    #:min-distance
@@ -407,6 +410,9 @@
    #:up
    #:input-location
    #:input-velocity
+   #:input-min-distance
+   #:input-max-distance
+   #:input-rolloff
    #:soundspeed
    #:doppler-factor
    #:min-distance

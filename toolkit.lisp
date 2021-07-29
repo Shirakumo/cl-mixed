@@ -116,6 +116,37 @@
      (define-field-reader ,name ,class ,type ,enum)
      (define-field-writer ,name ,class ,type ,enum)))
 
+(defmacro define-input-field-accessor (name class field enum type)
+  (let ((value-ptr (gensym "VALUE-PTR"))
+        (value (gensym "VALUE"))
+        (location (gensym "LOCATION"))
+        (segment (gensym  "SEGMENT")))
+    `(progn
+       (defmethod input-field ((field (eql ,field)) ,location (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr ,type)
+           (with-error-on-failure ()
+             (mixed:segment-get-in ,enum ,location ,value-ptr (handle ,segment)))
+           (cffi:mem-ref ,value-ptr ,type)))
+
+       (defmethod (setf input-field) (,value (field (eql ,field)) ,location (,segment ,class))
+         (cffi:with-foreign-object (,value-ptr ,type)
+           (setf (cffi:mem-ref ,value-ptr ,type) ,value)
+           (with-error-on-failure ()
+             (mixed:segment-set-in ,enum ,location ,value-ptr (handle ,segment))))
+         ,value)
+
+       (defmethod ,name ((,location buffer) (,segment ,class))
+         (input-field ,field (position ,location (inputs ,segment)) ,segment))
+
+       (defmethod ,name ((,location integer) (,segment ,class))
+         (input-field ,field ,location ,segment))
+
+       (defmethod (setf ,name) (,value (,location buffer) (,segment ,class))
+         (setf (input-field ,field (position ,location (inputs ,segment)) ,segment) ,value))
+
+       (defmethod (setf ,name) (,value (,location integer) (,segment ,class))
+         (setf (input-field ,field ,location ,segment) ,value)))))
+
 (defun ptr->vec (value-ptr &optional (size 3))
   (let ((value (make-array size :initial-element 0.0f0 :element-type 'single-float)))
     (dotimes (i size value)
