@@ -5,7 +5,7 @@
 |#
 
 (asdf:defsystem cl-mixed
-  :version "2.0.0"
+  :version "2.1.0"
   :license "zlib"
   :author "Nicolas Hafner <shinmera@tymoon.eu>"
   :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
@@ -28,13 +28,13 @@
                (:file "mixer")
                (:module "segments"
                 :components ((:file "basic-mixer")
+                             (:file "biquad-filter")
                              (:file "bundle")
                              (:file "chain")
                              (:file "channel-convert")
                              (:file "delay")
                              (:file "distribute")
                              (:file "fader")
-                             (:file "frequency-pass")
                              (:file "gate")
                              (:file "generator")
                              (:file "ladspa")

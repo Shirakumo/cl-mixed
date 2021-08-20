@@ -23,7 +23,7 @@
    #:generator-type
    #:noise-type
    #:repeat-mode
-   #:frequency-pass
+   #:biquad-filter
    #:field-type
    #:info-flags
    #:location
@@ -113,7 +113,7 @@
    #:make-segment-delay
    #:make-segment-distribute
    #:make-segment-fade
-   #:make-segment-frequency-pass
+   #:make-segment-biquad-filter
    #:make-segment-gate
    #:make-segment-generator
    #:make-segment-ladspa
@@ -182,10 +182,6 @@
    #:clear
    #:with-buffers
    #:transfer)
-  ;; bundle.lisp
-  (:export
-   #:bundle
-   #:make-bundle)
   ;; c-object.lisp
   (:export
    #:handle
@@ -257,6 +253,20 @@
    #:channels
    #:make-basic-mixer
    #:volume)
+  ;; segments/biquad-filter.lisp
+  (:export
+   #:biquad-filter
+   #:make-biquad-filter
+   #:frequency
+   #:filter
+   #:samplerate
+   #:bypass
+   #:q
+   #:gain)
+  ;; segments/bundle.lisp
+  (:export
+   #:bundle
+   #:make-bundle)
   ;; segments/chain.lisp
   (:export
    #:chain
@@ -290,15 +300,6 @@
    #:duration
    #:fade-type
    #:bypass)
-  ;; segments/frequency-pass.lisp
-  (:export
-   #:frequency-pass
-   #:make-frequency-pass
-   #:cutoff
-   #:frequency-pass
-   #:samplerate
-   #:bypass
-   #:wet)
   ;; segments/gate.lisp
   (:export
    #:gate

@@ -121,8 +121,10 @@
   :noise-type
   :repeat-time
   :repeat-mode
-  :frequency-cutoff
-  :frequency-pass
+  :frequency
+  :biquad-filter
+  :gain
+  :q
   :in-count
   :out-count
   :current-segment
@@ -130,7 +132,18 @@
   :quantize-steps
   :mix
   :plane-location
-  :plane-velocity)
+  :plane-velocity
+  :compressor-pregain
+  :compressor-threshold
+  :compressor-knee
+  :compressor-ratio
+  :compressor-attack
+  :compressor-release
+  :compressor-predelay
+  :compressor-releasezone
+  :compressor-postgain
+  :compressor-wet
+  :compressor-gain)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -166,9 +179,15 @@
   (:record 1)
   :play)
 
-(defcenum frequency-pass
-  (:low 1)
-  :high)
+(defcenum biquad-filter
+  (:lowpass 1)
+  :highpass
+  :bandpass
+  :notch
+  :peaking
+  :allpass
+  :lowshelf
+  :highshelf)
 
 (defbitfield info-flags
   (:inplace #x1)
@@ -224,7 +243,7 @@
   :pack-pointer
   :chain-pointer
   :location-enum
-  :frequency-pass-enum
+  :biquad-filter-enum
   :repeat-mode-enum
   :noise-type-enum
   :generator-type-enum
@@ -497,9 +516,9 @@
   (type noise-type)
   (segment :pointer))
 
-(defcfun (make-segment-frequency-pass "mixed_make_segment_frequency_pass") :int
-  (pass frequency-pass)
-  (cutoff :uint32)
+(defcfun (make-segment-biquad-filter "mixed_make_segment_biquad_filter") :int
+  (pass biquad-filter)
+  (frequency :float)
   (samplerate :uint32)
   (segment :pointer))
 

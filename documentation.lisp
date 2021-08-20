@@ -257,7 +257,7 @@ The sample rate is in Hz.
 See PACKED-AUDIO
 See DELAY
 See FADER
-See FREQUENCY-PASS
+See BIQUAD-FILTER
 See PITCH
 See REPEAT
 See SPACE-MIXER"))
@@ -802,41 +802,40 @@ Must be one of :LINEAR :CUBIC-IN :CUBIC-OUT :CUBIC-IN-OUT
 
 See FADER"))
 
-;; segments/frequency-pass.lisp
+;; segments/biquad-filter.lisp
 (docs:define-docs
-  (type frequency-pass
-    "A frequency low or high pass filter.
-
-This filters out frequencies below or above a given
-cutoff frequency.
+  (type biquad-filter
+    "A biquad filter for simple frequency filtering operations.
 
 See SEGMENT
-See MAKE-FREQUENCY-PASS
-See CUTOFF
-See FREQUENCY-PASS
+See MAKE-BIQUAD-FILTER
+See FREQUENCY
+See FILTER
 See SAMPLERATE
-See BYPASS")
+See BYPASS
+See Q
+See GAIN")
 
-  (function make-frequency-pass
+  (function make-biquad-filter
     "Create a new frequency pass segment.
 
 PASS can be either :high or :low, which will cause
 high and low frequencies to pass through the filter
 respectively.
 
-See FREQUENCY-PASS")
+See BIQUAD-FILTER")
 
-  (function cutoff
-    "Accessor to the cutoff frequency of the frequency-pass segment.
+  (function frequency
+    "Accessor to the frequency around which the filter is tuned.
 
-See FREQUENCY-PASS")
+See BIQUAD-FILTER")
 
-  (function frequency-pass
-    "Accessor to whether the frequency-pass segment passes high or low frequencies.
+  (function biquad-filter
+    "Accessor to whether the biquad-filter segment passes high or low frequencies.
 
 Value must be either :HIGH or :LOW.
 
-See FREQUENCY-PASS"))
+See BIQUAD-FILTER"))
 
 ;; segments/generator.lisp
 (docs:define-docs
