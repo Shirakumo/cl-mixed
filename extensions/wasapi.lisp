@@ -31,10 +31,11 @@
 
 (defun find-audio-client (&optional id)
   (com:with-com (enumerator (com:create wasapi:CLSID-MMDEVICEENUMERATOR wasapi:IID-IMMDEVICEENUMERATOR))
-    (com:with-com (device (com:with-deref (device :pointer)
-                            (if id
-                                (com:with-wstring (wstring id)
-                                  (wasapi:imm-device-enumerator-get-device enumerator wstring device))
+    (com:with-com (device (if id
+                              (com:with-wstring (wstring id)
+                                (com:with-deref (device :pointer)
+                                  (wasapi:imm-device-enumerator-get-device enumerator wstring device)))
+                              (com:with-deref (device :pointer)
                                 (wasapi:imm-device-enumerator-get-default-audio-endpoint enumerator :render :multimedia device))))
       (com:with-deref (client :pointer)
         (wasapi:imm-device-activate device wasapi:IID-IAUDIOCLIENT com-cffi:CLSCTX-ALL (cffi:null-pointer) client)))))
