@@ -24,6 +24,7 @@
 
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
+    (sleep (/ size (mixed:samplerate (mixed:pack drain))))
     (mixed:finish size)))
 
 (defmethod mixed:end ((drain drain)))
