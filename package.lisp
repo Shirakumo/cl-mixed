@@ -140,6 +140,7 @@
    #:chain-add-at
    #:chain-remove
    #:chain-remove-at
+   #:make-segment-spatial-reverb
    #:load-plugin
    #:close-plugin
    #:register-segment
@@ -422,6 +423,14 @@
    #:volume
    #:field
    #:attenuation)
+  ;; segments/spatial-reverb.lisp
+  (:export
+   #:spatial-reverb
+   #:make-spatial-reverb
+   #:distance-delay
+   #:max-distance
+   #:set-parameters
+   #:add-spatial-probe)
   ;; segments/speed-change.lisp
   (:export
    #:speed-change

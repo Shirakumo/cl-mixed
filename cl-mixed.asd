@@ -47,6 +47,7 @@
                              (:file "queue")
                              (:file "repeat")
                              (:file "space-mixer")
+                             (:file "spatial-reverb")
                              (:file "speed-change")
                              (:file "unpacker")
                              (:file "virtual")

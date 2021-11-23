@@ -143,7 +143,11 @@
   :compressor-releasezone
   :compressor-postgain
   :compressor-wet
-  :compressor-gain)
+  :compressor-gain
+  :spatial-reverb-distance-delay
+  :spatial-reverb-max-distance-cutoff
+  :spatial-reverb-parameters
+  :spatial-reverb-probe)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -582,6 +586,10 @@
 (defcfun (chain-remove-at "mixed_chain_remove_at") :int
   (i :uint32)
   (chain :pointer))
+
+(defcfun (make-segment-spatial-reverb "mixed_make_segment_spatial_reverb") :int
+  (samplerate :uint32)
+  (segment :pointer))
 
 (defcfun (load-plugin "mixed_load_plugin") :int
   (file :string))
