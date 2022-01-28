@@ -14,6 +14,7 @@
    #:pcm-format
    #:pcm-access
    #:pcm-open
+   #:pcm-name
    #:pcm-set-params
    #:pcm-hw-params-size
    #:pcm-hw-params-current
@@ -26,6 +27,9 @@
    #:pcm-drop
    #:pcm-drain
    #:pcm-close
+   #:device-hint
+   #:device-name
+   #:device-free-hint
    #:strerror))
 (in-package #:org.shirakumo.fraf.mixed.alsa.cffi)
 
@@ -100,6 +104,9 @@
   (stream pcm-stream)
   (mode :int))
 
+(cffi:defcfun (pcm-name "snd_pcm_name") :string
+  (pcm :pointer))
+
 (cffi:defcfun (pcm-set-params "snd_pcm_set_params") :int
   (pcm :pointer)
   (format pcm-format)
@@ -153,3 +160,15 @@
 
 (cffi:defcfun (strerror "snd_strerror") :string
   (error :int))
+
+(cffi:defcfun (device-name "snd_device_name_get_hint") :pointer
+  (device :string)
+  (hint :string))
+
+(cffi:defcfun (device-hint "snd_device_name_hint") :int
+  (card :int)
+  (interface :string)
+  (hints :pointer))
+
+(cffi:defcfun (device-free-hint "snd_device_name_free_hint") :int
+  (hints :pointer))
