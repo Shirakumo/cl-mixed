@@ -43,3 +43,10 @@
 
 (defmethod channel-order ((drain drain))
   *default-channel-order*)
+
+(defclass device-drain (drain)
+  ())
+
+(defgeneric list-devices (device-drain))
+(defgeneric device (device-drain))
+(defgeneric (setf device) (device device-drain))

@@ -195,7 +195,10 @@
    #:drain
    #:program-name
    #:pack
-   #:channel-order)
+   #:channel-order
+   #:device-drain
+   #:list-devices
+   #:device)
   ;; mixer.lisp
   (:export
    #:mixer
