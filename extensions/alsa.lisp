@@ -18,7 +18,7 @@
 
 (define-condition alsa-error (error)
   ((code :initarg :code :accessor code))
-  (:report (lambda (c s) (format s "Pulse error ~d: ~a"
+  (:report (lambda (c s) (format s "ALSA error ~d: ~a"
                                  (code c) (alsa:strerror (code c))))))
 
 (defun check-result (result)
