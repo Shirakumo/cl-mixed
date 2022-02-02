@@ -16,6 +16,34 @@
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.wasapi)
 
+(defstruct (device (:constructor make-device (id name)))
+  (id NIL :type string)
+  (name NIL :type string))
+
+(defmethod print-object ((device device) stream)
+  (if *print-readably*
+      (call-next-method)
+      (write-string (device-name device) stream)))
+
+(defun device-from-win (device)
+  (cffi:with-foreign-objects ((key '(:struct wasapi:property-key))
+                              (var '(:struct wasapi:propvariant)))
+    (loop for i from 0 below (cffi:foreign-type-size 'com:guid)
+          do (setf (cffi:mem-aref key :uint8 i) (aref (com:bytes wasapi:PKEY-Device-FriendlyName) i)))
+    (setf (wasapi:property-key-pid key) 14)
+    (let ((id (com:with-deref (id :pointer)
+                (wasapi:imm-device-get-id device id)))
+          (store (com:with-deref (store :pointer)
+                   (wasapi:imm-device-open-property-store device 0 store))))
+      (unwind-protect
+           (progn
+             (com:check-hresult (wasapi:i-property-store-get-value store key var))
+             (make-device (com:wstring->string id)
+                          (com:wstring->string (wasapi:propvariant-value var))))
+        (wasapi:clear-propvariant var)
+        (com:release store)
+        (com-cffi:task-mem-free id)))))
+
 (defun enumerate-devices ()
   (com:with-com (enumerator (com:create wasapi:CLSID-MMDEVICEENUMERATOR wasapi:IID-IMMDEVICEENUMERATOR))
     (com:with-com (collection (com:with-deref (collection :pointer)
@@ -23,11 +51,8 @@
       (loop for i from 0 below (com:with-deref (count :uint)
                                  (wasapi:imm-device-collection-get-count collection count))
             collect (com:with-com (device (com:with-deref (device :pointer)
-                                                   (wasapi:imm-device-collection-item collection i device)))
-                      (let ((id (com:with-deref (id :pointer)
-                                  (wasapi:imm-device-get-id device id))))
-                        (unwind-protect (com:wstring->string id)
-                          (com-cffi:task-mem-free id))))))))
+                                            (wasapi:imm-device-collection-item collection i device)))
+                      (device-from-win device))))))
 
 (defun find-audio-client (&optional id)
   (com:with-com (enumerator (com:create wasapi:CLSID-MMDEVICEENUMERATOR wasapi:IID-IMMDEVICEENUMERATOR))
@@ -37,8 +62,10 @@
                                   (wasapi:imm-device-enumerator-get-device enumerator wstring device)))
                               (com:with-deref (device :pointer)
                                 (wasapi:imm-device-enumerator-get-default-audio-endpoint enumerator :render :multimedia device))))
-      (com:with-deref (client :pointer)
-        (wasapi:imm-device-activate device wasapi:IID-IAUDIOCLIENT com-cffi:CLSCTX-ALL (cffi:null-pointer) client)))))
+      (values
+       (com:with-deref (client :pointer)
+         (wasapi:imm-device-activate device wasapi:IID-IAUDIOCLIENT com-cffi:CLSCTX-ALL (cffi:null-pointer) client))
+       (device-from-win device)))))
 
 (defun format-supported-p (audio-client samplerate channels sample-format &optional (mode :shared))
   (cffi:with-foreign-object (wave '(:struct wasapi:waveformat-extensible))
@@ -89,49 +116,60 @@
        (wasapi:i-audio-session-control-set-display-name session label (cffi:null-pointer)))))
   label)
 
-(defclass drain (mixed:drain)
+(defclass drain (mixed:device-drain)
   ((mode :initform :shared :initarg :mode :accessor mode)
    (client :initform NIL :accessor client)
    (render :initform NIL :accessor render)
    (event :initform NIL :accessor event)
-   (audio-client-id :initform NIL :initarg :audio-client-id :accessor audio-client-id)
+   (device :initform NIL :reader mixed:device :accessor device)
    (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
 
-(defmethod initialize-instance :after ((drain drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key device)
   (com:init)
-  ;; FIXME: allow picking a device
+  (init drain device))
+
+(defun init (drain device)
   ;; FIXME: allow picking shared/exclusive mode
   (let* ((mode (mode drain))
          (pack (mixed:pack drain))
          ;; Attempt to get a buffer as large as our internal ones.
          (buffer-duration (seconds->reference-time (/ (mixed:size pack) (mixed:framesize pack) (mixed:samplerate pack))))
          (periodicity (ecase mode (:shared 0) (:exclusive buffer-duration)))
-         (client (find-audio-client (audio-client-id drain)))
          (channels (or (mixed:channel-order drain) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
-    (setf (client drain) client)
-    (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
-      (declare (ignore ok))
-      (setf (mixed:channels pack) (length channels))
-      (setf (mixed:samplerate pack) samplerate)
-      (setf (mixed:encoding pack) encoding)
-      (setf (mixed:channel-order drain) channels))
-    ;; Initialise the rest
-    (cffi:with-foreign-object (format '(:struct wasapi:waveformat-extensible))
-      (wasapi:encode-wave-format format (mixed:samplerate pack) (mixed:channel-order drain) (mixed:encoding pack))
-      (com:check-hresult
-       (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
-                                         buffer-duration periodicity
-                                         format (cffi:null-pointer))))
-    (when (mixed:program-name drain)
-      (setf (audio-client-label client) (mixed:program-name drain)))
-    (let ((event (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
-      (com:check-last-error (not (cffi:null-pointer-p event)))
-      (setf (event drain) event)
-      (com:check-hresult
-       (wasapi:i-audio-client-set-event-handle client event)))
-    (setf (render drain)
-          (com:with-deref (render :pointer)
-            (wasapi:i-audio-client-get-service client wasapi:IID-IAUDIORENDERCLIENT render)))))
+    (multiple-value-bind (client device) (find-audio-client (when device (device-id device)))
+      (setf (client drain) client)
+      (setf (device drain) device)
+      (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
+        (declare (ignore ok))
+        (setf (mixed:channels pack) (length channels))
+        (setf (mixed:samplerate pack) samplerate)
+        (setf (mixed:encoding pack) encoding)
+        (setf (mixed:channel-order drain) channels))
+      ;; Initialise the rest
+      (cffi:with-foreign-object (format '(:struct wasapi:waveformat-extensible))
+        (wasapi:encode-wave-format format (mixed:samplerate pack) (mixed:channel-order drain) (mixed:encoding pack))
+        (com:check-hresult
+         (wasapi:i-audio-client-initialize client mode wasapi:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
+                                           buffer-duration periodicity
+                                           format (cffi:null-pointer))))
+      (when (mixed:program-name drain)
+        (setf (audio-client-label client) (mixed:program-name drain)))
+      (let ((event (wasapi:create-event (cffi:null-pointer) 0 0 (cffi:null-pointer))))
+        (com:check-last-error (not (cffi:null-pointer-p event)))
+        (setf (event drain) event)
+        (com:check-hresult
+         (wasapi:i-audio-client-set-event-handle client event)))
+      (setf (render drain)
+            (com:with-deref (render :pointer)
+              (wasapi:i-audio-client-get-service client wasapi:IID-IAUDIORENDERCLIENT render))))))
+
+(defmethod mixed:list-devices ((drain drain))
+  (enumerate-devices))
+
+(defmethod (setf mixed:device) ((device device) (drain drain))
+  (mixed:free drain)
+  (init drain device)
+  device)
 
 (defmethod mixed:free ((drain drain))
   (when (event drain)

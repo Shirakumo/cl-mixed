@@ -15,6 +15,7 @@
    #:AUDCLNT-STREAMFLAGS-EVENTCALLBACK
    #:DEVICE-STATE-ACTIVE
    #:WAVE-FORMAT-EXTENSIBLE
+   #:PKEY-Device-FriendlyName
    #:INFINITE
    #:word
    #:dword
@@ -47,6 +48,9 @@
    #:property-key
    #:property-key-fmtid
    #:property-key-pid
+   #:propvariant
+   #:propvariant-vt
+   #:propvariant-value
    #:imm-device-enumerator
    #:imm-device-enumerator-query-interface
    #:imm-device-enumerator-add-ref
@@ -122,6 +126,7 @@
    #:close-handle
    #:set-event
    #:reset-event
+   #:clear-propvariant
    #:compose-channel-mask
    #:channel-mask-for-channel-count
    #:IID-IAudioClient
@@ -155,6 +160,8 @@
   (com:guid #x00000001 #x0000 #x0010 #x80 #x00 #x00 #xAA #x00 #x38 #x9B #x71))
 (defvar KSDATAFORMAT-SUBTYPE-IEEE-FLOAT
   (com:guid #x00000003 #x0000 #x0010 #x80 #x00 #x00 #xAA #x00 #x38 #x9B #x71))
+(defvar PKEY-Device-FriendlyName
+  (com:guid #XA45C254E #XDF1C #X4EFD #X80 #X20 #X67 #XD1 #X46 #XA8 #X50 #XE0))
 (defconstant AUDCLNT-STREAMFLAGS-EVENTCALLBACK #x00040000)
 (defconstant DEVICE-STATE-ACTIVE #x00000001)
 (defconstant WAVE-FORMAT-EXTENSIBLE #x0000FFFE)
@@ -257,9 +264,16 @@
   (channel-mask channel-mask)
   (sub-format com:guid))
 
-(cffi:defcstruct (property-key :conc-name property-key)
+(cffi:defcstruct (property-key :conc-name property-key-)
   (fmtid com:guid)
   (pid dword))
+
+(cffi:defcstruct (propvariant :conc-name propvariant-)
+  (vt :ushort)
+  (r1 word)
+  (r2 word)
+  (r3 word)
+  (value :pointer))
 
 (cffi:defcstruct (com :conc-name ||)
   (vtbl :pointer))
@@ -301,11 +315,11 @@
   (release-buffer (num-frames-written :uint32) (flags bufferflags)))
 
 (com:define-comstruct i-property-store
-  (commit)
-  (get-at (prop dword) (pkey :pointer))
   (get-count (props :pointer))
+  (get-at (prop dword) (pkey :pointer))
   (get-value (key :pointer) (value :pointer))
-  (set-value (key :pointer) (value :pointer)))
+  (set-value (key :pointer) (value :pointer))
+  (commit))
 
 (com:define-comstruct i-audio-session-control
   (get-state (retval :pointer))
@@ -346,6 +360,9 @@
 
 (cffi:defcfun (reset-event "ResetEvent") :bool
   (event handle))
+
+(cffi:defcfun (clear-propvariant "PropVariantClear") :void
+  (propvariant :pointer))
 
 (defun encode-wave-format (ptr samplerate channels format)
   (let ((bit-depth (ecase format
