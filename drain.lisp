@@ -50,3 +50,7 @@
 (defgeneric list-devices (device-drain))
 (defgeneric device (device-drain))
 (defgeneric (setf device) (device device-drain))
+
+(defmethod print-object ((drain device-drain) stream)
+  (print-unreadable-object (drain stream :type T :identity T)
+    (format stream "~a" (device drain))))
