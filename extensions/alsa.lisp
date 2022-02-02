@@ -67,8 +67,13 @@
   (alsa:pcm-name (pcm drain)))
 
 (defmethod (setf mixed:device) (device (drain drain))
-  (mixed:free drain)
-  (connect drain device))
+  (cond ((pcm drain)
+         (alsa:pcm-drain (pcm drain))
+         (alsa:pcm-close (pcm drain))
+         (setf (pcm drain) NIL)
+         (connect drain device))
+        (T
+         (connect drain device))))
 
 (defmethod mixed:list-devices ((drain drain))
   (cffi:with-foreign-object (hints :pointer)

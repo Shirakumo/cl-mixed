@@ -167,11 +167,19 @@
   (enumerate-devices))
 
 (defmethod (setf mixed:device) ((device device) (drain drain))
-  (mixed:free drain)
-  (init drain device)
+  (cond ((client drain)
+         (mixed:end drain)
+         (clear drain)
+         (init drain device)
+         (mixed:start drain))
+        (T
+         (init drain device)))
   device)
 
 (defmethod mixed:free ((drain drain))
+  (clear drain))
+
+(defun clear (drain)
   (when (event drain)
     (wasapi:close-handle (event drain))
     (setf (event drain) NIL))
