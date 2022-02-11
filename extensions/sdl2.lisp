@@ -28,7 +28,8 @@
     (setf (ldb (byte 8 0) f) (* 8 (mixed:samplesize format)))
     (case format
       ((:double :float)
-       (setf (ldb (byte 1 8) f) 1))
+       (setf (ldb (byte 1 8) f) 1)
+       (setf (ldb (byte 1 15) f) 1))
       ((:int8 :int16 :int24 :int32 :int64)
        (setf (ldb (byte 1 15) f) 1)))
     f))
@@ -53,7 +54,7 @@
 
 (defmethod initialize-instance :after ((drain drain) &key)
   (sdl2:init :audio)
-  (init (device drain)))
+  (init drain (device drain)))
 
 (defun init (drain device)
   (cffi:with-foreign-objects ((want '(:struct audio-spec))
