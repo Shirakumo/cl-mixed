@@ -45,27 +45,30 @@
 (defmacro define-callback (name return args error-return &body body)
   (let ((err (gensym "ERROR")))
     `(cffi:defcallback ,name ,return ,args
+       #-cl-mixed-no-restarts
        (handler-case
            (loop
-              (restart-case
-                  (handler-bind ((error #'invoke-debugger))
-                    (return
-                      (locally
-                          ,@body)))
-                (abort (&optional e)
-                  :report "Abort the callback and report an error."
-                  (declare (ignore e))
-                  (return ,error-return))
-                (continue (&optional e)
-                  :report "Abort the callback and ignore the error."
-                  (declare (ignore e))
-                  (return 1))
-                (retry (&optional e)
-                  :report "Retry the callback."
-                  (declare (ignore e)))))
+             (restart-case
+                 (handler-bind ((error #'invoke-debugger))
+                   (return
+                     (locally
+                         ,@body)))
+               (abort (&optional e)
+                 :report "Abort the callback and report an error."
+                 (declare (ignore e))
+                 (return ,error-return))
+               (continue (&optional e)
+                 :report "Abort the callback and ignore the error."
+                 (declare (ignore e))
+                 (return 1))
+               (retry (&optional e)
+                 :report "Retry the callback."
+                 (declare (ignore e)))))
          (error (,err)
            (format T "~&Error in ~a callback: ~a~%" ',name ,err)
-           ,error-return)))))
+           ,error-return))
+       #+cl-mixed-no-restarts
+       ,@body)))
 
 (defmacro define-std-callback (name args &body body)
   `(define-callback ,name :int ,args
