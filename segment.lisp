@@ -181,6 +181,7 @@
              (:right-rear-bottom '(:right-rear-bottom :right-side :right-rear-top))
              (:center-front '(:center-front :center :center-rear))
              (:center-rear '(:center-rear :center :center-front))
+             (:center '(:center-front :center :center-rear))
              (T (list c)))))
     (let ((segments (loop for c in old-order
                           for a across (ecase side
