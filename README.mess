@@ -7,3 +7,81 @@ Precompiled versions of the underlying library are included in this for most com
 Examples on how to use cl-mixed can be found in the "examples"(link examples/) directory. This also includes an example on how to create a custom audio processing element in pure lisp.
 
 cl-mixed also ships a variety of "extension"(link extensions/) systems providing segments that can be used for playing back audio on various sound systems, or reading audio from various formats.
+
+Fully implemented extensions:
+
+- Alsa
+- CoreAudio
+- Flac
+- Mpg123
+- Ogg/vorbis
+- Openmpt
+- Oss
+- Out123
+- PulseAudio
+- Wasapi
+- Wave
+
+## Basic Concepts
+This library is a wrapper around libmixed. As such, most of the functionality is inherent to the underlying library. However, for convenience, we'll explain the basic concepts here.
+
+### C-Objects
+Since we're dealing with a foreign library, we need an interface to manage the shared memory. This is done via ``c-object``, a base class for everything in cl-mixed.
+
+When an instance is created, ``allocate-handle`` is called to manage the allocation and initialisation of the foreign data. The resulting pointer is retained in the ``handle`` slot, and registered in a reverse table that allows retrieving the Lisp object from the handle pointer.
+
+Once the object is no longer needed, ``free`` **must** be called on it to clean up the foreign memory. It is safe to call ``free`` repeatedly. Once freed, the object should not be used for anything else anymore.
+
+For dynamic-extent use of c-objects, ``with-objects`` may be used, which ensures the cleanup.
+
+### Buffer
+A container for raw audio samples. Each ``buffer`` represents one "channel" of audio signals, encoded as 32-bit floating point numbers in the range [-1,+1]. A buffer has a maximum number of samples it can store, and keeps track of read and write heads.
+
+Internally, buffers are implemented as lock-free bipartite buffers, meaning that whenever you request a write or read, you will always get a consecutive region of memory, and you can write and read from it in parallel. Note however, that only one simultaneous reader and writer are supported.
+
+To start a transaction use ``request-read`` or ``request-write``, which will give you a start and end index to use. Once your transaction is completed, use ``finish-read`` or ``finish-write`` and pass the number of samples that were actually consumed. If you want to abort a transaction, simply don't call the corresponding finish function.
+
+You can also query the available space with ``available-read`` and ``available-write``, and perform transaction more conveniently with ``with-buffer-tx``, or a sample-wise transfer from one buffer to another with ``with-buffer-transfer``.
+
+Buffers can be resized simply using ``(setf size)``, and cleared using ``clear``.
+
+#### Pack
+Note that there's two types of buffers in libmixed, the regular ``buffer`` as explained above that carries samples, and ``pack``s, which carry encoded audio frames in a byte buffer. Both use the same interface to read/write, but beware that when dealing with a ``pack`` you must appropriately encode and decode the samples from the packed byte frames.
+
+In addition to the bip-buffer content, a ``pack`` also holds data about the representation of the audio data, such as the sample ``encoding``, ``channels``, ``framesize``, and ``samplerate``. You can conveniently transfer pack data from/to buffers using ``transfer``.
+
+Also see the ``unpacker`` and ``packer`` segments, which efficiently handle the encoding and decoding operations, including resampling.
+
+### Segment
+A ``segment`` is a representation of some audio processing unit. A segment may take samples from a number of input buffers, and may put samples into a number of output buffers. Segments represent the base part of libmixed and have a standardised interface to deal with their buffers, parameters, and metadata.
+
+You can retrieve information about the available fields, outputs, inputs, etc. using ``info``. Connected ``input``s and ``output``s can also be fetched, as long as they were connected using the appropriate Lisp functions (``(setf input)``, ``(setf output)``). Note: libmixed does not offer a way for us to get notified when foreign code changes fields, and so cl-mixed will miss buffer connections when they happen outside of lisp-land.
+
+Fields in general can be accessed with ``input-field``, ``output-field``, and ``field``. Please consult the respective field descriptions in the ``info`` to determine when it is safe to change these fields, and which values are permitted.
+
+Once a segment has been properly connected, it can be ``start``ed to ready it for use. After that, ``mix`` can be called repeatedly to process audio samples. Once the segment is no longer used, or when specific parameters need to be reconfigured, ``end`` should be called to park the segment.
+
+#### Reflection
+Libmixed offers a full reflection API, including the listing of supported segments, which may also be contributed by outside libraries not directly known to cl-mixed. You can list all available segment types using ``list-segments`` and construct an instance using ``make-generic-segment``. 
+
+#### Mixer
+A mixer is a special kind of segment that takes an arbitrary number of input buffers and mixes them together in particular ways to produce a fixed set of output buffers. libmixed offers three types of mixers out of the box: ``basic-mixer``, ``plane-mixer``, and ``space-mixer``.
+
+#### Source
+A source is a special kind of segment that does not have any output or input buffers, only a connected ``pack`` that it writes raw audio frames into. Sources also offer special methods to handle the audio input stream, such as ``byte-position``, ``frame-position``, ``frame-count``, ``channel-order``, and ``seek``.
+
+All audio sources that produce samples from an audio file or similar will be a subclass of ``source``.
+
+#### Drain
+Analogous to sources, a ``drain`` does not have any input or output buffers, only a ``pack`` that it reads raw audio frames from. Drains are used to output audio data to a file or playback device. They similarly support the ``channel-order`` hint.
+
+A special subclass of drain, ``device-drain`` further allows discovery of available playback devices using ``list-devices`` and the selection of a specific device either through the ``:device`` initarg, or using the ``device`` accessor. The format of the device argument is typically a string, but is dependent on the type of drain used.
+
+#### Virtual
+Thanks to libmixed's standardised segment structure, we can also create segments from Lisp that integrate with any other part that consumes the libmixed API. To do so, create a subclass of ``virtual`` and implement methods as needed on ``start``, ``mix``, ``end``, etc.
+
+This is especially handy for experimentation with audio data, as we can quickly update and change processing functions. All of cl-mixed's extensions are implemented in part through a ``virtual`` segment.
+
+## See Also
+- "libmixed"(https://github.com/shirakumo/libmixed) The underlying C library implementing the high-performance processing functionality and base API.
+- "Harmony"(https://shirakumo.github.io/harmony) A capable sound server implemented on top of cl-mixed, which offers a more convenient interface to manage playback and construct mixing pipelines.
