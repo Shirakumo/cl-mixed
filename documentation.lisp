@@ -24,6 +24,142 @@ Acceptable values are
 
 (in-package #:org.shirakumo.fraf.mixed)
 
+;; bip-buffer.lisp
+(docs:define-docs
+  (type bip-buffer
+    "Base class for all buffer types.
+
+Implements an interface to allow for asynchronous read/write to the
+buffer.
+
+See DATA
+See AVAILABLE-READ
+See AVAILABLE-WRITE
+See REQUEST-WRITE
+See FINISH-WRITE
+See REQUEST-READ
+See FINISH-READ
+See DATA-PTR
+See WITH-BUFFER-TX
+See WITH-BUFFER-TRANSFER")
+
+  (function available-read
+    "Returns the number of elements available for reading in the buffer.
+
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function available-write
+    "Returns the number of elements that can be written to the buffer.
+
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function request-write
+    "Prepares a writing operation on the buffer.
+
+Returns two values:
+  START -- The number of elements after which the write may begin.
+  SIZE  -- The number of elements that may be written.
+
+After calling this, you **must** call FINISH-WRITE before calling
+REQUEST-WRITE again.
+
+See FINISH-WRITE
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function finish-write
+    "Finishes a writing transaction.
+
+You must not call this function without a matching REQUEST-WRITE call
+first. The SIZE should be the number of written elements, which may be
+less than the number obtained from REQUEST-WRITE, but not more.
+
+See REQUEST-WRITE
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function request-read
+    "Prepares a reading operation on the buffer.
+
+Returns two values:
+  START -- The number of elements after which the read may begin.
+  SIZE  -- The number of elements that may be read.
+
+After calling this, you **must** call FINISH-READ before calling
+REQUEST-WRITE again.
+
+See FINISH-READ
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function finish-read
+    "Finishes a reading transaction.
+
+You must not call this function without a matching REQUEST-READ call
+first. The SIZE should be the number of read elements, which may be
+less than the number obtained from REQUEST-READ, but not more.
+
+See REQUEST-READ
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function data-ptr
+    "Returns a foreign pointer to the underlying storage of the data array.
+
+See BIP-BUFFER
+See BUFFER
+See PACK")
+
+  (function with-buffer-tx
+    "Convenience macro to handle a buffer transaction.
+
+DATA is bound to the storage array of the buffer.
+START is bound to the starting index of the transaction.
+SIZE is bound to the number of elements that may be operated on during
+the transaction.
+BUFFER should be a BIP-BUFFER instance.
+DIRECTION can be either :INPUT or :OUTPUT depending on the type of
+transaction desired.
+INITIAL-SIZE should be the amount of space to request.
+
+During BODY, two functions are available:
+  FINISH   --- Completes the transaction, using the passed number of
+               elements. Note that this does not cause an unwind.
+  DATA-PTR --- Returns a foreign pointer to the start of the
+               transaction's valid memory.
+
+This macro ensures that on unwind for any reason, whether after FINISH
+or before, the buffer is left in a sealed state where it is safe to
+call REQUEST-READ and REQUEST-WRITE again.
+
+See BIP-BUFFER
+See BUFFER
+See PACK
+See WITH-BUFFER-TRANSFER")
+
+  (function with-buffer-transfer
+    "Convenience macro to handle a transfer from one buffer to another.
+
+Both FROM and TO may be the same buffer, in which case the transfer
+happens from the region available to read to itself.
+
+Otherwise, this is akin to nesting WITH-BUFFER-TX, with the special
+exemption that FINISH will complete the transaction on both buffers at
+once.
+
+See BIP-BUFFER
+See BUFFER
+See PACK
+See WITH-BUFFER-TRANSFER"))
+
 ;; buffer.lisp
 (docs:define-docs
   (type buffer
@@ -54,7 +190,7 @@ See BUFFER")
     "Accessor to the raw data array contained in the object.
 
 See BUFFER
-See PACKED-AUDIO")
+See PACK")
   
   (function size
     "Accessor to the size of the data contained in the object.
@@ -66,7 +202,7 @@ When the size is set on a buffer, the buffer's data array is
 resized to fit the requested size.
 
 See BUFFER
-See PACKED-AUDIO
+See PACK
 See SEGMENT-SEQUENCE")
 
   (function clear
@@ -181,10 +317,10 @@ segments without the need to alter the pipeline.
 See MIXER
 See SOURCES"))
 
-;; packed-audio.lisp
+;; pack.lisp
 (docs:define-docs
-  (type packed-audio
-    "Packed-audio represents an interface to an outside sound source or drain.
+  (type pack
+    "A pack represents an interface to an outside sound source or drain.
 
 The object holds all the necessary information to describe
 the audio data present in a raw byte buffer. This includes
@@ -193,36 +329,25 @@ and how the samples are formatted in memory. It also includes
 the samplerate of the channel's source so that it can be
 converted if necessary.
 
-See MAKE-PACKED-AUDIO
+Note that a pack only supports interleaved channel data. If the data
+is sequential in memory, it must be handled by multiple packs.
+
+See MAKE-PACK
 See SOURCE
 See DRAIN
 See C-OBJECT
-See OWN-DATA
 See DATA
 See SIZE
 See ENCODING
 See CHANNELS
-See LAYOUT
-See SAMPLERATE")
+See SAMPLERATE
+See FRAMESIZE
+See TRANSFER")
   
-  (function own-data
-    "Reader for a cons cell that holds information about the buffer in the channel.
+  (function make-pack
+    "Create a new pack object.
 
-If the cons cell stores NIL in its car, then the data buffer
-is not owned by the channel and may not be freed by the
-library. If it is T, the cdr must be the pointer to the
-buffer data. This data is freed when the channel is GCed.
-
-See PACKED-AUDIO")
-  
-  (function make-packed-audio
-    "Create a new packed-audio object.
-
-If DATA is NIL, then a new data buffer is allocated with
-SIZE number of bytes. This data buffer will be automatically
-freed whenever the pack is freed.
-
-See PACKED-AUDIO")
+See PACK")
   
   (function encoding
     "Accessor to the sample encoding of the raw data buffer in the object.
@@ -231,30 +356,19 @@ The encoding has to be one of the following:
  :INT8 :UINT8 :INT16 :UINT16 :INT24 :UINT24 :INT32 :UINT32
  :FLOAT :DOUBLE
 
-See PACKED-AUDIO")
+See PACK")
   
   (function channels
     "Accessor to the number of channels encoded in the data buffer in the object.
 
-See PACKED-AUDIO")
-  
-  (function layout
-    "Accessor to the channel layout in which the samples are laid out in the buffer of the object.
-
-The layout has to be either :ALTERNATING or :SEQUENTIAL.
-Alternating means that the samples are encoded like this:
- (C₁C₂...)ⁿ
-Sequential means that the samples are encoded like this:
- C₁ⁿC₂ⁿ...
-
-See PACKED-AUDIO")
+See PACK")
   
   (function samplerate
     "Accessor to the samplerate at which the samples are expected to be.
 
 The sample rate is in Hz.
 
-See PACKED-AUDIO
+See PACK
 See DELAY
 See FADER
 See BIQUAD-FILTER
@@ -941,25 +1055,10 @@ by Mixed.
 The samplerate argument defines the sample rate
 in the input buffers. If it diverges from the
 sample rate in the packed-audio, resampling occurs to
-account for this. To change the resampling method,
-use the :RESAMPLER method. The value must be a
-pointer to a C function of the following signature:
-
-  int resample(struct mixed_buffer *in,
-               uint32_t in_samplerate,
-               struct mixed_buffer *out,
-               uint32_t out_samplerate,
-               uint32_t out_samples)
-
-Three such resampling functions are available out
-of the box:
-
-- MIXED:RESAMPLE-NEAREST
-- MIXED:RESAMPLE-LINEAR
-- MIXED:RESAMPLE-CUBIC
+account for this.
 
 See mixed.h
-See PACKED-AUDIO
+See PACK
 See SEGMENT
 See MAKE-PACKER
 See *DEFAULT-SAMPLERATE*")
@@ -971,7 +1070,7 @@ This automatically creates a packed-audio object to use.
 If you prefer to use a packed-audio object you created
 yourself, simply use MAKE-INSTANCE instead.
 
-See PACKED-AUDIO
+See PACK
 See PACKER"))
 
 ;; segments/pitch.lisp
@@ -1224,24 +1323,8 @@ needed by Mixed.
 The samplerate argument defines the sample rate
 in the output buffers. If it diverges from the
 sample rate in the packed-audio, resampling occurs to
-account for this. To change the resampling method,
-use the :RESAMPLER method. The value must be a
-pointer to a C function of the following signature:
+account for this.
 
-  int resample(struct mixed_buffer *in,
-               size_t in_samplerate,
-               struct mixed_buffer *out,
-               size_t out_samplerate,
-               size_t out_samples)
-
-Three such resampling functions are available out
-of the box:
-
-- MIXED:RESAMPLE-NEAREST
-- MIXED:RESAMPLE-LINEAR
-- MIXED:RESAMPLE-CUBIC
-
-See PACKED-AUDIO
 See SEGMENT
 See MAKE-UNPACKER
 See *DEFAULT-SAMPLERATE*")
@@ -1249,7 +1332,7 @@ See *DEFAULT-SAMPLERATE*")
   (function packed-audio
     "Reader for the packed-audio the un/packer is translating from/to.
 
-See PACKED-AUDIO
+See PACK
 See UNPACKER
 See PACKER")
   
@@ -1261,7 +1344,7 @@ to use. If you prefer to use a packed-audio object
 you created yourself, simply use MAKE-INSTANCE
 instead.
 
-See PACKED-AUDIO
+See PACK
 See UNPACKER"))
 
 ;; segments/virtual.lisp

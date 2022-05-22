@@ -39,7 +39,7 @@ A container for raw audio samples. Each ``buffer`` represents one "channel" of a
 
 Internally, buffers are implemented as lock-free bipartite buffers, meaning that whenever you request a write or read, you will always get a consecutive region of memory, and you can write and read from it in parallel. Note however, that only one simultaneous reader and writer are supported.
 
-To start a transaction use ``request-read`` or ``request-write``, which will give you a start and end index to use. Once your transaction is completed, use ``finish-read`` or ``finish-write`` and pass the number of samples that were actually consumed. If you want to abort a transaction, simply don't call the corresponding finish function.
+To start a transaction use ``request-read`` or ``request-write``, which will give you a start and end index to use. Once your transaction is completed, use ``finish-read`` or ``finish-write`` and pass the number of samples that were actually consumed. If you want to abort a transaction, you must still call the finish function, but should simply pass ``0`` for the number of processed elements.
 
 You can also query the available space with ``available-read`` and ``available-write``, and perform transaction more conveniently with ``with-buffer-tx``, or a sample-wise transfer from one buffer to another with ``with-buffer-transfer``.
 
