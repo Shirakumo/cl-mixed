@@ -202,31 +202,50 @@
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (when (< 0 size)
-      (let* ((render (render drain))
-             (client (client drain))
-             (event (event drain))
-             (framesize (mixed:framesize (mixed:pack drain)))
-             (buffer-size (* framesize
-                             (- (com:with-deref (frames :uint32)
-                                  (wasapi:i-audio-client-get-buffer-size client frames))
-                                (com:with-deref (frames :uint32)
-                                  (wasapi:i-audio-client-get-current-padding client frames))))))
-        (loop while (= 0 buffer-size) ;; Wait until we have stuff available again
-              do (wasapi:wait-for-single-object event 1000)
-                 (setf buffer-size (* framesize
-                                      (- (com:with-deref (frames :uint32)
-                                           (wasapi:i-audio-client-get-buffer-size client frames))
-                                         (com:with-deref (frames :uint32)
-                                           (wasapi:i-audio-client-get-current-padding client frames))))))
-        ;; We shouldn't have to do this, but if we don't it seems to spinlock above. Cool.
-        (wasapi:reset-event event)
-        (let* ((size (min buffer-size size))
-               (frames (/ size framesize))
-               (buffer (com:with-deref (target :pointer)
-                         (wasapi:i-audio-render-client-get-buffer render frames target))))
-          (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) size)
-          (wasapi:i-audio-render-client-release-buffer render frames 0)
-          (mixed:finish size))))))
+      (macrolet ((with-render-deref ((var type) func)
+                   `(cffi:with-foreign-object (,var ,type)
+                      (case ,func
+                        ((:ok :false)
+                         (cffi:mem-ref ,var ,type))
+                        (:device-invalidated
+                         ;; Sleep as many frames as we have to simulate playback
+                         (sleep (/ size
+                                   (mixed:framesize (mixed:pack drain))
+                                   (mixed:samplerate (mixed:pack drain))))
+                         (mixed:finish size)
+                         ;; Then try to reacquire the sound device
+                         (handler-case
+                             (progn (init drain (device drain))
+                                    (mixed:start drain))
+                           (error ()))
+                         ;; Just exit out. We'll get back in to try again or resume playback
+                         ;; next time we get called.
+                         (return-from mixed:mix 0))))))
+        (let* ((render (render drain))
+               (client (client drain))
+               (event (event drain))
+               (framesize (mixed:framesize (mixed:pack drain)))
+               (buffer-size (* framesize
+                               (- (with-render-deref (frames :uint32)
+                                    (wasapi:i-audio-client-get-buffer-size client frames))
+                                  (with-render-deref (frames :uint32)
+                                    (wasapi:i-audio-client-get-current-padding client frames))))))
+          (loop while (= 0 buffer-size) ;; Wait until we have stuff available again
+                do (wasapi:wait-for-single-object event 1000)
+                   (setf buffer-size (* framesize
+                                        (- (with-render-deref (frames :uint32)
+                                             (wasapi:i-audio-client-get-buffer-size client frames))
+                                           (with-render-deref (frames :uint32)
+                                             (wasapi:i-audio-client-get-current-padding client frames))))))
+          ;; We shouldn't have to do this, but if we don't it seems to spinlock above. Cool.
+          (wasapi:reset-event event)
+          (let* ((size (min buffer-size size))
+                 (frames (/ size framesize))
+                 (buffer (with-render-deref (target :pointer)
+                           (wasapi:i-audio-render-client-get-buffer render frames target))))
+            (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) size)
+            (wasapi:i-audio-render-client-release-buffer render frames 0)
+            (mixed:finish size)))))))
 
 (defmethod mixed:end ((drain drain))
   (wasapi:i-audio-client-stop (client drain)))

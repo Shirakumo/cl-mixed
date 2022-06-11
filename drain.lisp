@@ -44,6 +44,9 @@
 (defmethod channel-order ((drain drain))
   *default-channel-order*)
 
+(defmethod framesize ((drain drain))
+  (framesize (pack drain)))
+
 (defclass device-drain (drain)
   ())
 
