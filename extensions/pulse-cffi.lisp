@@ -31,6 +31,7 @@
    #:channel-map-init
    #:simple-new
    #:simple-write
+   #:simple-read
    #:simple-drain
    #:simple-flush
    #:simple-free))
@@ -170,6 +171,12 @@
   (error :pointer))
 
 (cffi:defcfun (simple-write "pa_simple_write") :int
+  (simple :pointer)
+  (data :pointer)
+  (bytes size_t)
+  (error :pointer))
+
+(cffi:defcfun (simple-read "pa_simple_read") :int
   (simple :pointer)
   (data :pointer)
   (bytes size_t)
