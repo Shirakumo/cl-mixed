@@ -136,7 +136,7 @@
          (buffer-duration (seconds->reference-time (/ (mixed:size pack) (mixed:framesize pack) (mixed:samplerate pack))))
          (periodicity (ecase mode (:shared 0) (:exclusive buffer-duration)))
          (channels (or (mixed:channel-order drain) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
-    (multiple-value-bind (client device) (find-audio-client (when device (device-id device)))
+    (multiple-value-bind (client device) (find-audio-client (when (and device (not (eql :default device))) (device-id device)))
       (setf (client drain) client)
       (setf (device drain) device)
       (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
