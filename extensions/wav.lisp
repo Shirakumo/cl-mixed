@@ -10,9 +10,29 @@
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi))
   (:export
+   #:wave-format-error
+   #:file
    #:source
    #:in-memory-source))
 (in-package #:org.shirakumo.fraf.mixed.wav)
+
+(define-condition wave-format-error (error)
+  ((file :initarg :file :initform NIL :accessor file)))
+
+(define-condition bad-header (wave-format-error)
+  ()
+  (:report (lambda (c s) (format s "The file~%  ~a~%is not a valid RIFF file: bad header."
+                                 (file c)))))
+
+(define-condition unsupported-audio-format (wave-format-error)
+  ((audio-format :initarg :audio-format :accessor audio-format))
+  (:report (lambda (c s) (format s "The file~%  ~a~%contains the audio format ~d which is unsupported."
+                                 (file c) (audio-format c)))))
+
+(define-condition missing-block (wave-format-error)
+  ((block-type :initarg :block-type :accessor block-type))
+  (:report (lambda (c s) (format s "The file~%  ~a~%is missing the required block type ~a"
+                                 (file c) (block-type c)))))
 
 (defun evenify (int)
   (if (evenp int)
@@ -27,11 +47,10 @@
 (defun decode-label (stream)
   (map-into (make-string 4) (lambda () (code-char (read-byte stream)))))
 
-(defun check-label (stream label)
+(defun check-label (stream label file)
   (let ((found (decode-label stream)))
     (unless (string= found label)
-      (error "Not a valid RIFF file: encountered ~s instead of ~s."
-             found label))))
+      (error 'bad-header :file file))))
 
 (defun decode-block-type (type stream)
   (when (string= type "fmt ")
@@ -52,7 +71,7 @@
                   (decode-block-type label stream))
       (file-position stream (evenify (+ start size 4))))))
 
-(defun determine-sample-format (format)
+(defun determine-sample-format (format file)
   (case (getf format :audio-format)
     (1 (ecase (/ (getf format :bits-per-sample) 8)
          (1 :uint8)
@@ -60,24 +79,24 @@
          (3 :int24)
          (4 :int32)))
     (3 :float)
-    (T (error "Unsupported audio format (~d) in file." (getf format :audio-format)))))
+    (T (error 'unsupported-audio-format :file file :audio-format (getf format :audio-format)))))
 
 (defun decode-wav-header (stream)
-  (check-label stream "RIFF")
+  (check-label stream "RIFF" (pathname stream))
   (dotimes (i 4) (read-byte stream))
-  (check-label stream "WAVE")
+  (check-label stream "WAVE" (pathname stream))
   (let* ((blocks (loop for block = (ignore-errors (decode-block stream))
                        while block collect block))
          (format (find "fmt " blocks :key #'second :test #'string=))
          (data (find "data" blocks :key #'second :test #'string=)))
     (unless format
-      (error "Format block not found in RIFF file."))
+      (error 'missing-block :file (pathname stream) :block-type "FMT"))
     (unless data
-      (error "Data block not found in RIFF file."))
+      (error 'missing-block :file (pathname stream) :block-type "DATA"))
     (file-position stream (getf data :start))
     (values (getf format :channels)
             (getf format :samplerate)
-            (determine-sample-format format)
+            (determine-sample-format format (pathname stream))
             (getf data :start)
             (getf data :end))))
 
