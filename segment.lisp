@@ -62,6 +62,7 @@
              (if (< 128 count)
                  (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)
                  (make-array count :initial-element NIL))))
+      ;; FIXME: retain old bindings if overwriting
       (setf (slot-value segment 'outputs) (marr outputs))
       (setf (slot-value segment 'inputs) (marr max-inputs)))))
 

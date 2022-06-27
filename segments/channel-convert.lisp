@@ -20,3 +20,12 @@
 (defun make-channel-convert (&rest args &key in out samplerate)
   (declare (ignore in out samplerate))
   (apply #'make-instance 'channel-convert args))
+
+(define-field-accessor channel-count-in channel-convert mixed:channel_t)
+(define-field-accessor channel-count-out channel-convert mixed:channel_t)
+
+(defmethod (setf field) :after (value (field (eql :channel-count-in)) (segment channel-convert))
+  (setf (slot-value segment 'inputs) (adjust-array (inputs segment) value)))
+
+(defmethod (setf field) :after (value (field (eql :channel-count-out)) (segment channel-convert))
+  (setf (slot-value segment 'outputs) (adjust-array (outputs segment) value)))

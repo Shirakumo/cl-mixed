@@ -14,6 +14,7 @@
    #:libmixed
    #:size_t
    #:ssize_t
+   #:channel_t
    #:error
    #:encoding
    #:layout
@@ -283,7 +284,9 @@
   ;; segments/channel-convert.lisp
   (:export
    #:channel-convert
-   #:make-channel-convert)
+   #:make-channel-convert
+   #:channel-count-in
+   #:channel-count-out)
   ;; segments/delay.lisp
   (:export
    #:delay

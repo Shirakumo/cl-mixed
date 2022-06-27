@@ -47,6 +47,7 @@
 
 (defctype size_t #+64-bit :uint64 #+32-bit :uint32)
 (defctype ssize_t #+64-bit :int64 #+32-bit :int32)
+(defctype channel_t :uint8)
 
 (defcenum error
   (:no-error 0)
@@ -144,10 +145,8 @@
   :compressor-postgain
   :compressor-wet
   :compressor-gain
-  :spatial-reverb-distance-delay
-  :spatial-reverb-max-distance-cutoff
-  :spatial-reverb-parameters
-  :spatial-reverb-probe)
+  :channel-count-in
+  :channel-count-out)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -255,7 +254,8 @@
   :attenuation-enum
   :encoding-enum
   :error-enum
-  :resample-type-enum)
+  :resample-type-enum
+  :channel_t)
 
 (declaim (ftype (function (cffi:foreign-pointer) (unsigned-byte 32))
                 buffer-size buffer-read buffer-write buffer-reserved
