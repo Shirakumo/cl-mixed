@@ -47,6 +47,15 @@
 (defmethod framesize ((drain drain))
   (framesize (pack drain)))
 
+(defmethod samplerate ((drain drain))
+  (samplerate (pack drain)))
+
+(defmethod encoding ((drain drain))
+  (encoding (pack drain)))
+
+(defmethod channels ((drain drain))
+  (channels (pack drain)))
+
 (defclass device-drain (drain)
   ())
 

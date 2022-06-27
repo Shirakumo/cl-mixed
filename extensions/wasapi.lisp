@@ -167,6 +167,7 @@
   (enumerate-devices))
 
 (defmethod (setf mixed:device) ((device device) (drain drain))
+  (setf (mixed:channel-order drain) ())
   (cond ((client drain)
          (mixed:end drain)
          (clear drain)
@@ -248,4 +249,5 @@
             (mixed:finish size)))))))
 
 (defmethod mixed:end ((drain drain))
+  (wasapi:i-audio-client-reset (client drain))
   (wasapi:i-audio-client-stop (client drain)))
