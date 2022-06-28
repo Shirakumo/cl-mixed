@@ -218,6 +218,8 @@
   (:center-front 4)
   (:left-side 6)
   (:right-side 7)
+  (:left-front-center 6)
+  (:right-front-center 7)
   (:left-front-top 8)
   (:right-front-top 9)
   (:left-rear-top 10)
