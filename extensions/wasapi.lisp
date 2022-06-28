@@ -237,7 +237,7 @@
                          (cffi:mem-ref ,var ,type))
                         (:device-invalidated
                          ;; Sleep as many frames as we have to simulate playback
-                         (sleep (/ size
+                         (sleep (/ (float size)
                                    (mixed:framesize (mixed:pack drain))
                                    (mixed:samplerate (mixed:pack drain))))
                          (mixed:finish size)
@@ -268,7 +268,7 @@
           ;; We shouldn't have to do this, but if we don't it seems to spinlock above. Cool.
           (wasapi:reset-event event)
           (let* ((size (min buffer-size size))
-                 (frames (/ size framesize))
+                 (frames (floor size framesize))
                  (buffer (with-render-deref (target :pointer)
                            (wasapi:i-audio-render-client-get-buffer render frames target))))
             (static-vectors:replace-foreign-memory buffer (mixed:data-ptr) size)

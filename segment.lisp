@@ -30,8 +30,8 @@
 
 ;; See the comment on the segment-sequence class for an explanation on the arrays.
 (defclass segment (c-object)
-  ((inputs :reader inputs)
-   (outputs :reader outputs)
+  ((inputs :initform #() :reader inputs)
+   (outputs :initform #() :reader outputs)
    (info :initform NIL :accessor direct-info)))
 
 (defmethod initialize-instance :around ((segment segment) &key)
@@ -56,15 +56,19 @@
 (defmethod revalidate ((segment segment))
   (declare (optimize speed))
   (setf (direct-info segment) NIL)
-  (destructuring-bind (&key outputs max-inputs &allow-other-keys) (info segment)
+  (destructuring-bind (&key (outputs 0) (max-inputs 0) &allow-other-keys) (info segment)
     (declare (type (unsigned-byte 32) outputs max-inputs))
-    (flet ((marr (count)
-             (if (< 128 count)
-                 (make-array 0 :adjustable T :fill-pointer T :initial-element NIL)
-                 (make-array count :initial-element NIL))))
+    (flet ((marr (slot count)
+             (let ((orig (slot-value segment slot)))
+               (declare (type vector orig))
+               (setf (slot-value segment slot)
+                     (if (< 128 count)
+                         (make-array (length orig) :fill-pointer (length orig) :adjustable T :initial-element NIL)
+                         (make-array count :initial-element NIL)))
+               (replace (slot-value segment slot) orig))))
       ;; FIXME: retain old bindings if overwriting
-      (setf (slot-value segment 'outputs) (marr outputs))
-      (setf (slot-value segment 'inputs) (marr max-inputs)))))
+      (marr 'outputs outputs)
+      (marr 'inputs max-inputs))))
 
 (defmethod start ((segment segment))
   (with-error-on-failure ()
