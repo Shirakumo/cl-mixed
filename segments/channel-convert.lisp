@@ -25,7 +25,10 @@
 (define-field-accessor channel-count-out channel-convert mixed:channel_t)
 
 (defmethod (setf field) :after (value (field (eql :channel-count-in)) (segment channel-convert))
-  (setf (slot-value segment 'inputs) (adjust-array (inputs segment) value)))
+  (setf (slot-value segment 'inputs) (adjust-array (inputs segment) value :initial-element NIL))
+  (setf (getf (direct-info segment) :max-inputs) value)
+  (setf (getf (direct-info segment) :min-inputs) value))
 
 (defmethod (setf field) :after (value (field (eql :channel-count-out)) (segment channel-convert))
-  (setf (slot-value segment 'outputs) (adjust-array (outputs segment) value)))
+  (setf (slot-value segment 'outputs) (adjust-array (outputs segment) value :initial-element NIL))
+  (setf (getf (direct-info segment) :outputs) value))
