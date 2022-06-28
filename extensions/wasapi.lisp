@@ -16,7 +16,7 @@
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.wasapi)
 
-(defstruct (device (:constructor make-device (id name)))
+(defstruct (device :constructor)
   (id NIL :type string)
   (name NIL :type string))
 
@@ -38,8 +38,8 @@
       (unwind-protect
            (progn
              (com:check-hresult (wasapi:i-property-store-get-value store key var))
-             (make-device (com:wstring->string id)
-                          (com:wstring->string (wasapi:propvariant-value var))))
+             (make-device :id (com:wstring->string id)
+                          :name (com:wstring->string (wasapi:propvariant-value var))))
         (wasapi:clear-propvariant var)
         (com:release store)
         (com-cffi:task-mem-free id)))))
@@ -136,7 +136,10 @@
          (buffer-duration (seconds->reference-time (/ (mixed:size pack) (mixed:framesize pack) (mixed:samplerate pack))))
          (periodicity (ecase mode (:shared 0) (:exclusive buffer-duration)))
          (channels (or (mixed:channel-order drain) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
-    (multiple-value-bind (client device) (find-audio-client (when (and device (not (eql :default device))) (device-id device)))
+    (multiple-value-bind (client device) (find-audio-client (etypecase device
+                                                              ((member NIL :default) NIL)
+                                                              (device (device-id device))
+                                                              (string device)))
       (setf (client drain) client)
       (setf (device drain) device)
       (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
