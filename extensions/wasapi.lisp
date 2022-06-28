@@ -75,13 +75,36 @@
                    audio-client mode wave closest)))
         (let ((closest (cffi:mem-ref closest :pointer)))
           (unwind-protect
-               (multiple-value-bind (samplerate channels sample-format)
+               (multiple-value-bind (samplerate new-channels sample-format)
                    (cond ((and (eql :ok pass) (cffi:null-pointer-p closest))
                           (values samplerate channels sample-format))
                          ((not (cffi:null-pointer-p closest))
                           (wasapi:decode-wave-format closest)))
-                 (values (eql :ok pass) samplerate channels sample-format))
+                 (values (eql :ok pass) samplerate new-channels sample-format))
             (com-cffi:task-mem-free closest)))))))
+
+(defun try-formats (audio-client samplerate channels sample-format &optional (mode :shared))
+  (let ((channel-formats (list* channels
+                          '((:left-front :right-front)
+                            (:left-front :right-front :center)
+                            (:left-front :right-front :left-rear :right-rear)
+                            (:left-front :right-front :center :left-rear :right-rear)
+                            (:left-front :right-front :center :left-rear :right-rear :subwoofer)
+                            (:left-front :right-front :center :left-rear :right-rear :front-left-of-center :front-right-of-center)
+                            (:left-front :right-front :center :left-rear :right-rear :subwoofer :front-left-of-center :front-right-of-center)
+                            (:left-front)
+                            (:center))))
+        (last ()))
+    (dolist (samplerate (list samplerate 44100 48000 88200 96000))
+      (dolist (sample-format (list sample-format :float :uint8 :int16 :int32 :int64 :int24))
+        (dolist (channels channel-formats)
+          (multiple-value-bind (ok new-samplerate new-channels new-sample-format)
+              (format-supported-p audio-client samplerate channels sample-format mode)
+            (when ok (return-from try-formats
+                       (values :ok new-samplerate new-channels new-sample-format)))
+            (setf last (list new-samplerate new-channels new-sample-format mode))))))
+    (when last
+      (apply #'format-supported-p audio-client last))))
 
 (defun mix-format (audio-client)
   (com:with-deref (format :pointer)
@@ -130,6 +153,7 @@
 
 (defun init (drain device)
   ;; FIXME: allow picking shared/exclusive mode
+  (setf (mixed:channels (mixed:pack drain)) (max 1 (mixed:channels (mixed:pack drain))))
   (let* ((mode (mode drain))
          (pack (mixed:pack drain))
          ;; Attempt to get a buffer as large as our internal ones.
@@ -142,7 +166,7 @@
                                                               (string device)))
       (setf (client drain) client)
       (setf (device drain) device)
-      (multiple-value-bind (ok samplerate channels encoding) (format-supported-p client (mixed:samplerate pack) channels :float)
+      (multiple-value-bind (ok samplerate channels encoding) (try-formats client (mixed:samplerate pack) channels :float)
         (declare (ignore ok))
         (setf (mixed:channels pack) (length channels))
         (setf (mixed:samplerate pack) samplerate)
@@ -169,7 +193,7 @@
 (defmethod mixed:list-devices ((drain drain))
   (enumerate-devices))
 
-(defmethod (setf mixed:device) ((device device) (drain drain))
+(defmethod (setf mixed:device) (device (drain drain))
   (setf (mixed:channel-order drain) ())
   (cond ((client drain)
          (mixed:end drain)

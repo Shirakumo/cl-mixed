@@ -228,7 +228,7 @@
   :communications
   :role-enum-count)
 
-(cffi:defbitfield channel-mask
+(cffi:defbitfield (channel-mask dword)
   (:left-front             #x1)
   (:right-front            #x2)
   (:center                 #x4)
