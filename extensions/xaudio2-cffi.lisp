@@ -473,12 +473,12 @@
 
 (defun channel-mask-for-channel-count (channels)
   (case channels
-    (1 (cffi:foreign-bitfield-value 'channel-mask '(:front-center)))
-    (2 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right)))
-    (3 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right)))
-    (4 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right)))
-    (5 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-right :back-left :back-right :low-frequency)))
-    (6 (cffi:foreign-bitfield-value 'channel-mask '(:front-left :front-center :front-right :back-left :back-right :low-frequency)))
+    (1 (cffi:foreign-bitfield-value 'channel-mask '(:center-front)))
+    (2 (cffi:foreign-bitfield-value 'channel-mask '(:left-front :right-front)))
+    (3 (cffi:foreign-bitfield-value 'channel-mask '(:left-front :center-front :right-front)))
+    (4 (cffi:foreign-bitfield-value 'channel-mask '(:left-front :right-front :left-rear :right-rear)))
+    (5 (cffi:foreign-bitfield-value 'channel-mask '(:left-front :right-front :left-rear :right-rear :low-frequency)))
+    (6 (cffi:foreign-bitfield-value 'channel-mask '(:left-front :center-front :right-front :left-rear :right-rear :low-frequency)))
     (T (cffi:foreign-bitfield-value 'channel-mask '()))))
 
 (defun encode-wave-format (ptr samplerate channels format)
