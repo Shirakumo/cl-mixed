@@ -197,6 +197,7 @@
    #:program-name
    #:pack
    #:channel-order
+   #:device-not-found
    #:device-drain
    #:list-devices
    #:device)

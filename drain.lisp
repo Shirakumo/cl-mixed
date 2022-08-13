@@ -56,6 +56,11 @@
 (defmethod channels ((drain drain))
   (channels (pack drain)))
 
+(define-condition device-not-found (error)
+  ((device :initarg :device :reader device))
+  (:report (lambda (c s) (format s "A device with the descriptor~%  ~s~%was requested, but could not be found."
+                                 (device c)))))
+
 (defclass device-drain (drain)
   ())
 

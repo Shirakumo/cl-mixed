@@ -199,7 +199,8 @@
   (:service-not-running #x88890010)
   (:unsupported-format #x88890008)
   (:wrong-endpoint-type #x88890003)
-  (:not-stopped #x88890005))
+  (:not-stopped #x88890005)
+  (:not-found #x80070490))
 
 (cffi:defcenum (wait-result dword)
   (:abandoned #x00000080)

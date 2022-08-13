@@ -41,8 +41,11 @@
                               (rate :uint)
                               (dir :int))
     (restart-case
-        (check-result
-         (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) :playback 0))
+        (let ((error (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) :playback 0)))
+          (case error
+            (0)
+            (-6 (error 'mixed:device-not-found :device device))
+            (T (error 'alsa-error :code error))))
       (continue (&optional c)
         :report "Continue by using the default device."
         (declare (ignore c))

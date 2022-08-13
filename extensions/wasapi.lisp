@@ -59,8 +59,10 @@
     (com:with-com (device (restart-case
                               (if id
                                   (com:with-wstring (wstring id)
-                                    (com:with-deref (device :pointer)
-                                      (wasapi:imm-device-enumerator-get-device enumerator wstring device)))
+                                    (cffi:with-foreign-object (device :pointer)
+                                      (when (eql :not-found (com:check-hresult (wasapi:imm-device-enumerator-get-device enumerator wstring device) :ok :false :not-found))
+                                        (error 'mixed:device-not-found :device id))
+                                      (cffi:mem-ref device :pointer)))
                                   (continue))
                             (continue (&optional c)
                               :report "Continue with the default device."
