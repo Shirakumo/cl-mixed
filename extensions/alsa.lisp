@@ -40,8 +40,13 @@
                               (channels :uint)
                               (rate :uint)
                               (dir :int))
-    (check-result
-     (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) :playback 0))
+    (restart-case
+        (check-result
+         (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) :playback 0))
+      (continue (&optional c)
+        :report "Continue by using the default device."
+        (declare (ignore c))
+        (alsa:pcm-open pcm "default" :playback 0)))
     (let ((pcm (cffi:mem-ref pcm :pointer))
           (pack (mixed:pack drain)))
       (check-result
