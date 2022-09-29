@@ -16,6 +16,45 @@
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.wasapi)
 
+(cffi:defcallback com-query-interface com:hresult ((this :pointer) (uid com:guid) (out :pointer))
+  0)
+
+(cffi:defcallback com-add-ref :unsigned-long ((this :pointer))
+  0)
+
+(cffi:defcallback com-release :unsigned-long ((this :pointer))
+  0)
+
+(cffi:defcallback on-device-state-changed com:hresult ((this :pointer) (device-id :pointer) (new-state wasapi:dword))
+  0)
+
+(cffi:defcallback on-device-added com:hresult ((this :pointer) (device-id :pointer))
+  0)
+
+(cffi:defcallback on-device-removed com:hresult ((this :pointer) (device-id :pointer))
+  0)
+
+(cffi:defcallback on-default-device-changed com:hresult ((this :pointer) (data-flow wasapi:dataflow) (role wasapi:role) (device-id :pointer))
+  0)
+
+(cffi:defcallback on-property-value-changed com:hresult ((this :pointer) (device-id :pointer) (key wasapi:property-key))
+  0)
+
+(defun make-device-notification ()
+  (let* ((com (cffi:foreign-alloc :uint8 :count (+ (cffi:foreign-type-size '(:struct wasapi:imm-notification-client))
+                                                   (cffi:foreign-type-size '(:struct com-cffi:com)))))
+         (vtbl (cffi:inc-pointer com (cffi:foreign-type-size '(:struct com-cffi:com)))))
+    (setf (com-cffi:vtbl com) vtbl)
+    (setf (wasapi::%imm-notification-client-query-interface vtbl) (cffi:callback com-query-interface))
+    (setf (wasapi::%imm-notification-client-add-ref vtbl) (cffi:callback com-add-ref))
+    (setf (wasapi::%imm-notification-client-release vtbl) (cffi:callback com-release))
+    (setf (wasapi::%imm-notification-client-on-device-state-changed vtbl) (cffi:callback on-device-state-changed))
+    (setf (wasapi::%imm-notification-client-on-device-added vtbl) (cffi:callback on-device-added))
+    (setf (wasapi::%imm-notification-client-on-device-removed vtbl) (cffi:callback on-device-removed))
+    (setf (wasapi::%imm-notification-client-on-default-device-changed vtbl) (cffi:callback on-default-device-changed))
+    (setf (wasapi::%imm-notification-client-on-property-value-changed vtbl) (cffi:callback on-property-value-changed))
+    com))
+
 (defstruct (device :constructor)
   (id NIL :type string)
   (name NIL :type string))

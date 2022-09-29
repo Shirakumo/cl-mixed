@@ -74,6 +74,12 @@
    #:imm-device-open-property-store
    #:imm-device-get-id
    #:imm-device-get-state
+   #:imm-notification-client
+   #:imm-notification-client-on-device-state-changed
+   #:imm-notification-client-on-device-added
+   #:imm-notification-client-on-device-removed
+   #:imm-notification-client-on-default-device-changed
+   #:imm-notification-client-on-property-value-changed
    #:i-audio-client
    #:i-audio-client-query-interface
    #:i-audio-client-add-ref
@@ -295,6 +301,13 @@
   (open-property-store (access dword) (properties :pointer))
   (get-id (str-id :pointer))
   (get-state (state :pointer)))
+
+(com:define-comstruct imm-notification-client
+  (on-device-state-changed (device-id :pointer) (new-state dword))
+  (on-device-added (device-id :pointer))
+  (on-device-removed (device-id :pointer))
+  (on-default-device-changed (data-flow dataflow) (role role) (device-id :pointer))
+  (on-property-value-changed (device-id :pointer) (key property-key)))
 
 (com:define-comstruct i-audio-client
   (initialize (share-mode sharemode) (stream-flags dword) (buffer-duration reference-time) (preiodicity reference-time) (format :pointer) (audio-session-guid com:guid))
