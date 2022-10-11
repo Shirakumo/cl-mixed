@@ -16,12 +16,13 @@
 
 (defmethod print-object ((source source) stream)
   (print-unreadable-object (source stream :type T)
-    (cond ((done-p source)
-           (write-string "DONE" stream))
-          ((null (frame-count source))
-           (write-string "STREAM" stream))
-          (T
-           (format stream "~2d%" (floor (* (/ (frame-position source) (frame-count source)) 100)))))))
+    (ignore-errors
+     (cond ((done-p source)
+            (write-string "DONE" stream))
+           ((null (frame-count source))
+            (write-string "STREAM" stream))
+           (T
+            (format stream "~2d%" (floor (* (/ (frame-position source) (frame-count source)) 100))))))))
 
 (defmethod (setf pack) (thing (source source))
   (etypecase thing
