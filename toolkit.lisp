@@ -68,7 +68,9 @@
            (format T "~&Error in ~a callback: ~a~%" ',name ,err)
            ,error-return))
        #+cl-mixed-no-restarts
-       ,@body)))
+       (handler-case (progn ,@body)
+         (error ()
+           ,error-return)))))
 
 (defmacro define-std-callback (name args &body body)
   `(define-callback ,name :int ,args
