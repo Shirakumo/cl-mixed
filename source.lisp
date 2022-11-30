@@ -86,3 +86,8 @@
 
 (defmethod channel-order ((source source))
   *default-channel-order*)
+
+(defmethod duration ((source source))
+  (float (/ (frame-count source)
+            (samplerate (pack source)))
+         0f0))
