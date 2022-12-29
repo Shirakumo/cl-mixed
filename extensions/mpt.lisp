@@ -55,7 +55,7 @@ Author: Nicolas Hafner <shinmera@tymoon.eu>
 (defmethod mixed:end ((source source)))
 
 (defmethod mixed:seek-to-frame ((source source) position)
-  (mpt:set-position (module source) (float (truncate position (samplerate source)) 0d0)))
+  (mpt:set-position (module source) (/ (float position 0d0) (samplerate source))))
 
 (defmethod mixed:frame-count ((source source))
   (truncate (* (mpt:get-duration (module source)) (samplerate source))))
