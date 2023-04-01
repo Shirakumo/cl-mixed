@@ -47,10 +47,11 @@
 (define-foreign-library winmm
   (T (:default "Winmm")))
 
-(defconstant WAVE-FORMAT-PCM #x1)
-(defconstant WAVE-FORMAT-IEEE-FLOAT #x3)
-(defconstant WAVE-MAPPER #xFFFFFFFF)
-(defconstant INFINITE (1- (expt 2 32)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defconstant WAVE-FORMAT-PCM #x1)
+  (defconstant WAVE-FORMAT-IEEE-FLOAT #x3)
+  (defconstant WAVE-MAPPER #xFFFFFFFF)
+  (defconstant INFINITE (1- (expt 2 32))))
 
 (cffi:defctype word :uint16)
 (cffi:defctype dword :uint32)
