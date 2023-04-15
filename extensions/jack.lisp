@@ -22,8 +22,13 @@
   (:report (lambda (c s) (format s "Jack error ~d"
                                  (code c)))))
 
+(defun load-lib ()
+  (unless (cffi:foreign-library-loaded-p 'jack:libjack)
+    (cffi:load-foreign-library 'jack:libjack)
+    #+sbcl (ignore-errors (cffi:foreign-funcall "restore_sbcl_signals" :void))))
+
 (defun jack-present-p ()
-  (handler-case (cffi:use-foreign-library jack:libjack)
+  (handler-case (load-lib)
     (error () (return-from jack-present-p NIL)))
   (cffi:with-foreign-object (status 'jack:status)
     (let* ((client (jack:open-client "mixed-server-probe" '(:no-start-server) status :int 0))
@@ -45,9 +50,9 @@
    (server :initarg :server :initform "default" :accessor server)
    (samplerate :initform 44100 :accessor mixed:samplerate)))
 
-(defmethod initialize-instance :after ((drain drain) &key channels)
+(defmethod initialize-instance :after ((drain drain) &key (channels 2))
   (assert (<= channels 16) (channels))
-  (cffi:use-foreign-library jack:libjack)
+  (load-lib)
   (setf (mixed-cffi:direct-segment-mix (mixed:handle drain)) (cffi:callback mix))
   (let* ((size (cffi:foreign-type-size '(:struct data)))
          (data (cffi:foreign-alloc :uint8 :count size)))
@@ -137,13 +142,13 @@
 
 #++
 (defun play (file &key (samples 500))
-  (mixed:with-objects ((source (mixed:make-unpacker samples :float 2 44100))
+  (mixed:with-objects ((source (mixed:make-unpacker))
                        (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))
                        (drain (make-instance 'drain :channels 2)))
     (mixed:with-buffers samples (l r)
       (mixed:connect source :left drain :left l)
       (mixed:connect source :right drain :right r)
-      (mixed:with-sequence sequence (mp3 source drain)
+      (mixed:with-chain sequence (mp3 source drain)
         (format T "~&Playing back on ~d channels @ ~dHz~%"
                 (mixed:channels drain) (mixed:samplerate drain))
         (loop (mixed:mix sequence))))))

@@ -12,7 +12,7 @@ The extensions are in different states of completeness:
 - **flac** (FLAC file format)
   Complete, input only.
 - **jack** (JackAudio toolkit)
-  Not working on SBCL due to a conflict on SIGPIPE.
+  Complete, input only.
 - **mpg123** (MP3 file format)
   Complete, input only.
 - **mpt** (libmpt, tracker formats)
@@ -24,7 +24,7 @@ The extensions are in different states of completeness:
 - **out123**
   Complete, output only.
 - **pulse** (PulseAudio system, used on Linux)
-  Complete, output only.
+  Complete.
 - **sdl2**
   Complete, output only.
 - **vorbis** (OGG/Vorbis file format)
