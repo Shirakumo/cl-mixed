@@ -3,6 +3,8 @@ This directory contains smaller extensions for cl-mixed that implement various u
 
 The extensions are in different states of completeness:
 
+- **aaudio** (Android Audio)
+  Complete, untested.
 - **alsa** (Advanced Linux Sound Architecture)
   Complete, output only.
 - **coreaudio** (Apple CoreAudio toolkit)
@@ -13,6 +15,10 @@ The extensions are in different states of completeness:
   Not working on SBCL due to a conflict on SIGPIPE.
 - **mpg123** (MP3 file format)
   Complete, input only.
+- **mpt** (libmpt, tracker formats)
+  Complete, input only.
+- **opus** (OGG/Opus file format)
+  Complete, input only.
 - **oss** (Open Sound System, used on BSD)
   Complete, output only.
 - **out123**
@@ -21,6 +27,8 @@ The extensions are in different states of completeness:
   Complete, output only.
 - **sdl2**
   Complete, output only.
+- **vorbis** (OGG/Vorbis file format)
+  Complete, input only.
 - **wasapi** (Windows Advanced Sound API)
   Complete, output only.
 - **wav**

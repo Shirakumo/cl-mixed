@@ -10,6 +10,7 @@ cl-mixed also ships a variety of "extension"(link extensions/) systems providing
 
 Fully implemented extensions:
 
+- AAudio (Android)
 - Alsa
 - CoreAudio
 - Flac
