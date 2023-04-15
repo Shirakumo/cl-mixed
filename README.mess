@@ -16,9 +16,11 @@ Fully implemented extensions:
 - Mpg123
 - Ogg/vorbis
 - Openmpt
+- Opus
 - Oss
 - Out123
 - PulseAudio
+- Vorbis
 - Wasapi
 - Wave
 
