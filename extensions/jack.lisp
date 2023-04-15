@@ -139,16 +139,3 @@
 
 (defmethod mixed:end ((drain drain))
   (jack:deactivate-client (client drain)))
-
-#++
-(defun play (file &key (samples 500))
-  (mixed:with-objects ((source (mixed:make-unpacker))
-                       (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))
-                       (drain (make-instance 'drain :channels 2)))
-    (mixed:with-buffers samples (l r)
-      (mixed:connect source :left drain :left l)
-      (mixed:connect source :right drain :right r)
-      (mixed:with-chain sequence (mp3 source drain)
-        (format T "~&Playing back on ~d channels @ ~dHz~%"
-                (mixed:channels drain) (mixed:samplerate drain))
-        (loop (mixed:mix sequence))))))
