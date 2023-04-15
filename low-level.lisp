@@ -224,7 +224,12 @@
   (:right-front-top 9)
   (:left-rear-top 10)
   (:right-rear-top 11)
-  (:center-rear 12))
+  (:center-rear 12)
+  (:left-side-top 13)
+  (:right-side-top 14)
+  (:subwoofer-2 15)
+  (:left-front-wide 16)
+  (:right-front-wide 17))
 
 (defcenum field-type
   (:unknown 0)
