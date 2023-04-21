@@ -313,7 +313,7 @@
   (builder :pointer)
   (privacy-sensitive :bool))
 
-(cffi:defcfun (stream-builder-set-data-callback "AAudioStreamBuilder_setFormat") :void
+(cffi:defcfun (stream-builder-set-data-callback "AAudioStreamBuilder_setDataCallback") :void
   (builder :pointer)
   (callback :pointer)
   (user-data :pointer))
