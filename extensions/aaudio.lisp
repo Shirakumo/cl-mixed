@@ -113,7 +113,9 @@
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (let* ((framesize (mixed:framesize (mixed:pack drain)))
            (played (check-result (aaudio:stream-write (stream drain) (mixed:data-ptr) (truncate size framesize) 1000000000))))
-      (mixed:finish (max 0 (* played framesize))))))
+      (if (eq played :ok)
+          (mixed:finish 0)
+          (mixed:finish (max 0 (* played framesize)))))))
 
 (defmethod mixed:end ((drain drain))
   (check-result (aaudio:stream-request-stop (stream drain))))
