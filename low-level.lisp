@@ -36,17 +36,20 @@
    (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
         #+X86 "lin-i686-libmixed.so"
         #+X86-64 "lin-amd64-libmixed.so"
-        #+ARM64 "lin-arm64-libmixed.so"))
+        #+ARM64 "lin-arm64-libmixed.so"
+        #+(and ARM (not ARM64)) "lin-arm7a-libmixed.so"))
   (:freebsd
    (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
         #+X86 "bsd-i686-libmixed.so"
         #+X86-64 "bsd-amd64-libmixed.so"
-        #+ARM64 "bsd-arm64-libmixed.so"))
+        #+ARM64 "bsd-arm64-libmixed.so"
+        #+(and ARM (not ARM64)) "bsd-arm7a-libmixed.so"))
   (:windows
    (:or "libmixed2.dll" "libmixed.dll"
         #+X86 "win-i686-libmixed.dll"
         #+X86-64 "win-amd64-libmixed.dll"
-        #+ARM64 "win-arm64-libmixed.dll"))
+        #+ARM64 "win-arm64-libmixed.dll"
+        #+(and ARM (not ARM64)) "win-arm7a-libmixed.so"))
   (t (:default "mixed")))
 
 (use-foreign-library libmixed)
