@@ -21,6 +21,12 @@
   (use-foreign-library gcc-s))
 
 (define-foreign-library libmixed
+  (:android
+   (:or "libmixed.so"
+        #+X86 "android-i686-libmixed.so"
+        #+X86-64 "android-amd64-libmixed.so"
+        #+ARM64 "android-arm64-libmixed.so"
+        #+(and ARM (not ARM64)) "android-arm7a-libmixed.so"))
   (:darwin
    (:or "libmixed2.dylib" "libmixed.dylib"
         #+X86 "mac-i686-libmixed.dylib"
