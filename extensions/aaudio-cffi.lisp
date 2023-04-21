@@ -191,7 +191,7 @@
   (:allow-by-system 2)
   (:deny-all 3))
 
-(cffi:defcenum (session-id :int32 :allow-other-keys T)
+(cffi:defcenum (session-id :int32 :allow-undeclared-values T)
   (:none -1)
   (:allocate 0))
 
