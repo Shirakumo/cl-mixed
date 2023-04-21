@@ -453,7 +453,7 @@
 (cffi:defcfun (stream-get-capture-policy "AAudioStream_getAllowedCapturePolicy") capture-policy
   (stream :pointer))
 
-(cffi:defcfun (stream-get-privacy-sensitive "AAudioStream_getPrivacySensitive") :bool
+(cffi:defcfun (stream-get-privacy-sensitive "AAudioStream_isPrivacySensitive") :bool
   (stream :pointer))
 
 (cffi:defcfun (stream-get-channel-mask "AAudioStream_getChannelMask") channel-mask
