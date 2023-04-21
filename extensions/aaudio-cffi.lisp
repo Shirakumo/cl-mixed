@@ -105,7 +105,7 @@
   (:int24)
   (:int32))
 
-(cffi:defcenum (result :int32 :allow-other-keys T)
+(cffi:defcenum (result :int32 :allow-undeclared-values T)
   (:ok 0)
   (:error-base -900)
   (:disconnected -899)
@@ -370,7 +370,7 @@
   (frames :int32)
   (timeout :int64))
 
-(cffi:defcfun (stream-write "AAudioStream_write") :void
+(cffi:defcfun (stream-write "AAudioStream_write") result
   (stream :pointer)
   (buffer :pointer)
   (frames :int32)
