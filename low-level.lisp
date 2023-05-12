@@ -183,9 +183,9 @@
   :sawtooth)
 
 (defcenum noise-type
-  (:white-noise 1)
-  :pink-noise
-  :brown-noise)
+  (:white 1)
+  :pink
+  :brown)
 
 (defcenum repeat-mode
   (:record 1)
