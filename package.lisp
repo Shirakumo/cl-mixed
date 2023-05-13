@@ -203,7 +203,8 @@
    #:device
    #:file-drain
    #:file
-   #:stream)
+   #:stream
+   #:dont-close-p)
   ;; mixer.lisp
   (:export
    #:mixer

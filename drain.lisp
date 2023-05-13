@@ -74,7 +74,8 @@
 
 (defclass file-drain (drain)
   ((file :initform NIL :initarg :file :reader file)
-   (stream :initform NIL :initarg :stream :accessor stream)))
+   (stream :initform NIL :initarg :stream :accessor stream)
+   (dont-close :initform NIL :initarg :dont-close :accessor dont-close-p)))
 
 (defmethod print-object ((drain file-drain) stream)
   (print-unreadable-object (drain stream :type T :identity T)
@@ -94,11 +95,13 @@
       (finish size))))
 
 (defmethod end :after ((drain file-drain))
-  (when (stream drain)
+  (when (and (stream drain)
+             (not (dont-close-p drain)))
     (close (stream drain))
     (setf (stream drain) NIL)))
 
 (defmethod free :after ((drain file-drain))
-  (when (stream drain)
+  (when (and (stream drain)
+             (not (dont-close-p drain)))
     (close (stream drain) :abort T)
     (setf (stream drain) NIL)))
