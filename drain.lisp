@@ -73,7 +73,8 @@
     (format stream "~a" (device drain))))
 
 (defclass file-drain (drain)
-  ((file :initform NIL :initarg :file :reader file)))
+  ((file :initform NIL :initarg :file :reader file)
+   (frame-position :initform 0 :accessor frame-position)))
 
 (defmethod print-object ((drain file-drain) stream)
   (print-unreadable-object (drain stream :type T :identity T)
