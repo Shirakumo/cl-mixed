@@ -276,18 +276,21 @@
       (when (oddp data-size)
         (write-byte 0 stream))
       ;; Set RIFF chunk size (including pad byte)
-      (let ((riff-size (- (file-position stream)
-                          (+ 4 (riff-chunk-offset drain)))))
+      (let* ((position (file-position stream))
+             (riff-size (- position
+                           (+ 4 (riff-chunk-offset drain)))))
         (file-position stream (riff-chunk-offset drain))
-        (write-int stream 4 riff-size))
-      ;; Set number of samples in fact chunk when needed
-      (when (fact-chunk-offset drain)
-        (let ((samples (/ data-size (bytes-per-sample (mixed:encoding mixed:pack)))))
-          (file-position stream (fact-chunk-offset drain))
-          (write-int stream 4 samples)))
-      ;; Set data chunk size
-      (file-position stream (data-chunk-offset drain))
-      (write-int stream 4 data-size))))
+        (write-int stream 4 riff-size)
+        ;; Set number of samples in fact chunk when needed
+        (when (fact-chunk-offset drain)
+          (let ((samples (/ data-size (bytes-per-sample (mixed:encoding mixed:pack)))))
+            (file-position stream (fact-chunk-offset drain))
+            (write-int stream 4 samples)))
+        ;; Set data chunk size
+        (file-position stream (data-chunk-offset drain))
+        (write-int stream 4 data-size)
+        (when (mixed:dont-close-p drain)
+          (file-position stream position))))))
 
 ;; Reset offsets
 (defmethod mixed:end :after ((drain file-drain))
