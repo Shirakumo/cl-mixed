@@ -245,8 +245,8 @@
   (unless (riff-chunk-offset drain)     ; Check if we already started
     (with-slots (stream mixed:pack) drain
       (let* ((samplesize (mixed:samplesize (mixed:encoding mixed:pack)))
-             (block-align (* (mixed:channels mixed:pack) samplesize))
-             (byterate (* (mixed:samplerate mixed:pack) block-align))
+             (framesize (mixed:framesize mixed:pack))
+             (byterate (* (mixed:samplerate mixed:pack) framesize))
              (audio-format (audio-format (mixed:encoding mixed:pack))))
         (write-label stream "RIFF")     ; RIFF chunk
         (setf (riff-chunk-offset drain) (file-position stream)) ; skip size field, save offset
@@ -258,7 +258,7 @@
         (write-int stream 2 (mixed:channels mixed:pack))
         (write-int stream 4 (mixed:samplerate mixed:pack))
         (write-int stream 4 byterate)
-        (write-int stream 2 block-align)
+        (write-int stream 2 framesize)
         (write-int stream 2 (* 8 samplesize))
         (when (= audio-format 3)
           (write-int stream 2 2)
