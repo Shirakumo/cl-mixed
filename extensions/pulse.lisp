@@ -116,7 +116,8 @@
     (pulse:simple-drain (simple drain) err)))
 
 (defclass source (mixed:source)
-  ((simple :initform NIL :accessor simple)
+  ((mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
+   (simple :initform NIL :accessor simple)
    (server :initform NIL :initarg :server :accessor server)
    (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
 
