@@ -6,7 +6,7 @@
 
 (defpackage #:org.shirakumo.fraf.mixed.examples
   (:use #:cl)
-  (:shadow #:space)
+  (:shadow #:space #:stream)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:out123 #:org.shirakumo.fraf.out123)
@@ -14,6 +14,7 @@
   (:export
    #:mixer
    #:play
+   #:play-to-file
    #:echo
    #:space
    #:tone))
