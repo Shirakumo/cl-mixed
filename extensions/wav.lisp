@@ -222,14 +222,6 @@
     ((:float) 3)  ; IEEE FLOAT
     (T (error 'unsupported-sample-format :sample-format sample-format))))
 
-(defun bytes-per-sample (sample-format)
-  (ecase sample-format
-    (:uint8 1)
-    (:int16 2)
-    (:int24 3)
-    (:int32 4)
-    (:float 4)))
-
 (defun fmt-size (audio-format)
   (ecase audio-format
     (1 16)
@@ -252,8 +244,8 @@
 (defmethod mixed:start ((drain file-drain))
   (unless (riff-chunk-offset drain)     ; Check if we already started
     (with-slots (stream mixed:pack) drain
-      (let* ((bytes-per-sample (bytes-per-sample (mixed:encoding mixed:pack)))
-             (block-align (* (mixed:channels mixed:pack) bytes-per-sample))
+      (let* ((samplesize (mixed:samplesize (mixed:encoding mixed:pack)))
+             (block-align (* (mixed:channels mixed:pack) samplesize))
              (byterate (* (mixed:samplerate mixed:pack) block-align))
              (audio-format (audio-format (mixed:encoding mixed:pack))))
         (write-label stream "RIFF")     ; RIFF chunk
@@ -267,7 +259,7 @@
         (write-int stream 4 (mixed:samplerate mixed:pack))
         (write-int stream 4 byterate)
         (write-int stream 2 block-align)
-        (write-int stream 2 (* 8 bytes-per-sample))
+        (write-int stream 2 (* 8 samplesize))
         (when (= audio-format 3)
           (write-int stream 2 2)
           (write-label stream "fact")   ; fact chunk
@@ -299,7 +291,7 @@
         (write-int stream 4 riff-size)
         ;; Set number of samples in fact chunk when needed
         (when (fact-chunk-offset drain)
-          (let ((samples (/ data-size (bytes-per-sample (mixed:encoding mixed:pack)))))
+          (let ((samples (/ data-size (mixed:samplesize (mixed:encoding mixed:pack)))))
             (file-position stream (fact-chunk-offset drain))
             (write-int stream 4 samples)))
         ;; Set data chunk size
