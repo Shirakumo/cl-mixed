@@ -160,7 +160,7 @@
 (defpackage #:org.shirakumo.fraf.mixed
   (:use #:cl #:cffi)
   (:import-from #:org.shirakumo.fraf.mixed.cffi #:size_t)
-  (:shadow #:space #:byte-position #:stream)
+  (:shadow #:space #:byte-position)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed.cffi))
   ;; bip-buffer.lisp
@@ -202,9 +202,7 @@
    #:list-devices
    #:device
    #:file-drain
-   #:file
-   #:stream
-   #:dont-close-p)
+   #:file)
   ;; mixer.lisp
   (:export
    #:mixer

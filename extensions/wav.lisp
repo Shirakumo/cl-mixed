@@ -6,6 +6,7 @@
 
 (defpackage #:org.shirakumo.fraf.mixed.wav
   (:use #:cl)
+  (:shadow #:stream)
   (:local-nicknames
    (#:mixed #:org.shirakumo.fraf.mixed)
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi))
@@ -235,13 +236,22 @@
     (3 18)))
 
 (defclass file-drain (mixed:file-drain)
-  ((riff-chunk-offset :initform NIL :accessor riff-chunk-offset)
+  ((stream :initform NIL :initarg :stream :accessor stream)
+   (dont-close :initform NIL :initarg :dont-close :accessor dont-close-p)
+   (riff-chunk-offset :initform NIL :accessor riff-chunk-offset)
    (fact-chunk-offset :initform NIL :accessor fact-chunk-offset)
    (data-chunk-offset :initform NIL :accessor data-chunk-offset)))
 
+(defmethod mixed:start :before ((drain file-drain))
+  (with-slots (mixed:file stream) drain
+    (setf stream
+          (or stream
+              (open mixed:file :direction :output
+                               :element-type '(unsigned-byte 8))))))
+
 (defmethod mixed:start ((drain file-drain))
-  (unless (riff-chunk-offset drain)  ; Check if we already started
-    (with-slots ((stream mixed:stream) mixed:pack) drain
+  (unless (riff-chunk-offset drain)     ; Check if we already started
+    (with-slots (stream mixed:pack) drain
       (let* ((bytes-per-sample (bytes-per-sample (mixed:encoding mixed:pack)))
              (block-align (* (mixed:channels mixed:pack) bytes-per-sample))
              (byterate (* (mixed:samplerate mixed:pack) block-align))
@@ -268,8 +278,14 @@
         (setf (data-chunk-offset drain) (file-position stream)) ; skip size field, save offset
         (write-int stream 4 0)))))
 
+(defmethod mixed:mix ((drain file-drain))
+  (mixed:with-buffer-tx (data start size (mixed:pack drain))
+    (when (< 0 size)
+      (write-sequence data (stream drain) :start start :end (+ start size))
+      (mixed:finish size))))
+
 (defmethod mixed:end ((drain file-drain))
-  (with-slots ((stream mixed:stream) mixed:pack) drain
+  (with-slots (stream mixed:pack) drain
     (let ((data-size (- (file-position stream)
                         (+ 4 (data-chunk-offset drain)))))
       ;; pad byte for data chunk
@@ -289,11 +305,21 @@
         ;; Set data chunk size
         (file-position stream (data-chunk-offset drain))
         (write-int stream 4 data-size)
-        (when (mixed:dont-close-p drain)
+        (when (dont-close-p drain)
           (file-position stream position))))))
 
-;; Reset offsets
 (defmethod mixed:end :after ((drain file-drain))
+  (when (and (stream drain)
+             (not (dont-close-p drain)))
+    (close (stream drain))
+    (setf (stream drain) NIL))
+  ;; Reset offsets
   (setf (data-chunk-offset drain) NIL
         (fact-chunk-offset drain) NIL
         (riff-chunk-offset drain) NIL))
+
+(defmethod mixed:free :after ((drain file-drain))
+  (when (and (stream drain)
+             (not (dont-close-p drain)))
+    (close (stream drain) :abort T)
+    (setf (stream drain) NIL)))
