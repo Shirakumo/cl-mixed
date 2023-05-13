@@ -20,8 +20,10 @@
                (:file "echo")
                (:file "play")
                (:file "play-to-file")
-               (:file "mixer"))
+               (:file "mixer")
+               (:file "record-to-file"))
   :depends-on (:cl-mixed
                :cl-mixed-out123
                :cl-mixed-mpg123
-               :cl-mixed-wav))
+               :cl-mixed-wav
+               :cl-mixed-pulse))

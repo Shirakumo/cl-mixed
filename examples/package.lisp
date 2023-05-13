@@ -17,6 +17,7 @@
    #:play-to-file
    #:echo
    #:space
-   #:tone))
+   #:tone
+   #:record-to-file))
 
 (in-package #:org.shirakumo.fraf.mixed.examples)
