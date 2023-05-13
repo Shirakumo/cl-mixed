@@ -291,9 +291,8 @@
         (write-int stream 4 riff-size)
         ;; Set number of samples in fact chunk when needed
         (when (fact-chunk-offset drain)
-          (let ((samples (/ data-size (mixed:samplesize (mixed:encoding mixed:pack)))))
-            (file-position stream (fact-chunk-offset drain))
-            (write-int stream 4 samples)))
+          (file-position stream (fact-chunk-offset drain))
+          (write-int stream 4 (* (mixed:channels mixed:pack) (mixed:frame-position drain))))
         ;; Set data chunk size
         (file-position stream (data-chunk-offset drain))
         (write-int stream 4 data-size)
