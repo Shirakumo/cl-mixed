@@ -71,3 +71,34 @@
 (defmethod print-object ((drain device-drain) stream)
   (print-unreadable-object (drain stream :type T :identity T)
     (format stream "~a" (device drain))))
+
+(defclass file-drain (drain)
+  ((file :initform NIL :initarg :file :reader file)
+   (stream :initform NIL :initarg :stream :accessor stream)))
+
+(defmethod print-object ((drain file-drain) stream)
+  (print-unreadable-object (drain stream :type T :identity T)
+    (format stream "~a" (file drain))))
+
+(defmethod start :before ((drain file-drain))
+  (with-slots (file stream) drain
+    (setf stream
+          (or stream
+              (open file :direction :output
+                         :element-type '(unsigned-byte 8))))))
+
+(defmethod mix ((drain file-drain))
+  (with-buffer-tx (data start size (pack drain))
+    (when (< 0 size)
+      (write-sequence data (stream drain) :start start :end (+ start size))
+      (finish size))))
+
+(defmethod end :after ((drain file-drain))
+  (when (stream drain)
+    (close (stream drain))
+    (setf (stream drain) NIL)))
+
+(defmethod free :after ((drain file-drain))
+  (when (stream drain)
+    (close (stream drain) :abort T)
+    (setf (stream drain) NIL)))
