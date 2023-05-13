@@ -13,7 +13,8 @@
    #:wave-format-error
    #:file
    #:source
-   #:in-memory-source))
+   #:in-memory-source
+   #:file-drain))
 (in-package #:org.shirakumo.fraf.mixed.wav)
 
 (define-condition wave-format-error (error)
@@ -199,3 +200,97 @@
 (defmethod mixed:frame-count ((source in-memory-source))
   (/ (length (buffer source))
      (mixed:framesize source)))
+
+(define-condition unsupported-sample-format (wave-format-error)
+  ((sample-format :initarg :sample-format :accessor sample-format))
+  (:report (lambda (c s) (format s "Sample format~%  ~a~%is not supported."
+                                 (sample-format c)))))
+
+(defun write-label (stream label)
+  (loop for char across label
+        do (write-byte (char-code char) stream)))
+
+(defun write-int (stream size int)
+  ;; little endian
+  (dotimes (i size int)
+    (write-byte (ldb (byte 8 (* 8 i)) int) stream)))
+
+(defun audio-format (sample-format)
+  (case sample-format
+    ((:uint8 :int16 :int24 :int32) 1)  ; PCM
+    ((:float) 3)  ; IEEE FLOAT
+    (T (error 'unsupported-sample-format :sample-format sample-format))))
+
+(defun bytes-per-sample (sample-format)
+  (ecase sample-format
+    (:uint8 1)
+    (:int16 2)
+    (:int24 3)
+    (:int32 4)
+    (:float 4)))
+
+(defun fmt-size (audio-format)
+  (ecase audio-format
+    (1 16)
+    (3 18)))
+
+(defclass file-drain (mixed:file-drain)
+  ((riff-chunk-offset :initform NIL :accessor riff-chunk-offset)
+   (fact-chunk-offset :initform NIL :accessor fact-chunk-offset)
+   (data-chunk-offset :initform NIL :accessor data-chunk-offset)))
+
+(defmethod mixed:start ((drain file-drain))
+  (unless (riff-chunk-offset drain)  ; Check if we already started
+    (with-slots ((stream mixed:stream) mixed:pack) drain
+      (let* ((bytes-per-sample (bytes-per-sample (mixed:encoding mixed:pack)))
+             (block-align (* (mixed:channels mixed:pack) bytes-per-sample))
+             (byterate (* (mixed:samplerate mixed:pack) block-align))
+             (audio-format (audio-format (mixed:encoding mixed:pack))))
+        (write-label stream "RIFF")     ; RIFF chunk
+        (setf (riff-chunk-offset drain) (file-position stream)) ; skip size field, save offset
+        (write-int stream 4 0)
+        (write-label stream "WAVE")
+        (write-label stream "fmt ")     ; fmt chunk
+        (write-int stream 4 (fmt-size audio-format))
+        (write-int stream 2 audio-format)
+        (write-int stream 2 (mixed:channels mixed:pack))
+        (write-int stream 4 (mixed:samplerate mixed:pack))
+        (write-int stream 4 byterate)
+        (write-int stream 2 block-align)
+        (write-int stream 2 (* 8 bytes-per-sample))
+        (when (= audio-format 3)
+          (write-int stream 2 2)
+          (write-label stream "fact")   ; fact chunk
+          (write-int stream 4 4)
+          (setf (fact-chunk-offset drain) (file-position stream)) ; skip size field, save offset
+          (write-int stream 4 0))
+        (write-label stream "data")     ; data chunk
+        (setf (data-chunk-offset drain) (file-position stream)) ; skip size field, save offset
+        (write-int stream 4 0)))))
+
+(defmethod mixed:end ((drain file-drain))
+  (with-slots ((stream mixed:stream) mixed:pack) drain
+    (let ((data-size (- (file-position stream)
+                        (+ 4 (data-chunk-offset drain)))))
+      ;; pad byte for data chunk
+      (when (oddp data-size)
+        (write-byte 0 stream))
+      ;; Set RIFF chunk size (including pad byte)
+      (let ((riff-size (- (file-position stream)
+                          (+ 4 (riff-chunk-offset drain)))))
+        (file-position stream (riff-chunk-offset drain))
+        (write-int stream 4 riff-size))
+      ;; Set number of samples in fact chunk when needed
+      (when (fact-chunk-offset drain)
+        (let ((samples (/ data-size (bytes-per-sample (mixed:encoding mixed:pack)))))
+          (file-position stream (fact-chunk-offset drain))
+          (write-int stream 4 samples)))
+      ;; Set data chunk size
+      (file-position stream (data-chunk-offset drain))
+      (write-int stream 4 data-size))))
+
+;; Reset offsets
+(defmethod mixed:end :after ((drain file-drain))
+  (setf (data-chunk-offset drain) NIL
+        (fact-chunk-offset drain) NIL
+        (riff-chunk-offset drain) NIL))
