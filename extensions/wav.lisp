@@ -272,6 +272,8 @@
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
     (when (< 0 size)
       (write-sequence data (stream drain) :start start :end (+ start size))
+      (incf (mixed:frame-position drain)
+            (/ size (mixed:framesize (mixed:pack drain))))
       (mixed:finish size))))
 
 (defmethod mixed:end ((drain file-drain))
