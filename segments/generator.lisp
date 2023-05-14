@@ -15,7 +15,8 @@
 
 (defmethod initialize-instance :after ((segment generator) &key type frequency samplerate)
   (with-error-on-failure ()
-    (mixed:make-segment-generator type frequency samplerate (handle segment))))
+    (mixed:make-segment-generator type 440 samplerate (handle segment)))
+  (when frequency (setf (frequency segment) frequency)))
 
 (defun make-generator (&rest args &key type frequency samplerate)
   (declare (ignore type frequency samplerate))
