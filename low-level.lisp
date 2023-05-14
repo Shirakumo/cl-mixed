@@ -189,7 +189,8 @@
 
 (defcenum repeat-mode
   (:record 1)
-  :play)
+  :play
+  :record-once)
 
 (defcenum biquad-filter
   (:lowpass 1)
