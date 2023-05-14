@@ -13,7 +13,7 @@
 
 (defmethod initialize-instance :after ((segment delay) &key time samplerate bypass)
   (with-error-on-failure ()
-    (mixed:make-segment-delay time samplerate (handle segment)))
+    (mixed:make-segment-delay (float time 0f0) samplerate (handle segment)))
   (setf (bypass segment) bypass))
 
 (defun make-delay (&rest args &key time samplerate)

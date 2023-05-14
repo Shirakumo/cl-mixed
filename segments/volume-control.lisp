@@ -14,7 +14,7 @@
 
 (defmethod initialize-instance :after ((segment volume-control) &key volume pan bypass)
   (with-error-on-failure ()
-    (mixed:make-segment-volume-control volume pan (handle segment)))
+    (mixed:make-segment-volume-control (float volume 0f0) (float pan 0f0) (handle segment)))
   (setf (bypass segment) bypass))
 
 (defun make-volume-control (&rest args &key volume pan)
