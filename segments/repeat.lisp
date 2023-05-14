@@ -11,12 +11,13 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment repeat) &key time samplerate bypass)
+(defmethod initialize-instance :after ((segment repeat) &key time mode samplerate bypass)
   (with-error-on-failure ()
     (mixed:make-segment-repeat (float time 0f0) samplerate (handle segment)))
+  (when mode (setf (repeat-mode segment) mode))
   (setf (bypass segment) bypass))
 
-(defun make-repeat (&rest args &key time samplerate)
+(defun make-repeat (&rest args &key time mode samplerate)
   (declare (ignore time samplerate))
   (apply #'make-instance 'repeat args))
 
