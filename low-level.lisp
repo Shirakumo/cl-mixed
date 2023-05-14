@@ -495,7 +495,7 @@
 
 (defcfun (make-segment-generator "mixed_make_segment_generator") :int
   (type generator-type)
-  (frequency :uint32)
+  (frequency :float)
   (samplerate :uint32)
   (segment :pointer))
 
