@@ -407,6 +407,7 @@
   (:export
    #:repeat
    #:make-repeat
+   #:repeat-position
    #:duration
    #:repeat-mode
    #:samplerate
