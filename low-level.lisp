@@ -155,7 +155,8 @@
   :compressor-wet
   :compressor-gain
   :channel-count-in
-  :channel-count-out)
+  :channel-count-out
+  :repeat-position)
 
 (defcenum resample-type
   (:sinc-best-quality 0)

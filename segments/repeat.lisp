@@ -21,6 +21,7 @@
   (declare (ignore time samplerate))
   (apply #'make-instance 'repeat args))
 
+(define-field-accessor repeat-position repeat :float :repeat-position)
 (define-field-accessor duration repeat :float :repeat-time)
 (define-field-accessor repeat-mode repeat mixed:repeat-mode :repeat-mode)
 (define-field-accessor samplerate repeat :float :samplerate)
