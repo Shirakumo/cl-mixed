@@ -63,7 +63,7 @@
   (cffi:use-foreign-library pulse:libpulse-simple)
   (let* ((pack (mixed:pack segment))
          (channels (or (mixed:channel-order segment) (mixed:guess-channel-order-from-count (mixed:channels pack))))
-         (buffer-size (/ (mixed:size pack) (mixed:framesize pack))))
+         (buffer-size (floor (mixed:size pack) (mixed:framesize pack))))
     (cffi:with-foreign-objects ((sample-spec '(:struct pulse:sample-spec))
                                 (channel-map '(:struct pulse:channel-map))
                                 (buffer-attributes '(:struct pulse:buffer-attr)))
