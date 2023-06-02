@@ -52,7 +52,7 @@
   (setf (aref (inputs segment) location) value))
 
 (defmethod (setf output-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
-  (setf (aref (inputs segment) location) value))
+  (setf (aref (outputs segment) location) value))
 
 (define-callback virtual-free :void ((segment :pointer))
     NIL
