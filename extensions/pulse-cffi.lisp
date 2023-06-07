@@ -43,7 +43,8 @@
 (cffi:define-foreign-library libpulse-simple
   (t (:or (:default "libpulse-simple") "libpulse-simple.so.0")))
 
-(defconstant +channels-max+ 32)
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (defconstant +channels-max+ 32))
 
 (cffi:defcenum sample-format
   :u8
