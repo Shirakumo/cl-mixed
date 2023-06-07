@@ -100,7 +100,7 @@
    (server :initform NIL :initarg :server :accessor server)
    (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
 
-(defmethod initialize-instance :after ((drain drain) &key)
+(defmethod initialize-instance :after ((drain drain) &key &allow-other-keys)
   (init-segment drain :playback))
 
 (defmethod mixed:free ((drain drain))
