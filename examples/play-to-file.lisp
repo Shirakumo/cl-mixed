@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Gleefre
-|#
-
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defclass raw-file-drain (mixed:file-drain)

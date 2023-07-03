@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (defpackage #:org.shirakumo.fraf.mixed.aaudio
   (:use #:cl)
   (:shadow #:stream)

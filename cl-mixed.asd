@@ -1,14 +1,8 @@
-#|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (asdf:defsystem cl-mixed
   :version "2.1.0"
   :license "zlib"
-  :author "Nicolas Hafner <shinmera@tymoon.eu>"
-  :maintainer "Nicolas Hafner <shinmera@tymoon.eu>"
+  :author "Yukari Hafner <shinmera@tymoon.eu>"
+  :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "Bindings to libmixed, a sound mixing and processing library."
   :homepage "https://Shirakumo.github.io/cl-mixed/"
   :bug-tracker "https://github.com/Shirakumo/cl-mixed/issues"

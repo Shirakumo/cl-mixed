@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Nicolas Hafner <shinmera@tymoon.eu>
-|#
-
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defun space (file &key (samplerate 44100) (width 100) (height 50) (speed 0.001) pitch-shift (output 'org.shirakumo.fraf.mixed.out123:drain))

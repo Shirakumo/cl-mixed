@@ -1,9 +1,3 @@
-#|
- This file is a part of cl-mixed
- (c) 2017 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
- Author: Gleefre
-|#
-
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defun record-to-file (file seconds &key (samplerate 44100) (encoding :float))
