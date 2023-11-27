@@ -209,7 +209,25 @@ See BUFFER")
 
 BUFFERS should be a list of symbols, to each of which a
 fresh instance of a BUFFER with a size of SAMPLES will
-be bound."))
+be bound.")
+
+  (function forward-fft
+    "Perform a forward FFT on the samples in IN and store the frequency data in OUT.
+
+FRAMESIZE must be a power of two in [2^1, 2^13] and the
+buffers must be sized accordingly.
+
+See BUFFER
+See INVERSE-FFT")
+
+  (function inverse-fft
+    "Perform an inverse FFT on the frequency data in IN and store the samples in OUT.
+
+FRAMESIZE must be a power of two in [2^1, 2^13] and the
+buffers must be sized accordingly.
+
+See BUFFER
+See FORWARD-FFT"))
 
 ;; c-object.lisp
 (docs:define-docs

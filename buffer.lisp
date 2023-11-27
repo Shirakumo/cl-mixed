@@ -62,3 +62,11 @@
 
 (defmethod framesize ((buffer buffer))
   (samplesize :float))
+
+(defun forward-fft (framesize in out)
+  (with-error-on-failure ()
+    (mixed:fwd-fft framesize (data-ptr in) (data-ptr out))))
+
+(defun inverse-fft (framesize in out)
+  (with-error-on-failure ()
+    (mixed:inv-fft framesize (data-ptr in) (data-ptr out))))

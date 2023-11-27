@@ -144,6 +144,8 @@
    #:make-segment-info
    #:make-segment
    #:samplesize
+   #:fwd-fft
+   #:inv-fft
    #:translator-from
    #:translator-to
    #:error
@@ -177,7 +179,9 @@
    #:size
    #:clear
    #:with-buffers
-   #:transfer)
+   #:transfer
+   #:forward-fft
+   #:inverse-fft)
   ;; c-object.lisp
   (:export
    #:handle

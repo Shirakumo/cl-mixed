@@ -639,6 +639,16 @@
 (defcfun (samplesize "mixed_samplesize") :uint8
   (encoding encoding))
 
+(defcfun (fwd-fft "mixed_fwd_fft") :int
+  (framesize :uint16)
+  (in :pointer)
+  (out :pointer))
+
+(defcfun (inv-fft "mixed_inv_fft") :int
+  (framesize :uint16)
+  (in :pointer)
+  (out :pointer))
+
 (defcfun (translator-from "mixed_translator_from") :pointer
   (encoding encoding))
 
