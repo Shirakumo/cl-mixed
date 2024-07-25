@@ -424,7 +424,7 @@
   (get-performance-data (data :pointer))
   (set-debug-configuration (configuration :pointer) (reserved :pointer)))
 
-(com:define-comstruct (voice :bare T)
+(com:define-comstruct (voice :include NIL)
   (get-voice-details (details :pointer))
   (set-output-voices (send-list :pointer))
   (set-effect-chain (effect-chain :pointer))
@@ -456,7 +456,7 @@
   (get-frequency-ratio (ratio :pointer))
   (set-source-samplerate (samplerate :uint32)))
 
-(com:define-comstruct (voice-callback :bare T)
+(com:define-comstruct (voice-callback :include NIL)
   (processing-pass-start :void (bytes-required :uint32))
   (processing-pass-end :void)
   (stream-end :void)
