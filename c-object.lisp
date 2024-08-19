@@ -2,6 +2,14 @@
 
 (defvar *c-object-table* (make-hash-table :test 'eql))
 
+(defun init ()
+  (flet ((load-library (lib)
+           (unless (cffi:foreign-library-loaded-p lib)
+             (cffi:load-foreign-library lib))))
+    #+windows (load-library 'mixed::winpthread)
+    #+windows (load-library 'mixed::gcc-s)
+    (load-library 'mixed::libmixed)))
+
 (defmethod handle (thing)
   (etypecase thing
     (cffi:foreign-pointer thing)))

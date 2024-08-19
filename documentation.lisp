@@ -239,6 +239,12 @@ by which lisp instance.
 
 See POINTER->OBJECT
 See C-OBJECT")
+
+  (function init
+    "Loads the shared libraries to make libmixed work.
+
+You must call this before calling any other functions.
+It is safe to call this multiple times.")
   
   (function handle
     "Accessor to the pointer to the foreign data that this object tracks.

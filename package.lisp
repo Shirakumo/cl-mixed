@@ -184,6 +184,7 @@
    #:inverse-fft)
   ;; c-object.lisp
   (:export
+   #:init
    #:handle
    #:c-object
    #:free

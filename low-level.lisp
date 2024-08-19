@@ -9,10 +9,7 @@
   (define-foreign-library winpthread
     (:windows "libwinpthread-1.dll"))
   (define-foreign-library gcc-s
-    (:windows "libgcc_s_seh-1.dll"))
-
-  (use-foreign-library winpthread)
-  (use-foreign-library gcc-s))
+    (:windows "libgcc_s_seh-1.dll")))
 
 (define-foreign-library libmixed
   (:android
@@ -49,8 +46,6 @@
         #+ARM64 "nx-arm64-libmixed.nro"
         #+ARM64 "misc-arm64-libmixed.nro"))
   (t (:default "mixed")))
-
-(use-foreign-library libmixed)
 
 (defctype size_t #+64-bit :uint64 #+32-bit :uint32)
 (defctype ssize_t #+64-bit :int64 #+32-bit :int32)
