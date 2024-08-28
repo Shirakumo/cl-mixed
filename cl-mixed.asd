@@ -44,7 +44,7 @@
                              (:file "spatial-reverb")
                              (:file "speed-change")
                              (:file "unpacker")
-                             (:file "virtual")
+                             (:file "virtual" :if-feature (:not :nx))
                              (:file "volume-control")))
                (:module "extensions"
                 :components ((:file "dummy")))

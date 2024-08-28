@@ -41,10 +41,7 @@
         #+X86-64 "win-amd64-libmixed.dll"
         #+ARM64 "win-arm64-libmixed.dll"
         #+(and ARM (not ARM64)) "win-arm7a-libmixed.so"))
-  (:nx
-   (:or "libmixed2.nro" "libmixed.nro"
-        #+ARM64 "nx-arm64-libmixed.nro"
-        #+ARM64 "misc-arm64-libmixed.nro"))
+  (:nx "libmixed.nro")
   (t (:default "mixed")))
 
 (defctype size_t #+64-bit :uint64 #+32-bit :uint32)
