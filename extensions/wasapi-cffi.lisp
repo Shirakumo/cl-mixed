@@ -194,7 +194,7 @@
   (:invalid-device-period #x88890020)
   (:invalid-size #x88890009)
   (:no-aggregation #x80040110)
-  (:not-initialized #x88890001)
+  (:device-not-initialized #x88890001)
   (:out-of-order #x88890007)
   (:service-not-running #x88890010)
   (:unsupported-format #x88890008)
