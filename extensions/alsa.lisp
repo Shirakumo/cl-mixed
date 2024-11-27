@@ -20,14 +20,35 @@
       (error 'alsa-error :code result)
       result))
 
-(defclass drain (mixed:device-drain)
+(defclass alsa-device ()
   ((pcm :initform NIL :accessor pcm)))
 
-(defmethod initialize-instance :after ((drain drain) &key device)
-  (cffi:use-foreign-library alsa:libasound)
-  (connect drain device))
+(defmethod initialize-instance :after ((alsa-device alsa-device) &key device)
+  (unless (cffi:foreign-library-loaded-p 'alsa:libasound)
+    (cffi:load-foreign-library 'alsa:libasound))
+  (connect alsa-device device))
 
-(defmethod connect ((drain drain) device)
+(defmethod mixed:device ((alsa-device alsa-device))
+  (alsa:pcm-name (pcm alsa-device)))
+
+(defmethod (setf mixed:device) (device (alsa-device alsa-device))
+  (cond ((pcm alsa-device)
+         (alsa:pcm-drain (pcm alsa-device))
+         (alsa:pcm-close (pcm alsa-device))
+         (setf (pcm alsa-device) NIL)
+         (connect alsa-device device))
+        (T
+         (connect alsa-device device))))
+
+(defmethod mixed:free ((alsa-device alsa-device))
+  (when (pcm alsa-device)
+    (alsa:pcm-close (pcm alsa-device))
+    (setf (pcm alsa-device) NIL)))
+
+(defmethod mixed:start ((alsa-device alsa-device)))
+(defmethod mixed:end ((alsa-device alsa-device)))
+
+(defmethod connect ((alsa-device alsa-device) device)
   (cffi:with-foreign-objects ((pcm :pointer)
                               (params :uint8 (alsa:pcm-hw-params-size))
                               (format 'alsa:pcm-format)
@@ -35,7 +56,7 @@
                               (rate :uint)
                               (dir :int))
     (restart-case
-        (let ((error (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) :playback 0)))
+        (let ((error (alsa:pcm-open pcm (if (or (null device) (eql :default device)) "default" device) (stream-type alsa-device) 0)))
           (case error
             (0)
             (-6 (error 'mixed:device-not-found :device device))
@@ -45,7 +66,7 @@
         (declare (ignore c))
         (alsa:pcm-open pcm "default" :playback 0)))
     (let ((pcm (cffi:mem-ref pcm :pointer))
-          (pack (mixed:pack drain)))
+          (pack (mixed:pack alsa-device)))
       (check-result
        (alsa:pcm-set-params pcm :float :rw-interleaved
                             (mixed:channels pack)
@@ -63,21 +84,9 @@
       (setf (mixed:encoding pack) (cffi:mem-ref format 'alsa:pcm-format))
       (setf (mixed:channels pack) (cffi:mem-ref channels :uint))
       (setf (mixed:samplerate pack) (cffi:mem-ref rate :uint))
-      (setf (pcm drain) pcm))))
+      (setf (pcm alsa-device) pcm))))
 
-(defmethod mixed:device ((drain drain))
-  (alsa:pcm-name (pcm drain)))
-
-(defmethod (setf mixed:device) (device (drain drain))
-  (cond ((pcm drain)
-         (alsa:pcm-drain (pcm drain))
-         (alsa:pcm-close (pcm drain))
-         (setf (pcm drain) NIL)
-         (connect drain device))
-        (T
-         (connect drain device))))
-
-(defmethod mixed:list-devices ((drain drain))
+(defmethod mixed:list-devices ((alsa-device alsa-device))
   (cffi:with-foreign-object (hints :pointer)
     (check-result (alsa:device-hint -1 "pcm" hints))
     (let ((hints (cffi:mem-ref hints :pointer))
@@ -94,12 +103,27 @@
         (alsa:device-free-hint hints))
       names)))
 
-(defmethod mixed:free ((drain drain))
-  (when (pcm drain)
-    (alsa:pcm-close (pcm drain))
-    (setf (pcm drain) NIL)))
+(defclass source (mixed:device-source alsa-device)
+  ())
 
-(defmethod mixed:start ((drain drain)))
+(defmethod stream-type ((_ source)) :capture)
+
+(defmethod mixed:mix ((source source))
+  (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
+    (let* ((framesize (mixed:framesize (mixed:pack source)))
+           (played (alsa:pcm-readi (pcm source) (mixed:data-ptr) (/ size framesize))))
+      (if (< played 0)
+          (check-result
+           (alsa:pcm-recover (pcm source) played 0))
+          (mixed:finish (* played framesize))))))
+
+(defmethod mixed:end ((source source))
+  (alsa:pcm-drop (pcm source)))
+
+(defclass drain (mixed:device-drain alsa-device)
+  ())
+
+(defmethod stream-type ((_ drain)) :playback)
 
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
@@ -108,7 +132,7 @@
       (if (< played 0)
           (check-result
            (alsa:pcm-recover (pcm drain) played 0))
-          (mixed:finish (max 0 (* played framesize)))))))
+          (mixed:finish (* played framesize))))))
 
 (defmethod mixed:end ((drain drain))
   (alsa:pcm-drain (pcm drain)))

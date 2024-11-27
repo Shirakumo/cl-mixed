@@ -16,6 +16,7 @@
    #:pcm-hw-params-get-format
    #:pcm-hw-params-get-rate
    #:pcm-writei
+   #:pcm-readi
    #:pcm-recover
    #:pcm-pause
    #:pcm-drop
@@ -130,6 +131,11 @@
   (dir :pointer))
 
 (cffi:defcfun (pcm-writei "snd_pcm_writei") :long
+  (pcm :pointer)
+  (buffer :pointer)
+  (frames :ulong))
+
+(cffi:defcfun (pcm-readi "snd_pcm_readi") :long
   (pcm :pointer)
   (buffer :pointer)
   (frames :ulong))
