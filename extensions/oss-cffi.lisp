@@ -8,7 +8,8 @@
    #:ioctl
    #:fd-open
    #:fd-close
-   #:fd-write))
+   #:fd-write
+   #:fd-read))
 (in-package #:org.shirakumo.fraf.mixed.oss.cffi)
 
 (cffi:defcenum encoding
@@ -21,6 +22,7 @@
   (:float  #x00004000))
 
 (cffi:defcenum open-flag
+  (:read-only 0)
   (:write-only 1))
 
 (cffi:defcenum ioctl
@@ -42,6 +44,11 @@
   (fd :int))
 
 (cffi:defcfun (fd-write "write") ssize_t
+  (fd :int)
+  (buf :pointer)
+  (bytes size_t))
+
+(cffi:defcfun (fd-read "read") ssize_t
   (fd :int)
   (buf :pointer)
   (bytes size_t))

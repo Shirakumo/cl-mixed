@@ -5,6 +5,7 @@
    (#:mixed-cffi #:org.shirakumo.fraf.mixed.cffi)
    (#:oss #:org.shirakumo.fraf.mixed.oss.cffi))
   (:export
+   #:source
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.oss)
 
@@ -16,16 +17,16 @@
         (error "ioctl failed."))
       (cffi:mem-ref param :int))))
 
-(defclass drain (mixed:drain)
+(defclass oss-device ()
   ((device :initform "/dev/dsp" :initarg :device :accessor device)
    (fd :initform NIL :accessor fd)))
 
-(defmethod initialize-instance :after ((drain drain) &key)
-  (let ((pack (mixed:pack drain))
-        (fd (oss:fd-open (device drain) :write-only :int 0)))
+(defmethod initialize-instance :after ((oss-device oss-device) &key)
+  (let ((pack (mixed:pack oss-device))
+        (fd (oss:fd-open (device oss-device) (fd-flag oss-device) :int 0)))
     (when (= -1 fd)
       (error "Failed to acquire sound device."))
-    (setf (fd drain) fd)
+    (setf (fd oss-device) fd)
     (let* ((format (cffi:foreign-enum-value 'oss:encoding (case (mixed:encoding pack)
                                                             (:uint24 :int24)
                                                             (:uint32 :int32)
@@ -39,12 +40,29 @@
       (setf (mixed:channels pack) (ioctl fd :sndctl-dsp-channels (mixed:channels pack)))
       (setf (mixed:samplerate pack) (ioctl fd :sndctl-dsp-speed (mixed:samplerate pack))))))
 
-(defmethod mixed:free ((drain drain))
-  (when (fd drain)
-    (oss:fd-close (fd drain))
-    (setf (fd drain) NIL)))
+(defmethod mixed:free ((oss-device oss-device))
+  (when (fd oss-device)
+    (oss:fd-close (fd oss-device))
+    (setf (fd oss-device) NIL)))
 
-(defmethod mixed:start ((drain drain)))
+(defmethod mixed:start ((oss-device oss-device)))
+
+(defmethod mixed:end ((oss-device oss-device)))
+
+(defclass source (mixed:source oss-device) ())
+
+(defmethod fd-flag ((source source)) :read-only)
+
+(defmethod mixed:mix ((source source))
+  (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
+    (let ((result (oss:fd-read (fd source) (mixed:data-ptr) size)))
+      (when (< result 0)
+        (error "Failed to read."))
+      (mixed:finish result))))
+
+(defclass drain (mixed:drain oss-device) ())
+
+(defmethod fd-flag ((drain drain)) :write-only)
 
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
@@ -52,5 +70,3 @@
       (when (< result 0)
         (error "Failed to write."))
       (mixed:finish result))))
-
-(defmethod mixed:end ((drain drain)))
