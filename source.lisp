@@ -85,3 +85,10 @@
   (float (/ (frame-count source)
             (samplerate (pack source)))
          0f0))
+
+(defclass device-source (source)
+  ())
+
+(defmethod print-object ((source device-source) stream)
+  (print-unreadable-object (source stream :type T :identity T)
+    (format stream "~a" (device source))))

@@ -245,7 +245,8 @@
    #:seek
    #:seek-to-frame
    #:frame-position
-   #:frame-count)
+   #:frame-count
+   #:device-source)
   ;; toolkit.lisp
   (:export
    #:*default-samplerate*
