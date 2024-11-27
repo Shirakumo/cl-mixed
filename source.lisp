@@ -87,7 +87,7 @@
          0f0))
 
 (defclass device-source (source)
-  ())
+  ((program-name :initform "Mixed" :initarg :program-name :accessor program-name)))
 
 (defmethod print-object ((source device-source) stream)
   (print-unreadable-object (source stream :type T :identity T)
