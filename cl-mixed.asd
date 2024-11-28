@@ -29,6 +29,7 @@
                              (:file "delay")
                              (:file "distribute")
                              (:file "fader")
+                             (:file "fft")
                              (:file "gate")
                              (:file "generator")
                              (:file "ladspa")

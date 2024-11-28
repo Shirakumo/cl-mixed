@@ -17,6 +17,6 @@
   (apply #'make-instance 'pitch args))
 
 (define-field-accessor pitch pitch :float :pitch-shift)
-(define-field-accessor samplerate pitch :float :samplerate)
+(define-field-accessor samplerate pitch :uint32 :samplerate)
 (define-field-accessor bypass pitch :bool :bypass)
 (define-field-accessor wet pitch :float :mix)

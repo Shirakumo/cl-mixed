@@ -108,6 +108,8 @@
    #:make-segment-delay
    #:make-segment-distribute
    #:make-segment-fade
+   #:make-segment-fwd-fft
+   #:make-segment-inv-fft
    #:make-segment-biquad-filter
    #:make-segment-gate
    #:make-segment-generator
@@ -310,6 +312,15 @@
    #:duration
    #:fade-type
    #:bypass)
+  ;; segments/fft.lisp
+  (:export
+   #:fwd-fft
+   #:make-fwd-fft
+   #:inv-fft
+   #:make-inv-fft
+   #:samplerate
+   #:framesize
+   #:oversampling)
   ;; segments/gate.lisp
   (:export
    #:gate

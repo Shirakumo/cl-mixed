@@ -146,7 +146,9 @@
   :compressor-gain
   :channel-count-in
   :channel-count-out
-  :repeat-position)
+  :repeat-position
+  :framesize
+  :oversampling)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -596,6 +598,14 @@
   (chain :pointer))
 
 (defcfun (make-segment-spatial-reverb "mixed_make_segment_spatial_reverb") :int
+  (samplerate :uint32)
+  (segment :pointer))
+
+(defcfun (make-segment-fwd-fft "mixed_make_segment_fwd_fft") :int
+  (samplerate :uint32)
+  (segment :pointer))
+
+(defcfun (make-segment-inv-fft "mixed_make_segment_inv_fft") :int
   (samplerate :uint32)
   (segment :pointer))
 
