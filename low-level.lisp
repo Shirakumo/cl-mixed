@@ -13,34 +13,34 @@
 
 (define-foreign-library libmixed
   (:android
-   (:or "libmixed.so"
-        #+X86 "android-i686-libmixed.so"
-        #+X86-64 "android-amd64-libmixed.so"
-        #+ARM64 "android-arm64-libmixed.so"
-        #+(and ARM (not ARM64)) "android-arm7a-libmixed.so"))
+   (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
+        #+X86 "libmixed-android-i686.so"
+        #+X86-64 "libmixed-android-amd64.so"
+        #+ARM64 "libmixed-android-arm64.so"
+        #+(and ARM (not ARM64)) "libmixed-android-arm7a.so"))
   (:darwin
    (:or "libmixed2.dylib" "libmixed.dylib"
-        #+X86 "mac-i686-libmixed.dylib"
-        #+X86-64 "mac-amd64-libmixed.dylib"
-        #+ARM64 "mac-arm64-libmixed.dylib"))
+        #+X86 "libmixed-mac-i686.dylib"
+        #+X86-64 "libmixed-mac-amd64.dylib"
+        #+ARM64 "libmixed-mac-arm64.dylib"))
   (:linux
    (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
-        #+X86 "lin-i686-libmixed.so"
-        #+X86-64 "lin-amd64-libmixed.so"
-        #+ARM64 "lin-arm64-libmixed.so"
-        #+(and ARM (not ARM64)) "lin-arm7a-libmixed.so"))
+        #+X86 "libmixed-lin-i686.so"
+        #+X86-64 "libmixed-lin-amd64.so"
+        #+ARM64 "libmixed-lin-arm64.so"
+        #+(and ARM (not ARM64)) "libmixed-lin-arm7a.so"))
   (:freebsd
    (:or "libmixed.so.2" "libmixed2.so" "libmixed.so"
-        #+X86 "bsd-i686-libmixed.so"
-        #+X86-64 "bsd-amd64-libmixed.so"
-        #+ARM64 "bsd-arm64-libmixed.so"
-        #+(and ARM (not ARM64)) "bsd-arm7a-libmixed.so"))
+        #+X86 "libmixed-bsd-i686.so"
+        #+X86-64 "libmixed-bsd-amd64.so"
+        #+ARM64 "libmixed-bsd-arm64.so"
+        #+(and ARM (not ARM64)) "libmixed-bsd-arm7a.so"))
   (:windows
    (:or "libmixed2.dll" "libmixed.dll"
-        #+X86 "win-i686-libmixed.dll"
-        #+X86-64 "win-amd64-libmixed.dll"
-        #+ARM64 "win-arm64-libmixed.dll"
-        #+(and ARM (not ARM64)) "win-arm7a-libmixed.so"))
+        #+X86 "libmixed-win-i686.dll"
+        #+X86-64 "libmixed-win-amd64.dll"
+        #+ARM64 "libmixed-win-arm64.dll"
+        #+(and ARM (not ARM64)) "libmixed-win-arm7a.so"))
   (:nx "libmixed.nro")
   (t (:default "mixed")))
 
