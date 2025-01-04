@@ -478,6 +478,10 @@
   (channels :uint32)
   (segment :pointer))
 
+(defcfun (make-segment-compressor "mixed_make_segment_compressor") :int
+  (samplerate :uint32)
+  (segment :pointer))
+
 (defcfun (make-segment-volume-control "mixed_make_segment_volume_control") :int
   (volume :float)
   (pan :float)

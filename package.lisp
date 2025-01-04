@@ -106,6 +106,7 @@
    #:segment-set
    #:segment-get
    #:make-segment-basic-mixer
+   #:make-segment-compressor
    #:make-segment-channel-convert
    #:make-segment-delay
    #:make-segment-distribute
@@ -294,6 +295,23 @@
    #:make-channel-convert
    #:channel-count-in
    #:channel-count-out)
+  ;; segments/compressor.lisp
+  (:export
+   #:compressor
+   #:make-compressor
+   #:samplerate
+   #:pregain
+   #:postgain
+   #:threshold
+   #:knee
+   #:compression-ratio
+   #:attack
+   #:release
+   #:predelay
+   #:release-zone
+   #:bypass
+   #:wet
+   #:gain)
   ;; segments/delay.lisp
   (:export
    #:delay
