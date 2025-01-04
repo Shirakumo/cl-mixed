@@ -18,6 +18,7 @@
 (define-field-accessor samplerate fwd-fft :uint32 :samplerate)
 (define-field-accessor framesize fwd-fft :uint32 :framesize)
 (define-field-accessor oversampling fwd-fft :uint32 :oversampling)
+(define-field-reader buffer-size-hint fwd-fft :uint32 :buffer-size-hint)
 
 (defclass inv-fft (segment)
   ()
@@ -37,3 +38,4 @@
 (define-field-accessor samplerate inv-fft :uint32 :samplerate)
 (define-field-accessor framesize inv-fft :uint32 :framesize)
 (define-field-accessor oversampling inv-fft :uint32 :oversampling)
+(define-field-reader buffer-size-hint inv-fft :uint32 :buffer-size-hint)

@@ -144,13 +144,13 @@
   :compressor-predelay
   :compressor-releasezone
   :compressor-postgain
-  :compressor-wet
   :compressor-gain
   :channel-count-in
   :channel-count-out
   :repeat-position
   :framesize
-  :oversampling)
+  :oversampling
+  :buffer-size-hint)
 
 (defcenum resample-type
   (:sinc-best-quality 0)

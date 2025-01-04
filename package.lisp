@@ -322,7 +322,8 @@
    #:make-inv-fft
    #:samplerate
    #:framesize
-   #:oversampling)
+   #:oversampling
+   #:buffer-size-hint)
   ;; segments/gate.lisp
   (:export
    #:gate
