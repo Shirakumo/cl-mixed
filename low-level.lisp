@@ -47,6 +47,8 @@
 (defctype size_t #+64-bit :uint64 #+32-bit :uint32)
 (defctype ssize_t #+64-bit :int64 #+32-bit :int32)
 (defctype channel_t :uint8)
+(defctype decibel_t :float)
+(defctype duration_t :float)
 
 (defcenum error
   (:no-error 0)
@@ -265,7 +267,9 @@
   :encoding-enum
   :error-enum
   :resample-type-enum
-  :channel_t)
+  :channel_t
+  :decibel_t
+  :duration_t)
 
 (declaim (ftype (function (cffi:foreign-pointer) (unsigned-byte 32))
                 buffer-size buffer-read buffer-write buffer-reserved

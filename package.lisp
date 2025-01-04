@@ -9,6 +9,8 @@
    #:size_t
    #:ssize_t
    #:channel_t
+   #:decibel_t
+   #:duration_t
    #:error
    #:encoding
    #:layout
