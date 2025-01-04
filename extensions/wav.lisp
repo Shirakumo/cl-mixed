@@ -21,9 +21,9 @@
                                  (file c)))))
 
 (define-condition unsupported-audio-format (wave-format-error)
-  ((audio-format :initarg :audio-format :accessor audio-format))
+  ((audio-format :initarg :audio-format))
   (:report (lambda (c s) (format s "The file~%  ~a~%contains the audio format ~d which is unsupported."
-                                 (file c) (audio-format c)))))
+                                 (file c) (slot-value c 'audio-format)))))
 
 (define-condition missing-block (wave-format-error)
   ((block-type :initarg :block-type :accessor block-type))
