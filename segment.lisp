@@ -201,3 +201,5 @@
 (defgeneric (setf volume) (volume thing))
 (declaim (ftype (function (T) single-float) volume))
 (declaim (ftype (function (single-float T) single-float) (setf volume)))
+
+(defmethod buffer-size-hint ((segment segment)) NIL)
