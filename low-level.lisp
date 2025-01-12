@@ -76,7 +76,8 @@
   :buffer-allocated
   :buffer-missing
   :duplicate-segment
-  :bad-segment)
+  :bad-segment
+  :buffer-too-small)
 
 (defcenum encoding
   (:int8 1)
