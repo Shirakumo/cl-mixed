@@ -12,7 +12,7 @@
   (when postgain (setf (postgain segment) postgain))
   (when threshold (setf (threshold segment) threshold))
   (when knee (setf (knee segment) knee))
-  (when ratio (setf (ratio segment) ratio))
+  (when ratio (setf (compression-ratio segment) ratio))
   (when attack (setf (attack segment) attack))
   (when release (setf (release segment) release))
   (when predelay (setf (predelay segment) predelay))
