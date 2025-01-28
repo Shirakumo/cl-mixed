@@ -3,6 +3,7 @@
   (:use #:cl)
   (:export
    #:libpipewire
+   #:STREAM-EVENTS
    #:audio-format
    #:audio-channel
    #:stream-events
@@ -67,6 +68,12 @@
    #:frame-parent
    #:frame-offset
    #:frame-flags
+   #:audio-info
+   #:audio-info-format
+   #:audio-info-flags
+   #:audio-info-rate
+   #:audio-info-channels
+   #:audio-info-position
    #:make-audio-format
    #:make-stream
    #:init
@@ -76,16 +83,23 @@
    #:make-properties
    #:connect-stream
    #:run-main-loop
+   #:quit-main-loop
    #:destroy-stream
    #:destroy-main-loop
    #:queue-buffer
-   #:dequeue-buffer))
+   #:dequeue-buffer
+   #:make-context
+   #:destroy-context
+   #:connect-context
+   #:disconnect-core))
 (in-package #:org.shirakumo.fraf.mixed.pipewire.cffi)
 
 (cffi:define-foreign-library libpipewire
   (T (:or "libpipewire-0.3.so" (:default "libpipewire"))))
 
-(cffi:defcenum audio-format
+(defconstant STREAM-EVENTS 2)
+
+(cffi:defcenum (audio-format :int32)
   :unknown
   :encoded
   (:start-interleaved #x100)
@@ -131,7 +145,7 @@
   :f64p
   :s8p)
 
-(cffi:defcenum audio-channel
+(cffi:defcenum (audio-channel :int32)
   :unknown
   :n/a
   :mono
@@ -171,11 +185,11 @@
   :left-center-bottom
   :right-center-bottom)
 
-(cffi:defcenum direction
+(cffi:defcenum (direction :int32)
   :input
   :output)
 
-(cffi:defbitfield stream-flags
+(cffi:defbitfield (stream-flags :int32)
   (:none 0)
   (:autoconnect #.(ash 1 0))
   (:inactive #.(ash 1 1))
@@ -190,6 +204,26 @@
   (:async #.(ash 1 10))
   (:early-process #.(ash 1 11))
   (:rt-trigger-done #.(ash 1 12)))
+
+(cffi:defcenum (parameter-type :int32)
+  :invalid
+  :prop-info
+  :props
+  :enum-format
+  :format
+  :buffers
+  :meta
+  :io
+  :enum-profile
+  :profile
+  :enum-port-config
+  :port-config
+  :enum-route
+  :route
+  :control
+  :latency
+  :process-latency
+  :tag)
 
 (cffi:defcstruct (stream-events :conc-name stream-events-)
   (version :uint32)
@@ -264,9 +298,16 @@
   (offset :uint32)
   (flags :uint32))
 
+(cffi:defcstruct (audio-info :conc-name audio-info-)
+  (format audio-format)
+  (flags :uint32)
+  (rate :uint32)
+  (channels :uint32)
+  (position audio-channel :count 64))
+
 (cffi:defcfun (make-audio-format "spa_format_audio_raw_build") :pointer
   (builder :pointer)
-  (id :uint32)
+  (id parameter-type)
   (info :pointer))
 
 (cffi:defcfun (make-stream "pw_stream_new_simple") :pointer
@@ -302,6 +343,9 @@
 (cffi:defcfun (run-main-loop "pw_main_loop_run") :int
   (loop :pointer))
 
+(cffi:defcfun (quit-main-loop "pw_main_loop_quit") :int
+  (loop :pointer))
+
 (cffi:defcfun (destroy-stream "pw_stream_destroy") :void
   (stream :pointer))
 
@@ -312,6 +356,21 @@
   (stream :pointer)
   (buffer :pointer))
 
-(cffi:defcfun (dequeue-buffer "pw_stream_dequeue_buffer") :int
-  (stream :pointer)
-  (buffer :pointer))
+(cffi:defcfun (dequeue-buffer "pw_stream_dequeue_buffer") :pointer
+  (stream :pointer))
+
+(cffi:defcfun (make-context "pw_context_new") :pointer
+  (loop :pointer)
+  (properties :pointer)
+  (user-data-size :size))
+
+(cffi:defcfun (destroy-context "pw_context_destroy") :void
+  (context :pointer))
+
+(cffi:defcfun (connect-context "pw_context_connect") :pointer
+  (context :pointer)
+  (properties :pointer)
+  (user-data-size :size))
+
+(cffi:defcfun (disconnect-core "pw_core_disconnect") :int
+  (core :pointer))

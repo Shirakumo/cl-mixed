@@ -17,69 +17,142 @@
   (:report (lambda (c s) (format s "PipeWire error~@[: ~a~]"
                                  (message c)))))
 
-(defmacro with-error ((errorvar) &body body)
-  `(cffi:with-foreign-object (,errorvar :int)
-     (when (< (progn ,@body) 0)
-       (error 'pipewire-error :code (cffi:mem-ref ,errorvar :int)))))
+(defmacro check-null (call &optional format &rest args)
+  `(let ((value ,call))
+     (if (cffi:null-pointer-p value)
+         (error 'pipewire-error :message ,(if format
+                                              `(format NIL ,format ,@args)
+                                              (format NIL "Call to ~s failed!" (first call))))
+         value)))
+
+(defmacro check-call (call &optional format &rest args)
+  `(let ((value ,call))
+     (if (= 0 value)
+         (error 'pipewire-error :message ,(if format
+                                              `(format NIL ,format ,@args)
+                                              (format NIL "Call to ~s failed!" (first call))))
+         value)))
 
 (defun pipewire-present-p ()
   (unless (cffi:foreign-library-loaded-p 'pipewire:libpipewire)
-    (handler-case (cffi:use-foreign-library pipewire:libpipewire)
-      (error () (return-from pipewire-present-p NIL))))
-  )
+    (handler-case (cffi:load-foreign-library 'pipewire:libpipewire)
+      (error () (return-from pipewire-present-p (values NIL :no-such-library)))))
+  (pipewire:init (cffi:null-pointer) (cffi:null-pointer))
+  (let* ((main-loop (check-null (pipewire:make-main-loop (cffi:null-pointer))))
+         (context (check-null (pipewire:make-context (pipewire:get-loop main-loop) (cffi:null-pointer) 0))))
+    (unwind-protect
+         (let ((core (pipewire:connect-context context (cffi:null-pointer) 0)))
+           (unless (cffi:null-pointer-p core)
+             (pipewire:disconnect-core core)
+             T))
+      (pipewire:destroy-context context)
+      (pipewire:destroy-main-loop main-loop))))
+
+(defclass segment (virtual)
+  ((channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)
+   (mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
+   (thread :initform NIL :accessor thread)
+   (pw-loop :initform NIL :accessor pw-loop)
+   (pw-stream :initform NIL :accessor pw-stream)))
 
 (defun init-segment (segment direction)
-  (unless (cffi:foreign-library-loaded-p 'pipewire:libpipewire)
-    (cffi:use-foreign-library pipewire:libpipewire))
+  (unless (pipewire-present-p)
+    (error "PipeWire is not present!"))
   (let* ((pack (mixed:pack segment))
-         (channels (or (mixed:channel-order segment) (mixed:guess-channel-order-from-count (mixed:channels pack))))
-         (buffer-size (floor (mixed:size pack) (mixed:framesize pack))))
-    ))
+         (channels (or (mixed:channel-order segment) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
+    (cffi:with-foreign-objects ((events '(:struct pipewire:stream-events))
+                                (builder '(:struct pipewire:pod-builder))
+                                (audio-info '(:struct pipewire:audio-info))
+                                (buffer :uint8 1024)
+                                (param :pointer))
+      (setf (pipewire:stream-events-version events) pipewire:STREAM-EVENTS)
+      (setf (pipewire:stream-events-process events)
+            (ecase direction
+              (:output (cffi:callback drain))
+              (:input (cffi:callback source))))
+      (setf (pw-loop segment) (check-null (pipewire:make-main-loop (cffi:null-pointer))))
+      (let ((props (check-null
+                    (pipewire:make-properties :string "media.type" :string "Audio"
+                                              :string "media.category" :string (ecase direction
+                                                                                 (:output "Playback")
+                                                                                 (:input "Capture"))
+                                              :string "media.role" :string "Game"
+                                              :string "media.software" :string "cl-mixed"
+                                              :size 0))))
+        (setf (pw-stream segment) (check-null (pipewire:make-stream (pipewire:get-loop (pw-loop segment))
+                                                                    (mixed:program-name segment)
+                                                                    props
+                                                                    events (mixed:handle segment)))))
+      (cffi:foreign-funcall "memset" :pointer builder :int 0 :size (cffi:foreign-type-size '(:struct pipewire:pod-builder)))
+      (setf (pipewire:pod-builder-data builder) buffer)
+      (setf (pipewire:pod-builder-size builder) 1024)
+      (setf (pipewire:audio-info-format audio-info) (mixed:encoding pack))
+      (setf (pipewire:audio-info-channels audio-info) (length channels))
+      (loop with audio-info-channels = (cffi:foreign-slot-pointer audio-info '(:struct pipewire:audio-info) 'position)
+            for i from 0
+            for channel in channels
+            do (setf (cffi:mem-aref audio-info-channels 'pipewire:audio-channel) channel))
+      (setf (cffi:mem-ref param :pointer) (check-null (pipewire:make-audio-format builder :enum-format audio-info)))
+      (check-call (pipewire:connect-stream (pw-stream segment) direction #xFFFFFFFF
+                                           '(:autoconnect :map-buffers :rt-process)
+                                           param 1)))))
 
-(defclass drain (mixed:drain)
-  ((simple :initform NIL :accessor simple)
-   (server :initform NIL :initarg :server :accessor server)
-   (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
+(defmethod mixed:start ((segment segment))
+  (unless (and (thread segment) (bt:thread-alive-p (thread segment)))
+    (let ((loop (pw-loop segment)))
+      (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
+                                             :name (format NIL "~a" segment))))))
+
+(defmethod mixed:mix ((segment segment)))
+
+(defmethod mixed:end ((segment segment)))
+
+(defmethod mixed:free ((segment segment))
+  (loop while (and (thread segment) (bt:thread-alive-p (thread segment)))
+        do (pipewire:quit-main-loop segment)
+           (sleep 0.01))
+  (when (pw-stream segment)
+    (pipewire:destroy-stream (pw-stream segment))
+    (setf (pw-stream segment) NIL))
+  (when (pw-loop segment)
+    (pipewire:destroy-main-loop (pw-loop segment))
+    (setf (pw-loop segment) NIL)))
+
+(defclass drain (mixed:drain segment)
+  ())
 
 (defmethod initialize-instance :after ((drain drain) &key &allow-other-keys)
-  (init-segment drain :playback))
+  (init-segment drain :output))
 
-(defmethod mixed:free ((drain drain))
-  (when (simple drain)
-    
-    (setf (simple drain) NIL)))
+(mixed::define-callback drain :void ((segment :pointer)) ()
+  (let* ((segment (mixed:pointer->object segment))
+         (pack (mixed:pack segment)))
+    (mixed:with-buffer-tx (data start size pack)
+      (if (< 0 size)
+          (let* ((stream (pw-stream segment))
+                 (pw-buffer (pipewire:dequeue-buffer stream)))
+            (if (not (cffi:null-pointer-p pw-buffer))
+                (let* ((spa-buffer (pipewire:pw-buffer-buffer pw-buffer))
+                       (data (pipewire:spa-buffer-data spa-buffer))
+                       (chunk (pipewire:data-chunk data))
+                       (size (min size (pipewire:data-max-size data))))
+                  ;; TODO: could probably submit the pack itself as a buffer and avoid the copying.
+                  (unless (cffi:null-pointer-p (pipewire:data-data data))
+                    (cffi:foreign-funcall "memcpy" :pointer (pipewire:data-data data) :pointer (mixed:data-ptr) :size size)
+                    (setf (pipewire:chunk-offset chunk) 0)
+                    (setf (pipewire:chunk-stride chunk) (mixed:framesize pack))
+                    (setf (pipewire:chunk-size chunk) size)
+                    (pipewire:queue-buffer stream pw-buffer)
+                    (mixed:finish size)))
+                (format *error-output* "Overrun! (no buffers available to queue)~%")))
+          (format *error-output* "Underrun! (no data ready to output)~%")))))
 
-(defmethod mixed:start ((drain drain)))
-
-(defmethod mixed:mix ((drain drain))
-  (mixed:with-buffer-tx (data start size (mixed:pack drain))
-    (when (< 0 size)
-      
-      (mixed:finish size))))
-
-(defmethod mixed:end ((drain drain))
-  )
-
-(defclass source (mixed:source)
-  ((mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
-   (simple :initform NIL :accessor simple)
-   (server :initform NIL :initarg :server :accessor server)
-   (channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)))
+(defclass source (mixed:source segment)
+  ())
 
 (defmethod initialize-instance :after ((source source) &key)
-  (init-segment source :record))
+  (init-segment source :input))
 
-(defmethod mixed:free ((source source))
-  (when (simple source)
-    
-    (setf (simple source) NIL)))
-
-(defmethod mixed:start ((source source)))
-
-(defmethod mixed:mix ((source source))
-  (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
-    (when (< 0 size)
-      
-      (mixed:finish size))))
-
-(defmethod mixed:end ((source source)))
+(mixed::define-callback source :void ((segment :pointer)) ()
+  (let ((segment (mixed:pointer->object segment)))
+    ))
