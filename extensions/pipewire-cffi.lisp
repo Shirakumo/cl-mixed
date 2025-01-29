@@ -91,6 +91,9 @@
    #:connect-stream
    #:run-main-loop
    #:quit-main-loop
+   #:enter-loop
+   #:leave-loop
+   #:iterate-loop
    #:destroy-stream
    #:destroy-main-loop
    #:queue-buffer
@@ -426,6 +429,15 @@
   (loop :pointer))
 
 (cffi:defcfun (quit-main-loop "pw_main_loop_quit") :int
+  (loop :pointer))
+
+(cffi:defcfun (enter-loop "_pw_loop_enter") :int
+  (loop :pointer))
+
+(cffi:defcfun (leave-loop "_pw_loop_leave") :int
+  (loop :pointer))
+
+(cffi:defcfun (iterate-loop "_pw_loop_iterate") :int
   (loop :pointer))
 
 (cffi:defcfun (destroy-stream "pw_stream_destroy") :void

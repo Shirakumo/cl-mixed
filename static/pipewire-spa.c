@@ -17,6 +17,7 @@ __asm__(".symver strlen,strlen@GLIBC_2.17");
 #endif
 
 #include<spa/param/audio/format-utils.h>
+#include<pipewire/loop.h>
 
 struct spa_pod *_spa_format_audio_raw_build(struct spa_pod_builder *builder, uint32_t id, struct spa_audio_info_raw *info){
   return spa_format_audio_raw_build(builder, id, info);
@@ -30,18 +31,16 @@ int _spa_format_audio_raw_parse(const struct spa_pod *format, struct spa_audio_i
   return spa_format_audio_raw_parse(format, info);
 }
 
-// cc -shared -o pipewire-spa-amd64.so -I/usr/include/spa-0.2 -O3 -fPIC pipewire-spa.c
+int _pw_loop_enter(struct pw_loop *loop){
+  return pw_loop_enter(loop);
+}
 
-if (spa_format_parse(param, &data->format.media_type, &data->format.media_subtype) < 0)
-                return;
- 
-        /* only accept raw audio */
-        if (data->format.media_type != SPA_MEDIA_TYPE_audio ||
-            data->format.media_subtype != SPA_MEDIA_SUBTYPE_raw)
-                return;
- 
-        /* call a helper function to parse the format for us. */
-        spa_format_audio_raw_parse(param, &data->format.info.raw);
- 
-        fprintf(stdout, "capturing rate:%d channels:%d\n",
-                        data->format.info.raw.rate, data->format.info.raw.channels);
+int _pw_loop_leave(struct pw_loop *loop){
+  return pw_loop_leave(loop);
+}
+
+int _pw_loop_iterate(struct pw_loop *loop){
+  return pw_loop_iterate(loop, -1);
+}
+
+// cc -shared -o pipewire-spa-amd64.so -I/usr/include/spa-0.2 -I/usr/include/pipewire-0.3 -O3 -fPIC pipewire-spa.c

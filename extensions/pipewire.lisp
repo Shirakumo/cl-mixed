@@ -107,21 +107,15 @@
                                          param 1))))
 
 (defmethod mixed:start ((segment segment))
-  (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
-    (let ((loop (pw-loop segment)))
-      (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
-                                             :name (format NIL "~a" segment))))))
+  (pipewire:enter-loop (pipewire:get-loop (pw-loop segment))))
+
+(defmethod mixed:mix ((segment segment))
+  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment))))
+
+(defmethod mixed:end ((segment segment))
+  (pipewire:leave-loop (pipewire:get-loop (pw-loop segment))))
 
 (defmethod mixed:free ((segment segment))
-  (when (pw-loop segment)
-    (loop for i from 0 below 100
-          do (pipewire:quit-main-loop (pw-loop segment))
-             (unless (and (thread segment) (bt:thread-alive-p (thread segment)))
-               (return))
-             (sleep 0.01)
-          finally (progn
-                    (bt:destroy-thread (thread segment))
-                    (setf (thread segment) NIL))))
   (when (pw-stream segment)
     (pipewire:destroy-stream (pw-stream segment))
     (setf (pw-stream segment) NIL))
