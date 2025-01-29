@@ -20,6 +20,7 @@ Fully implemented extensions:
 - Opus
 - Oss
 - Out123
+- PipeWire
 - PulseAudio
 - Vorbis
 - Wasapi
