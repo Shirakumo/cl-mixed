@@ -7,6 +7,9 @@
    #:STREAM-EVENTS
    #:audio-format
    #:audio-channel
+   #:parameter-type
+   #:media-type
+   #:media-subtype
    #:stream-events
    #:stream-events-version
    #:stream-events-destroy
@@ -76,6 +79,8 @@
    #:audio-info-channels
    #:audio-info-position
    #:make-audio-format
+   #:parse-audio-format
+   #:parse-raw-audio-format
    #:make-stream
    #:init
    #:deinit
@@ -236,6 +241,60 @@
   :process-latency
   :tag)
 
+(cffi:defcenum (media-type :int32)
+  :unknown
+  :audio
+  :video
+  :image
+  :binary
+  :stream
+  :application)
+
+(cffi:defcenum (media-subtype :int32)
+  :unknown
+  :raw
+  :dsp
+  :iec958
+  :dsd
+  (:start-audio #x10000)
+  :mp3
+  :aac
+  :vorbis
+  :wma
+  :ra
+  :sbc
+  :adpcm
+  :g723
+  :g726
+  :g729
+  :amr
+  :gsm
+  :alac
+  :flac
+  :ape
+  :opus
+  (:start-video #x20000)
+  :h264
+  :mjpg
+  :dv
+  :mpegts
+  :h263
+  :mpeg1
+  :mpeg2
+  :mpeg4
+  :xvid
+  :vc1
+  :vp8
+  :vp9
+  :bayer
+  (:start-image #x30000)
+  :jpeg
+  (:start-binary #x40000)
+  (:start-stream #x50000)
+  :midi
+  (:start-application #x60000)
+  :control)
+
 (cffi:defcstruct (stream-events :conc-name stream-events-)
   (version :uint32)
   (destroy :pointer)
@@ -319,6 +378,15 @@
 (cffi:defcfun (make-audio-format "_spa_format_audio_raw_build") :pointer
   (builder :pointer)
   (id parameter-type)
+  (info :pointer))
+
+(cffi:defcfun (parse-audio-format "_spa_format_parse") :int
+  (format :pointer)
+  (media-type :uint32)
+  (media-subtype :uint32))
+
+(cffi:defcfun (parse-raw-audio-format "_spa_format_audio_raw_parse") :int
+  (format :pointer)
   (info :pointer))
 
 (cffi:defcfun (make-stream "pw_stream_new_simple") :pointer
