@@ -22,10 +22,13 @@
          (when ,err
            ,cleanup)))))
 
+(declaim (inline calloc))
 (defun calloc (type &optional (count 1))
-  (let ((ptr (cffi:foreign-alloc type :count count)))
-    (dotimes (i (* count (cffi:foreign-type-size type)) ptr)
-      (setf (cffi:mem-aref ptr :uchar i) 0))))
+  (cffi:foreign-funcall "calloc" :size (cffi:foreign-type-size type) :size count :pointer))
+
+(declaim (inline clear-mem))
+(defun clear-mem (ptr type)
+  (cffi:foreign-funcall "memset" :pointer ptr :int 0 :size (cffi:foreign-type-size type)))
 
 (defmacro define-accessor (name class ffi)
   (let ((value (gensym "VALUE")))
