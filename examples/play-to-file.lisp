@@ -34,6 +34,7 @@
 (defun play-to-file (file &key output output-stream
                                (samplerate 44100) (encoding :float)
                                (input-format :mp3) (output-format :wav))
+  (mixed:init)
   (mixed:with-objects ((source (mixed:make-unpacker :samplerate samplerate))
                        (drain (mixed:make-packer :samplerate samplerate :encoding encoding))
                        (in (make-instance (ecase input-format

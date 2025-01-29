@@ -43,6 +43,7 @@
         :fields ()))
 
 (defun echo (file &key (delay 0.2) (falloff 0.5) (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain))
+  (mixed:init)
   (mixed:with-objects ((source (mixed:make-unpacker :samplerate samplerate))
                        (drain (mixed:make-packer :samplerate samplerate))
                        (mp3 (make-instance 'org.shirakumo.fraf.mixed.mpg123:source :file file :pack source))

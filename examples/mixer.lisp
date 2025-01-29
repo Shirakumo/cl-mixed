@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defun mixer (files &key (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain))
+  (mixed:init)
   (mixed:with-objects ((drain (mixed:make-packer :samplerate samplerate))
                        (out (make-instance output :pack drain))
                        (mixer (mixed:make-basic-mixer 2))

@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defun record-to-file (file seconds &key (samplerate 44100) (encoding :float))
+  (mixed:init)
   (mixed:with-objects ((input (mixed:make-unpacker :samplerate samplerate))
                        (output (mixed:make-packer :samplerate samplerate :encoding encoding))
                        (file-drain (make-instance 'org.shirakumo.fraf.mixed.wav:file-drain

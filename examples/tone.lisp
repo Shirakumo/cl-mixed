@@ -23,6 +23,7 @@
     (F5   698.46)))
 
 (defun tone (tones &key (type :sine) (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain))
+  (mixed:init)
   (let ((tones (loop for (tone length) in tones
                      collect (list (find-symbol (string tone) #.*package*) length))))
     (mixed:with-objects ((generator (mixed:make-generator :type type :samplerate samplerate))

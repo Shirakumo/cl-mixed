@@ -1,6 +1,7 @@
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
 (defun space (file &key (samplerate 44100) (width 100) (height 50) (speed 0.001) pitch-shift (output 'org.shirakumo.fraf.mixed.out123:drain))
+  (mixed:init)
   (mixed:with-objects ((source (mixed:make-unpacker :samplerate samplerate))
                        (drain (mixed:make-packer :samplerate samplerate))
                        (void (mixed:make-void))
