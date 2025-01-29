@@ -103,7 +103,7 @@
         (alsa:device-free-hint hints))
       names)))
 
-(defclass source (mixed:device-source alsa-device)
+(defclass source (alsa-device mixed:device-source)
   ())
 
 (defmethod stream-type ((_ source)) :capture)
@@ -120,7 +120,7 @@
 (defmethod mixed:end ((source source))
   (alsa:pcm-drop (pcm source)))
 
-(defclass drain (mixed:device-drain alsa-device)
+(defclass drain (alsa-device mixed:device-drain)
   ())
 
 (defmethod stream-type ((_ drain)) :playback)
