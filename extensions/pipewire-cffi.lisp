@@ -164,10 +164,13 @@
   :unknown
   :n/a
   :mono
+  (:left 3)
   (:left-front 3)
   (:left-front-bottom 3)
+  (:right 3)
   (:right-front 4)
   (:right-front-bottom 4)
+  (:center 5)
   (:center-front 5)
   (:subwoofer 6)
   (:left-side 7)
@@ -385,8 +388,8 @@
 
 (cffi:defcfun (parse-audio-format "_spa_format_parse") :int
   (format :pointer)
-  (media-type :uint32)
-  (media-subtype :uint32))
+  (media-type :pointer)
+  (media-subtype :pointer))
 
 (cffi:defcfun (parse-raw-audio-format "_spa_format_audio_raw_parse") :int
   (format :pointer)

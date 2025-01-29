@@ -90,32 +90,38 @@
                                                                     props
                                                                     (events segment)
                                                                     (mixed:handle segment))))))
-    (let* ((pack (mixed:pack segment))
-           (channels (or (mixed:channel-order segment) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
+    (let ((pack (mixed:pack segment)))
       (setf (pipewire:pod-builder-data builder) buffer)
       (setf (pipewire:pod-builder-size builder) 1024)
       (setf (pipewire:audio-info-format audio-info) (mixed:encoding pack))
       (setf (pipewire:audio-info-rate audio-info) (mixed:samplerate pack))
-      (setf (pipewire:audio-info-channels audio-info) (length channels))
+      (setf (pipewire:audio-info-channels audio-info) (mixed:channels pack))
       (loop with audio-info-channels = (cffi:foreign-slot-pointer audio-info '(:struct pipewire:audio-info) 'position)
-            for i from 0
-            for channel in channels
-            do (setf (cffi:mem-aref audio-info-channels 'pipewire:audio-channel) channel)))
+            for i from 0 below (mixed:channels pack)
+            for channel in (or (mixed:channel-order segment)
+                               (mixed:guess-channel-order-from-count (mixed:channels pack)))
+            do (setf (cffi:mem-aref audio-info-channels 'pipewire:audio-channel i) channel)))
     (setf (cffi:mem-ref param :pointer) (check-null (pipewire:make-audio-format builder :enum-format audio-info)))
     (check-call (pipewire:connect-stream (pw-stream segment) direction #xFFFFFFFF
                                          '(:autoconnect :map-buffers :rt-process)
                                          param 1))))
 
 (defmethod mixed:start ((segment segment))
-  (pipewire:enter-loop (pipewire:get-loop (pw-loop segment))))
-
-(defmethod mixed:mix ((segment segment))
-  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment))))
-
-(defmethod mixed:end ((segment segment))
-  (pipewire:leave-loop (pipewire:get-loop (pw-loop segment))))
+  (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
+    (let ((loop (pw-loop segment)))
+      (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
+                                             :name (format NIL "~a" segment))))))
 
 (defmethod mixed:free ((segment segment))
+  (when (pw-loop segment)
+    (loop for i from 0 below 100
+          do (pipewire:quit-main-loop (pw-loop segment))
+             (unless (and (thread segment) (bt:thread-alive-p (thread segment)))
+               (return))
+             (sleep 0.01)
+          finally (progn
+                    (bt:destroy-thread (thread segment))
+                    (setf (thread segment) NIL))))
   (when (pw-stream segment)
     (pipewire:destroy-stream (pw-stream segment))
     (setf (pw-stream segment) NIL))
@@ -126,7 +132,7 @@
     (cffi:foreign-free (events segment))
     (setf (events segment) NIL)))
 
-(mixed::define-callback param-changed :void ((segment :pointer) (id pipewire:parameter-type) (param :pointer))
+(mixed::define-callback param-changed :void ((segment :pointer) (id pipewire:parameter-type) (param :pointer)) ()
   (unless (or (cffi:null-pointer-p param)
               (not (eql :format id)))
     (cffi:with-foreign-objects ((media-type 'pipewire:media-type)
@@ -138,13 +144,16 @@
                  (<= 0 (pipewire:parse-raw-audio-format param audio-info)))
         (let* ((segment (mixed:pointer->object segment))
                (pack (mixed:pack segment)))
-          (setf (mixed:samplerate pack) (pipewire:audio-info-format audio-info))
-          (setf (mixed:channels pack) (pipewire:audio-info-channels audio-info))
-          (setf (mixed:encoding pack) (pipewire:audio-info-format audio-info))
-          (format *error-output* "[PipeWire] Changed audio format to ~d channels @ ~dHz, ~a~%"
-                  (mixed:channels pack) (mixed:samplerate pack) (mixed:encoding pack)))))))
+          (unless (and (= (mixed:samplerate pack) (pipewire:audio-info-rate audio-info))
+                       (= (mixed:channels pack) (pipewire:audio-info-channels audio-info))
+                       (eql (mixed:encoding pack) (pipewire:audio-info-format audio-info)))
+            (setf (mixed:samplerate pack) (pipewire:audio-info-rate audio-info))
+            (setf (mixed:channels pack) (pipewire:audio-info-channels audio-info))
+            (setf (mixed:encoding pack) (pipewire:audio-info-format audio-info))
+            (format *error-output* "[PipeWire] Changed audio format to ~d channels @ ~dHz, ~a~%"
+                    (mixed:channels pack) (mixed:samplerate pack) (mixed:encoding pack))))))))
 
-(defclass drain (mixed:drain segment)
+(defclass drain (segment mixed:drain)
   ())
 
 (defmethod initialize-instance :after ((drain drain) &key &allow-other-keys)
@@ -164,8 +173,9 @@
                    (chunk (pipewire:data-chunk data))
                    (size (min avail-size
                               (pipewire:data-max-size data)
-                              (* (pipewire:pw-buffer-requested pw-buffer)
-                                 framesize))))
+                              ;; (* (pipewire:pw-buffer-requested pw-buffer)
+                              ;;    framesize)
+                              )))
               ;; TODO: could probably submit the pack itself as a buffer and avoid the copying.
               (unless (cffi:null-pointer-p (pipewire:data-data data))
                 (cffi:foreign-funcall "memcpy" :pointer (pipewire:data-data data) :pointer (mixed:data-ptr) :size size)
@@ -175,7 +185,7 @@
                 (pipewire:queue-buffer stream pw-buffer)
                 (mixed:finish size)))))))))
 
-(defclass source (mixed:source segment)
+(defclass source (segment mixed:source)
   ())
 
 (defmethod initialize-instance :after ((source source) &key)
