@@ -110,14 +110,7 @@
   (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
     (let ((loop (pw-loop segment)))
       (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
-                                             :name (format NIL "~a" segment)))))
-  segment)
-
-(defmethod mixed:mix ((segment segment))
-  segment)
-
-(defmethod mixed:end ((segment segment))
-  segment)
+                                             :name (format NIL "~a" segment))))))
 
 (defmethod mixed:free ((segment segment))
   (loop while (and (thread segment) (bt:thread-alive-p (thread segment)))
