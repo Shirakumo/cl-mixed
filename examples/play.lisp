@@ -1,6 +1,6 @@
 (in-package #:org.shirakumo.fraf.mixed.examples)
 
-(defun play (file &key (samplerate 44100) (output 'org.shirakumo.fraf.mixed.pipewire:drain) (buffersize 100))
+(defun play (file &key (samplerate 44100) (output 'org.shirakumo.fraf.mixed.out123:drain) (buffersize 100))
   (mixed:init)
   (mixed:with-objects ((source (mixed:make-unpacker :samplerate samplerate :frames buffersize))
                        (drain (mixed:make-packer :samplerate samplerate :frames buffersize))

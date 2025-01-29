@@ -106,7 +106,7 @@
 
 (defconstant STREAM-EVENTS 2)
 
-(cffi:defcenum (audio-format :int32)
+(cffi:defcenum audio-format
   :unknown
   :encoded
   (:start-interleaved #x100)
@@ -200,7 +200,7 @@
   :input
   :output)
 
-(cffi:defbitfield (stream-flags :int32)
+(cffi:defbitfield stream-flags
   (:none 0)
   (:autoconnect #.(ash 1 0))
   (:inactive #.(ash 1 1))
