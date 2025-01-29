@@ -27,7 +27,7 @@
 
 (defmacro check-call (call &optional format &rest args)
   `(let ((value ,call))
-     (if (= 0 value)
+     (if (< value 0)
          (error 'pipewire-error :message ,(if format
                                               `(format NIL ,format ,@args)
                                               (format NIL "Call to ~s failed!" (first call))))
@@ -61,30 +61,31 @@
     (error "PipeWire is not present!"))
   (let* ((pack (mixed:pack segment))
          (channels (or (mixed:channel-order segment) (mixed:guess-channel-order-from-count (mixed:channels pack)))))
-    (cffi:with-foreign-objects ((events '(:struct pipewire:stream-events))
-                                (builder '(:struct pipewire:pod-builder))
+    (cffi:with-foreign-objects ((builder '(:struct pipewire:pod-builder))
                                 (audio-info '(:struct pipewire:audio-info))
                                 (buffer :uint8 1024)
                                 (param :pointer))
-      (setf (pipewire:stream-events-version events) pipewire:STREAM-EVENTS)
-      (setf (pipewire:stream-events-process events)
-            (ecase direction
-              (:output (cffi:callback drain))
-              (:input (cffi:callback source))))
-      (setf (pw-loop segment) (check-null (pipewire:make-main-loop (cffi:null-pointer))))
-      (let ((props (check-null
-                    (pipewire:make-properties :string "media.type" :string "Audio"
-                                              :string "media.category" :string (ecase direction
-                                                                                 (:output "Playback")
-                                                                                 (:input "Capture"))
-                                              :string "media.role" :string "Game"
-                                              :string "media.software" :string "cl-mixed"
-                                              :size 0))))
-        (setf (pw-stream segment) (check-null (pipewire:make-stream (pipewire:get-loop (pw-loop segment))
-                                                                    (mixed:program-name segment)
-                                                                    props
-                                                                    events (mixed:handle segment)))))
-      (cffi:foreign-funcall "memset" :pointer builder :int 0 :size (cffi:foreign-type-size '(:struct pipewire:pod-builder)))
+      (mixed::clear-mem builder '(:struct pipewire:pod-builder))
+      (mixed::clear-mem audio-info '(:struct pipewire:audio-info))
+      (let ((events (mixed::calloc '(:struct pipewire:stream-events))))
+        (setf (pipewire:stream-events-version events) pipewire:STREAM-EVENTS)
+        (setf (pipewire:stream-events-process events)
+              (ecase direction
+                (:output (cffi:callback drain))
+                (:input (cffi:callback source))))
+        (setf (pw-loop segment) (check-null (pipewire:make-main-loop (cffi:null-pointer))))
+        (let ((props (check-null
+                      (pipewire:make-properties :string "media.type" :string "Audio"
+                                                :string "media.category" :string (ecase direction
+                                                                                   (:output "Playback")
+                                                                                   (:input "Capture"))
+                                                :string "media.role" :string "Game"
+                                                :string "media.software" :string "cl-mixed"
+                                                :size 0))))
+          (setf (pw-stream segment) (check-null (pipewire:make-stream (pipewire:get-loop (pw-loop segment))
+                                                                      (mixed:program-name segment)
+                                                                      props
+                                                                      events (mixed:handle segment))))))
       (setf (pipewire:pod-builder-data builder) buffer)
       (setf (pipewire:pod-builder-size builder) 1024)
       (setf (pipewire:audio-info-format audio-info) (mixed:encoding pack))
