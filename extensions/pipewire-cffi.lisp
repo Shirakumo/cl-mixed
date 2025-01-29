@@ -3,6 +3,7 @@
   (:use #:cl)
   (:export
    #:libpipewire
+   #:pipewire-spa
    #:STREAM-EVENTS
    #:audio-format
    #:audio-channel
@@ -97,6 +98,11 @@
 (cffi:define-foreign-library libpipewire
   (T (:or "libpipewire-0.3.so" (:default "libpipewire"))))
 
+(cffi:define-foreign-library pipewire-spa
+  (:linux (:or #+ARM64 "pipewire-spa-arm64.so"
+               #+X86-64 "pipewire-spa-amd64.so"
+               "pipewire-spa.so")))
+
 (defconstant STREAM-EVENTS 2)
 
 (cffi:defcenum (audio-format :int32)
@@ -149,17 +155,21 @@
   :unknown
   :n/a
   :mono
-  :left-front
-  :right-front
-  :center-front
-  :subwoofer
-  :left-side
-  :right-side
-  :left-front-center
-  :right-front-center
-  :center-rear
-  :left-rear
-  :right-rear
+  (:left-front 3)
+  (:left-front-bottom 3)
+  (:right-front 4)
+  (:right-front-bottom 4)
+  (:center-front 5)
+  (:subwoofer 6)
+  (:left-side 7)
+  (:right-side 8)
+  (:left-front-center 9)
+  (:right-front-center 10)
+  (:center-rear 11)
+  (:left-rear 12)
+  (:left-rear-bottom 12)
+  (:right-rear 13)
+  (:right-rear-bottom 13)
   :center-top
   :left-front-top
   :center-front-top
@@ -305,7 +315,7 @@
   (channels :uint32)
   (position audio-channel :count 64))
 
-(cffi:defcfun (make-audio-format "spa_format_audio_raw_build") :pointer
+(cffi:defcfun (make-audio-format "_spa_format_audio_raw_build") :pointer
   (builder :pointer)
   (id parameter-type)
   (info :pointer))

@@ -35,7 +35,8 @@
 
 (defun pipewire-present-p ()
   (unless (cffi:foreign-library-loaded-p 'pipewire:libpipewire)
-    (handler-case (cffi:load-foreign-library 'pipewire:libpipewire)
+    (handler-case (progn (cffi:load-foreign-library 'pipewire:libpipewire)
+                         (cffi:load-foreign-library 'pipewire:pipewire-spa))
       (error () (return-from pipewire-present-p (values NIL :no-such-library)))))
   (pipewire:init (cffi:null-pointer) (cffi:null-pointer))
   (let* ((main-loop (check-null (pipewire:make-main-loop (cffi:null-pointer))))
@@ -48,7 +49,7 @@
       (pipewire:destroy-context context)
       (pipewire:destroy-main-loop main-loop))))
 
-(defclass segment (virtual)
+(defclass segment (mixed:virtual)
   ((channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)
    (mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
    (thread :initform NIL :accessor thread)
