@@ -114,7 +114,7 @@
     (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
       (let ((loop (pw-loop segment)))
         (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
-                                               :name (format NIL "~a" segment)))))
+                                               :name (format NIL "PipeWire-~a" (type-of segment))))))
     #+pipewire-no-threads
     (pipewire:enter-loop (pipewire:get-loop (pw-loop segment)))
     (setf (started-p segment) T)))
