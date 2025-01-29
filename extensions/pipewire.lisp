@@ -52,7 +52,9 @@
 (defclass segment (mixed:virtual)
   ((channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)
    (mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
-   (thread :initform NIL :accessor thread)
+   #+pipewire-threaded (thread :initform NIL :accessor thread)
+   #+pipewire-threaded (lock :initform (bt:make-lock) :accessor lock)
+   #+pipewire-threaded (cvar :initform (bt:make-condition-variable) :accessor cvar)
    (events :initform NIL :accessor events)
    (pw-loop :initform NIL :accessor pw-loop)
    (pw-stream :initform NIL :accessor pw-stream)))
@@ -107,12 +109,24 @@
                                          param 1))))
 
 (defmethod mixed:start ((segment segment))
+  #+pipewire-threaded
   (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
     (let ((loop (pw-loop segment)))
       (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
-                                             :name (format NIL "~a" segment))))))
+                                             :name (format NIL "~a" segment)))))
+  #-pipewire-threaded
+  (pipewire:enter-loop (pipewire:get-loop (pw-loop segment))))
+
+(defmethod mixed:mix ((segment segment))
+  #-pipewire-threaded
+  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1))
+
+(defmethod mixed:end ((segment segment))
+  #-pipewire-threaded
+  (pipewire:leave-loop (pipewire:get-loop (pw-loop segment))))
 
 (defmethod mixed:free ((segment segment))
+  #+pipewire-threaded
   (when (pw-loop segment)
     (loop for i from 0 below 100
           do (pipewire:quit-main-loop (pw-loop segment))
@@ -173,9 +187,8 @@
                    (chunk (pipewire:data-chunk data))
                    (size (min avail-size
                               (pipewire:data-max-size data)
-                              ;; (* (pipewire:pw-buffer-requested pw-buffer)
-                              ;;    framesize)
-                              )))
+                              (* (pipewire:pw-buffer-requested pw-buffer)
+                                 framesize))))
               ;; TODO: could probably submit the pack itself as a buffer and avoid the copying.
               (unless (cffi:null-pointer-p (pipewire:data-data data))
                 (cffi:foreign-funcall "memcpy" :pointer (pipewire:data-data data) :pointer (mixed:data-ptr) :size size)
@@ -183,7 +196,15 @@
                 (setf (pipewire:chunk-stride chunk) framesize)
                 (setf (pipewire:chunk-size chunk) size)
                 (pipewire:queue-buffer stream pw-buffer)
-                (mixed:finish size)))))))))
+                (mixed:finish size)
+                #+threaded
+                (bt:condition-notify (cvar drain))))))))))
+
+#+threaded
+(defmethod mixed:mix ((segment drain))
+  (loop while (= 0 (mixed:available-read (mixed:pack segment)))
+        do (bt:with-lock-held ((lock segment))
+             (bt:condition-wait (cvar segment) (lock segment) :timeout 0.1))))
 
 (defclass source (segment mixed:source)
   ())
@@ -208,4 +229,12 @@
               (unless (cffi:null-pointer-p (pipewire:data-data data))
                 (cffi:foreign-funcall "memcpy" :pointer (mixed:data-ptr) :pointer (pipewire:data-data data) :size size)
                 (pipewire:queue-buffer stream pw-buffer)
-                (mixed:finish size)))))))))
+                (mixed:finish size)
+                #+threaded
+                (bt:condition-notify (cvar drain))))))))))
+
+#+threaded
+(defmethod mixed:mix ((segment source))
+  (loop while (= 0 (mixed:available-write (mixed:pack segment)))
+        do (bt:with-lock-held ((lock segment))
+             (bt:condition-wait (cvar segment) (lock segment) :timeout 0.1))))

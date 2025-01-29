@@ -39,8 +39,8 @@ int _pw_loop_leave(struct pw_loop *loop){
   return pw_loop_leave(loop);
 }
 
-int _pw_loop_iterate(struct pw_loop *loop){
-  return pw_loop_iterate(loop, -1);
+int _pw_loop_iterate(struct pw_loop *loop, int count){
+  return pw_loop_iterate(loop, count);
 }
 
 // cc -shared -o pipewire-spa-amd64.so -I/usr/include/spa-0.2 -I/usr/include/pipewire-0.3 -O3 -fPIC pipewire-spa.c

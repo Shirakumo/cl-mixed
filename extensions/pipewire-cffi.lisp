@@ -441,7 +441,8 @@
   (loop :pointer))
 
 (cffi:defcfun (iterate-loop "_pw_loop_iterate") :int
-  (loop :pointer))
+  (loop :pointer)
+  (count :int))
 
 (cffi:defcfun (destroy-stream "pw_stream_destroy") :void
   (stream :pointer))
