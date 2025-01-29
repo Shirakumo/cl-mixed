@@ -208,12 +208,12 @@
                 (setf (pipewire:chunk-size chunk) size)
                 (pipewire:queue-buffer stream pw-buffer)
                 (mixed:finish size)
-                #+threaded
+                #+pipewire-threaded
                 (bt:condition-notify (cvar drain))))))))))
 
-#+threaded
+#+pipewire-threaded
 (defmethod mixed:mix ((segment drain))
-  (loop while (= 0 (mixed:available-read (mixed:pack segment)))
+  (loop while (< 0 (mixed:available-write (mixed:pack segment)))
         do (bt:with-lock-held ((lock segment))
              (bt:condition-wait (cvar segment) (lock segment) :timeout 0.1))))
 
@@ -241,11 +241,11 @@
                 (cffi:foreign-funcall "memcpy" :pointer (mixed:data-ptr) :pointer (pipewire:data-data data) :size size)
                 (pipewire:queue-buffer stream pw-buffer)
                 (mixed:finish size)
-                #+threaded
-                (bt:condition-notify (cvar drain))))))))))
+                #+pipewire-threaded
+                (bt:condition-notify (cvar segment))))))))))
 
-#+threaded
+#+pipewire-threaded
 (defmethod mixed:mix ((segment source))
-  (loop while (= 0 (mixed:available-write (mixed:pack segment)))
+  (loop while (< 0 (mixed:available-read (mixed:pack segment)))
         do (bt:with-lock-held ((lock segment))
              (bt:condition-wait (cvar segment) (lock segment) :timeout 0.1))))
