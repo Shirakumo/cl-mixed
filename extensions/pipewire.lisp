@@ -99,10 +99,11 @@
       (setf (pipewire:audio-info-format audio-info) (mixed:encoding pack))
       (setf (pipewire:audio-info-rate audio-info) (mixed:samplerate pack))
       (setf (pipewire:audio-info-channels audio-info) (mixed:channels pack))
+      (setf (mixed:channel-order segment) (or (mixed:channel-order segment)
+                                              (mixed:guess-channel-order-from-count (mixed:channels pack))))
       (loop with audio-info-channels = (cffi:foreign-slot-pointer audio-info '(:struct pipewire:audio-info) 'position)
             for i from 0 below (mixed:channels pack)
-            for channel in (or (mixed:channel-order segment)
-                               (mixed:guess-channel-order-from-count (mixed:channels pack)))
+            for channel in (mixed:channel-order segment)
             do (setf (cffi:mem-aref audio-info-channels 'pipewire:audio-channel i) channel)))
     (setf (cffi:mem-ref param :pointer) (check-null (pipewire:make-audio-format builder :enum-format audio-info)))
     (check-call (pipewire:connect-stream (pw-stream segment) direction #xFFFFFFFF
@@ -170,6 +171,10 @@
             (setf (mixed:samplerate pack) (pipewire:audio-info-rate audio-info))
             (setf (mixed:channels pack) (pipewire:audio-info-channels audio-info))
             (setf (mixed:encoding pack) (pipewire:audio-info-format audio-info))
+            (setf (mixed:channel-order segment)
+                  (loop with channels = (cffi:foreign-slot-pointer audio-info '(:struct pipewire:audio-info) 'pipewire::position)
+                        for i from 0 below (pipewire:audio-info-channels audio-info)
+                        collect (cffi:mem-aref channels 'pipewire:audio-channel i)))
             (format *error-output* "[PipeWire] Changed audio format to ~d channels @ ~dHz, ~a~%"
                     (mixed:channels pack) (mixed:samplerate pack) (mixed:encoding pack))))))))
 
