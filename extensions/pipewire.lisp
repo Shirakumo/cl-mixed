@@ -57,7 +57,8 @@
    #+pipewire-threaded (cvar :initform (bt:make-condition-variable) :accessor cvar)
    (events :initform NIL :accessor events)
    (pw-loop :initform NIL :accessor pw-loop)
-   (pw-stream :initform NIL :accessor pw-stream)))
+   (pw-stream :initform NIL :accessor pw-stream)
+   (started-p :initform NIL :accessor started-p)))
 
 (defun init-segment (segment direction)
   (unless (pipewire-present-p)
@@ -109,33 +110,38 @@
                                          param 1))))
 
 (defmethod mixed:start ((segment segment))
-  #+pipewire-threaded
-  (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
-    (let ((loop (pw-loop segment)))
-      (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
-                                             :name (format NIL "~a" segment)))))
-  #-pipewire-threaded
-  (pipewire:enter-loop (pipewire:get-loop (pw-loop segment))))
+  (unless (started-p segment)
+    #+pipewire-threaded
+    (when (or (not (thread segment)) (not (bt:thread-alive-p (thread segment))))
+      (let ((loop (pw-loop segment)))
+        (setf (thread segment) (bt:make-thread (lambda () (pipewire:run-main-loop loop))
+                                               :name (format NIL "~a" segment)))))
+    #-pipewire-threaded
+    (pipewire:enter-loop (pipewire:get-loop (pw-loop segment)))
+    (setf (started-p segment) T)))
 
 (defmethod mixed:mix ((segment segment))
   #-pipewire-threaded
   (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1))
 
 (defmethod mixed:end ((segment segment))
-  #-pipewire-threaded
-  (pipewire:leave-loop (pipewire:get-loop (pw-loop segment))))
+  (when (started-p segment)
+    #+pipewire-threaded
+    (when (pw-loop segment)
+      (loop for i from 0 below 100
+            do (pipewire:quit-main-loop (pw-loop segment))
+               (unless (and (thread segment) (bt:thread-alive-p (thread segment)))
+                 (return))
+               (sleep 0.01)
+            finally (progn
+                      (bt:destroy-thread (thread segment))
+                      (setf (thread segment) NIL))))
+    #-pipewire-threaded
+    (pipewire:leave-loop (pipewire:get-loop (pw-loop segment)))
+    (setf (started-p segment) NIL)))
 
 (defmethod mixed:free ((segment segment))
-  #+pipewire-threaded
-  (when (pw-loop segment)
-    (loop for i from 0 below 100
-          do (pipewire:quit-main-loop (pw-loop segment))
-             (unless (and (thread segment) (bt:thread-alive-p (thread segment)))
-               (return))
-             (sleep 0.01)
-          finally (progn
-                    (bt:destroy-thread (thread segment))
-                    (setf (thread segment) NIL))))
+  (mixed:end segment)
   (when (pw-stream segment)
     (pipewire:destroy-stream (pw-stream segment))
     (setf (pw-stream segment) NIL))
