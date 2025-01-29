@@ -1,6 +1,6 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defvar *c-object-table* (make-hash-table :test 'eql))
+(defvar *c-object-table* (make-hash-table :test 'eql #+sbcl :synchronized #+sbcl T))
 
 (defun init ()
   (flet ((load-library (lib)
