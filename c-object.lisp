@@ -39,11 +39,14 @@
     (cffi:foreign-free (handle object))
     (setf (handle object) NIL)))
 
-(defun pointer->object (pointer)
+(declaim (inline pointer->object (setf pointer->object)))
+(defun pointer->object (pointer &optional errorp)
   (let ((address (etypecase pointer
                    (cffi:foreign-pointer (cffi:pointer-address pointer))
                    (integer pointer))))
-    (gethash address *c-object-table*)))
+    (or (gethash address *c-object-table*)
+        (when errorp
+          (error "No object associated with address ~x" address)))))
 
 (defun (setf pointer->object) (object pointer)
   (let ((address (etypecase pointer

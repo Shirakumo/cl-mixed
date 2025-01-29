@@ -48,14 +48,13 @@
 (defmethod (setf output-field) ((value null) (field (eql :buffer)) (location integer) (segment virtual))
   (setf (aref (outputs segment) location) value))
 
-(define-callback virtual-free :void ((segment :pointer))
-    NIL
-  (free (pointer->object segment)))
+(define-callback virtual-free :void ((segment :pointer)) ()
+  (free (pointer->object segment T)))
 
 (define-callback virtual-info :pointer ((segment :pointer))
   (cffi:null-pointer)
   (destructuring-bind (&key name description flags min-inputs max-inputs outputs fields)
-      (info (pointer->object segment))
+      (info (pointer->object segment T))
     (let ((info (cffi:foreign-alloc '(:struct mixed:segment-info))))
       (setf (mixed:segment-info-name info) name)
       (setf (mixed:segment-info-description info) description)
@@ -67,31 +66,31 @@
       info)))
 
 (define-std-callback virtual-start ((segment :pointer))
-  (start (pointer->object segment)))
+  (start (pointer->object segment T)))
 
 (define-std-callback virtual-mix ((segment :pointer))
-  (mix (pointer->object segment)))
+  (mix (pointer->object segment T)))
 
 (define-std-callback virtual-end ((segment :pointer))
-  (end (pointer->object segment)))
+  (end (pointer->object segment T)))
 
 (define-std-callback virtual-set-input ((field :uint32) (location :uint32) (value :pointer) (segment :pointer))
-  (setf (input-field field location (pointer->object segment)) value))
+  (setf (input-field field location (pointer->object segment T)) value))
 
 (define-std-callback virtual-set-output ((field :uint32) (location :uint32) (value :pointer) (segment :pointer))
-  (setf (output-field field location (pointer->object segment)) value))
+  (setf (output-field field location (pointer->object segment T)) value))
 
 (define-std-callback virtual-get-input ((field :uint32) (location :uint32) (value-ptr :pointer) (segment :pointer))
-  (multiple-value-bind (value type) (input-field field location (pointer->object segment))
+  (multiple-value-bind (value type) (input-field field location (pointer->object segment T))
     (setf (cffi:mem-ref value-ptr type) value)))
 
 (define-std-callback virtual-get-output ((field :uint32) (location :uint32) (value-ptr :pointer) (segment :pointer))
-  (multiple-value-bind (value type) (output-field field location (pointer->object segment))
+  (multiple-value-bind (value type) (output-field field location (pointer->object segment T))
     (setf (cffi:mem-ref value-ptr type) value)))
 
 (define-std-callback virtual-set ((field :uint32) (value :pointer) (segment :pointer))
-  (setf (field field (pointer->object segment)) value))
+  (setf (field field (pointer->object segment T)) value))
 
 (define-std-callback virtual-get ((field :uint32) (value-ptr :pointer) (segment :pointer))
-  (multiple-value-bind (value type) (field field (pointer->object segment))
+  (multiple-value-bind (value type) (field field (pointer->object segment T))
     (setf (cffi:mem-ref value-ptr type) value)))
