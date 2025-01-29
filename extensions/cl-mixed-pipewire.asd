@@ -11,4 +11,5 @@
   :components ((:file "pipewire-cffi")
                (:file "pipewire"))
   :depends-on (:cl-mixed
+               :bordeaux-threads
                :cffi))

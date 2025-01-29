@@ -82,6 +82,7 @@
    #:make-main-loop
    #:get-loop
    #:make-properties
+   #:free-properties
    #:connect-stream
    #:run-main-loop
    #:quit-main-loop
@@ -341,6 +342,9 @@
 
 (cffi:defcfun (make-properties "pw_properties_new") :pointer
   &rest)
+
+(cffi:defcfun (free-properties "pw_properties_free") :void
+  (properties :pointer))
 
 (cffi:defcfun (connect-stream "pw_stream_connect") :int
   (stream :pointer)
