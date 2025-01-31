@@ -1,6 +1,6 @@
 (in-package #:org.shirakumo.fraf.mixed)
 
-(defvar *c-object-table* (make-hash-table :test 'eql #+sbcl :synchronized #+sbcl T))
+(defvar *c-object-table* (make-hash-table :test 'eql))
 
 (defun init ()
   (flet ((load-library (lib)
@@ -55,6 +55,10 @@
     (if object
         (setf (gethash address *c-object-table*) object)
         (remhash address *c-object-table*))))
+
+(defmacro with-fetched-object ((obj &optional (pointer obj)) &body body)
+  `(let ((,obj (pointer->object ,pointer)))
+     (when ,obj ,@body)))
 
 (defmacro with-objects (bindings &body body)
   `(let ,(mapcar #'first bindings)
