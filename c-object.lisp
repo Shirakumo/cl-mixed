@@ -43,7 +43,7 @@
 (defun pointer->object (pointer &optional errorp)
   (let ((address (etypecase pointer
                    (cffi:foreign-pointer (cffi:pointer-address pointer))
-                   (integer pointer))))
+                   ((unsigned-byte 64) pointer))))
     (or (gethash address *c-object-table*)
         (when errorp
           (error "No object associated with address ~x" address)))))

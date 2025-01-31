@@ -71,6 +71,7 @@
     (start segment)))
 
 (define-std-callback virtual-mix ((segment :pointer))
+  (declare (optimize speed (safety 0)))
   (with-fetched-object (segment)
     (mix segment)))
 
