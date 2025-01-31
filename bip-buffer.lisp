@@ -10,8 +10,10 @@
           (,full-r2 (logbitp 31 ,write))
           (,write (ldb (byte 31 0) ,write)))
      (declare (type cffi:foreign-pointer ,buffer))
+     (declare (type (unsigned-byte 32) ,read ,write))
      ,@body))
 
+(declaim (inline available-read available-write request-write finish-write request-read finish-read))
 (declaim (ftype (function (bip-buffer) (unsigned-byte 32)) available-read))
 (defun available-read (buffer)
   (declare (optimize speed))
@@ -123,7 +125,9 @@
 
 (declaim (inline data-ptr))
 (defun data-ptr (data &optional (start 0))
+  (declare (optimize speed))
   (declare (type (unsigned-byte 32) start))
+  (declare (type (simple-array * (*)) data))
   (static-vectors:static-vector-pointer data :offset start))
 
 (defmacro with-buffer-tx ((data start size buffer &key (direction :input) ((:size initial-size) #xFFFFFFFF)) &body body)

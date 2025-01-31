@@ -183,6 +183,7 @@
   (init-segment drain :output))
 
 (mixed::define-callback drain :void ((segment :pointer)) ()
+  (declare (optimize speed))
   (mixed::with-fetched-object (segment)
     (let ((pack (mixed:pack segment)))
       (mixed:with-buffer-tx (data start avail-size pack)
@@ -190,13 +191,14 @@
           (let* ((stream (pw-stream segment))
                  (framesize (mixed:framesize pack))
                  (pw-buffer (pipewire:dequeue-buffer stream)))
+            (declare (type (unsigned-byte 16) framesize))
             (unless (cffi:null-pointer-p pw-buffer)
               (let* ((spa-buffer (pipewire:pw-buffer-buffer pw-buffer))
                      (data (pipewire:spa-buffer-data spa-buffer))
                      (chunk (pipewire:data-chunk data))
                      (size (min avail-size
-                                (pipewire:data-max-size data)
-                                (* (pipewire:pw-buffer-requested pw-buffer)
+                                (the (unsigned-byte 32) (pipewire:data-max-size data))
+                                (* (the (unsigned-byte 32) (pipewire:pw-buffer-requested pw-buffer))
                                    framesize))))
                 ;; TODO: could probably submit the pack itself as a buffer and avoid the copying.
                 (unless (cffi:null-pointer-p (pipewire:data-data data))

@@ -33,10 +33,10 @@
 (define-accessor channels pack mixed:pack-channels)
 (define-accessor samplerate pack mixed:pack-samplerate)
 
-(declaim (ftype (function (T) (unsigned-byte 8)) channels))
-(declaim (ftype (function (T) (unsigned-byte 16)) framesize))
-(declaim (ftype (function (T) (unsigned-byte 32)) samplerate))
-(declaim (ftype (function (T) (unsigned-byte 32)) size))
+(declaim (ftype (function (T) (values (unsigned-byte 8) &optional)) channels))
+(declaim (ftype (function (T) (values (unsigned-byte 16) &optional)) framesize))
+(declaim (ftype (function (T) (values (unsigned-byte 32) &optional)) samplerate))
+(declaim (ftype (function (T) (values (unsigned-byte 32) &optional)) size))
 
 (defmethod clear ((pack pack))
   (mixed:clear-pack (handle pack)))
