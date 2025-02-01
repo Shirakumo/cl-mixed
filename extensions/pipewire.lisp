@@ -121,7 +121,10 @@
 
 (defmethod mixed:mix ((segment segment))
   #+pipewire-no-threads
-  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1))
+  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1)
+  (loop with pack = (mixed:pack segment)
+        until (< 0 (mixed:available-write pack))
+        do (bt:thread-yield)))
 
 (defmethod mixed:end ((segment segment))
   (when (started-p segment)
