@@ -65,7 +65,7 @@
            (format T "~&Error in ~a callback: ~a~%" ',name ,err)
            ,error-return))
        #+cl-mixed-no-restarts
-       (handler-case (progn ,@body)
+       (handler-case (locally ,@body)
          (error ()
            ,error-return)))))
 
