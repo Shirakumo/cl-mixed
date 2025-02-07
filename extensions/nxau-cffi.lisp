@@ -46,7 +46,7 @@
 (cffi:defcfun (stop "nxau_stop") :bool
   (device :pointer))
 
-(cffi:defcfun (play "nxau_play") :bool
+(cffi:defcfun (play "nxau_play") :int
   (buffer :pointer)
   (size :size)
   (timeout :float)
