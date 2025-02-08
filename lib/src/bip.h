@@ -27,6 +27,7 @@ static inline int bip_request_write(uint32_t *off, uint32_t *size, struct bip *b
     }else{ // Read has not done anything yet, no space!
       *size = 0;
       *off = 0;
+      debug_log("%p Overrun", buffer);
       return 0;
     }
   }else if(write < read){
@@ -38,6 +39,7 @@ static inline int bip_request_write(uint32_t *off, uint32_t *size, struct bip *b
   }else{
     *size = 0;
     *off = 0;
+    debug_log("%p Overrun", buffer);
     return 0;
   }
   return 1;
@@ -77,6 +79,7 @@ static inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *bu
     }else{ // Write has not done anything yet, no space!
       *size = 0;
       *off = 0;
+      debug_log("%p Underrun", buffer);
       return 0;
     }
   }else if(read < write){
@@ -85,6 +88,7 @@ static inline int bip_request_read(uint32_t *off, uint32_t *size, struct bip *bu
   }else{
     *size = 0;
     *off = 0;
+    debug_log("%p Underrun", buffer);
     return 0;
   }
   return 1;
@@ -110,6 +114,12 @@ static inline int bip_finish_read(uint32_t size, struct bip *buffer){
     return 0;
   }
   return 1;
+}
+
+static inline void bip_discard(struct bip *buffer){
+  atomic_write(buffer->read, 0);
+  atomic_write(buffer->write, 0);
+  atomic_write(buffer->reserved, 0);
 }
 
 static inline uint32_t bip_available_read(struct bip *buffer){

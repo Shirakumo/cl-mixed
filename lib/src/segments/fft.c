@@ -50,41 +50,7 @@ int fft_segment_start(struct mixed_segment *segment){
   return 1;
 }
 
-int fft_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
-  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
-
-  switch(field){
-  case MIXED_BUFFER:
-    if(location == 0){
-      data->in = (struct mixed_buffer *)buffer;
-      return 1;
-    }
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-}
-
-int fft_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
-  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
-
-  switch(field){
-  case MIXED_BUFFER:
-    if(location == 0){
-      data->out = (struct mixed_buffer *)buffer;
-      return 1;
-    }
-    mixed_err(MIXED_INVALID_LOCATION);
-    return 0;
-  default:
-    mixed_err(MIXED_INVALID_FIELD);
-    return 0;
-  }
-}
-
-int fft_segment_fwd(struct mixed_segment *segment){
+VECTORIZE int fft_segment_fwd(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
@@ -110,11 +76,8 @@ int fft_segment_fwd(struct mixed_segment *segment){
     data->overlap++;
     if(data->overlap >= framesize){
       uint32_t out_samples = framesize;
+      mixed_buffer_clear(data->out);
       mixed_buffer_request_write(&out, &out_samples, data->out);
-      if(out_samples < framesize){
-        mixed_buffer_finish_write(0, data->out);
-        break;
-      }
       
       data->overlap = fifo_latency;
 
@@ -157,7 +120,7 @@ int fft_segment_fwd(struct mixed_segment *segment){
   return 1;
 }
 
-int fft_segment_inv(struct mixed_segment *segment){
+VECTORIZE int fft_segment_inv(struct mixed_segment *segment){
   struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
   uint32_t framesize = data->framesize;
   uint32_t oversampling = data->oversampling;
@@ -223,6 +186,48 @@ int fft_segment_inv(struct mixed_segment *segment){
   return 1;
 }
 
+int fft_segment_set_in(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
+  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      if(segment->mix == fft_segment_inv && ((struct mixed_buffer *)buffer)->size < data->framesize){
+        mixed_err(MIXED_BUFFER_TOO_SMALL);
+        return 0;
+      }
+      data->in = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
+int fft_segment_set_out(uint32_t field, uint32_t location, void *buffer, struct mixed_segment *segment){
+  struct fft_segment_data *data = (struct fft_segment_data *)segment->data;
+
+  switch(field){
+  case MIXED_BUFFER:
+    if(location == 0){
+      if(segment->mix == fft_segment_fwd && ((struct mixed_buffer *)buffer)->size < data->framesize){
+        mixed_err(MIXED_BUFFER_TOO_SMALL);
+        return 0;
+      }
+      data->out = (struct mixed_buffer *)buffer;
+      return 1;
+    }
+    mixed_err(MIXED_INVALID_LOCATION);
+    return 0;
+  default:
+    mixed_err(MIXED_INVALID_FIELD);
+    return 0;
+  }
+}
+
 int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segment){
   info->name = (segment->mix == fft_segment_fwd)? "fwd_fft" : "inv_fft";
   info->description = "Perform a Fast Fourier Transform";
@@ -233,7 +238,7 @@ int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segm
   
   struct mixed_segment_field_info *field = info->fields;
   set_info_field(field++, MIXED_BUFFER,
-                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET,
+                 MIXED_BUFFER_POINTER, 1, MIXED_IN | MIXED_OUT | MIXED_SET | MIXED_CLEARS_OUTPUT,
                  "The buffer for audio data attached to the location.");
 
   set_info_field(field++, MIXED_SAMPLERATE,
@@ -247,6 +252,10 @@ int fft_segment_info(struct mixed_segment_info *info, struct mixed_segment *segm
   set_info_field(field++, MIXED_OVERSAMPLING,
                  MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_SET | MIXED_GET,
                  "The FFT oversampling rate.");
+
+  set_info_field(field++, MIXED_BUFFER_SIZE_HINT,
+                 MIXED_UINT32, 1, MIXED_SEGMENT | MIXED_GET,
+                 "The suggested minimum size for the output buffer.");
   
   clear_info_field(field++);
   return 1;
@@ -258,6 +267,7 @@ int fft_segment_get(uint32_t field, void *value, struct mixed_segment *segment){
   case MIXED_SAMPLERATE: *((uint32_t *)value) = data->samplerate; break;
   case MIXED_FRAMESIZE: *((uint32_t *)value) = data->framesize; break;
   case MIXED_OVERSAMPLING: *((uint32_t *)value) = data->oversampling; break;
+  case MIXED_BUFFER_SIZE_HINT: *((uint32_t *)value) = data->framesize; break;
   default: mixed_err(MIXED_INVALID_FIELD); return 0;
   }
   return 1;
@@ -274,12 +284,13 @@ int fft_segment_set(uint32_t field, void *value, struct mixed_segment *segment){
     data->samplerate = *(uint32_t *)value;
     break;
   case MIXED_FRAMESIZE:
-    if(*(uint32_t *)value <= 0 || 1<<13 < *(uint32_t *)value){
+    { uint32_t framesize = *(uint32_t *)value;
+    if(framesize <= 2 || 1<<13 < framesize || (framesize & (framesize - 1)) != 0){
       mixed_err(MIXED_INVALID_VALUE);
       return 0;
     }
-    data->framesize = *(uint32_t *)value;
-    break;
+    data->framesize = framesize;
+    }break;
   case MIXED_OVERSAMPLING:
     if(*(uint32_t *)value <= 0){
       mixed_err(MIXED_INVALID_VALUE);
