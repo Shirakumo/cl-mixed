@@ -25,6 +25,10 @@ MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   }
 }
 
+MIXED_EXPORT uint8_t mixed_byte_stride(mixed_channel_t channels, enum mixed_encoding encoding){
+  return mixed_samplesize(encoding)*channels;
+}
+
 int mix_noop(struct mixed_segment *segment){
   IGNORE(segment);
   return 1;
@@ -62,6 +66,9 @@ MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
     return 0;
   }
 }
+
+MIXED_EXPORT extern inline float mixed_from_db(mixed_decibel_t volume);
+MIXED_EXPORT extern inline  mixed_decibel_t mixed_to_db(float volume);
 
 thread_local int errorcode = 0;
 
@@ -130,6 +137,8 @@ MIXED_EXPORT char *mixed_error_string(int code){
     return "A bad number of arguments was specified.";
   case MIXED_BAD_NAME:
     return "A bad name was specified.";
+  case MIXED_BUFFER_TOO_SMALL:
+    return "The given buffer is too small for the required task.";
   default:
     return "Unknown error code.";
   }
@@ -197,6 +206,12 @@ MIXED_EXPORT char *mixed_type_string(int code){
     return "error";
   case MIXED_RESAMPLE_TYPE_ENUM:
     return "resample type";
+  case MIXED_CHANNEL_T:
+    return "channel count";
+  case MIXED_DECIBEL_T:
+    return "volume (dB)";
+  case MIXED_DURATION_T:
+    return "duration (s)";
   default:
     return "unknown";
   }
