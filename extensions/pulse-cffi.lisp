@@ -37,6 +37,11 @@
 (cffi:define-foreign-library libpulse-simple
   (t (:or (:default "libpulse-simple") "libpulse-simple.so.0")))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(libpulse libpulse-simple)))
+
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (defconstant +channels-max+ 32))
 

@@ -85,6 +85,11 @@
 (cffi:define-foreign-library audio-toolbox
   (:darwin (:framework "AudioToolbox")))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(audio-unit audio-toolbox)))
+
 ;; Constants
 (alexandria:define-constant kAudioUnitType_Output "auou" :test 'equal)
 (alexandria:define-constant kAudioUnitSubType_DefaultOutput "def " :test 'equal)

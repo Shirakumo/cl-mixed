@@ -32,6 +32,11 @@
   (:unix (:or "libasound.so.2.0.0" "libasound.so.2" "libasound.so"))
   (T (:or (:default "libasound") (:default "asound"))))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(libasound)))
+
 (cffi:defcenum pcm-stream
   :playback
   :capture)

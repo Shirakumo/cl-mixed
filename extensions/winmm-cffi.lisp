@@ -41,6 +41,11 @@
 (define-foreign-library winmm
   (T (:default "Winmm")))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(winmm)))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defconstant WAVE-FORMAT-PCM #x1)
   (defconstant WAVE-FORMAT-IEEE-FLOAT #x3)

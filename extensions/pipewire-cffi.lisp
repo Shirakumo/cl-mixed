@@ -112,6 +112,11 @@
                #+X86-64 "pipewire-spa-amd64.so"
                "pipewire-spa.so")))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(libpipewire)))
+
 (defconstant STREAM-EVENTS 2)
 
 (cffi:defcenum audio-format
