@@ -53,6 +53,8 @@
   ((channel-order :initform () :initarg :channel-order :accessor mixed:channel-order)
    (mixed:program-name :initform "Mixed" :initarg :program-name :accessor mixed:program-name)
    #-pipewire-no-threads (thread :initform NIL :accessor thread)
+   #-pipewire-no-threads (lock :initform (bt:make-lock) :accessor lock)
+   #-pipewire-no-threads (cvar :initform (bt:make-condition-variable) :accessor cvar)
    (events :initform NIL :accessor events)
    (pw-loop :initform NIL :accessor pw-loop)
    (pw-stream :initform NIL :accessor pw-stream)
@@ -121,10 +123,7 @@
 
 (defmethod mixed:mix ((segment segment))
   #+pipewire-no-threads
-  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1)
-  (loop with pack = (mixed:pack segment)
-        until (< 0 (mixed:available-write pack))
-        do (bt:thread-yield)))
+  (pipewire:iterate-loop (pipewire:get-loop (pw-loop segment)) 1))
 
 (defmethod mixed:end ((segment segment))
   (when (started-p segment)
@@ -210,7 +209,15 @@
                   (setf (pipewire:chunk-stride chunk) framesize)
                   (setf (pipewire:chunk-size chunk) size)
                   (pipewire:queue-buffer stream pw-buffer)
-                  (mixed:finish size))))))))))
+                  (mixed:finish size)
+                  (bt:condition-notify (cvar segment)))))))))))
+
+#-pipewire-no-threads
+(defmethod mixed:mix ((segment drain))
+  (loop with pack = (mixed:pack segment)
+        until (< 0 (mixed:available-write pack))
+        do (bt:with-lock-held ((lock segment))
+             (bt:condition-wait (cvar segment) (lock segment)))))
 
 (defclass source (segment mixed:source)
   ())
@@ -235,4 +242,12 @@
                 (unless (cffi:null-pointer-p (pipewire:data-data data))
                   (cffi:foreign-funcall "memcpy" :pointer (mixed:data-ptr) :pointer (pipewire:data-data data) :size size)
                   (pipewire:queue-buffer stream pw-buffer)
-                  (mixed:finish size))))))))))
+                  (mixed:finish size)
+                  (bt:condition-notify (cvar segment)))))))))))
+
+#-pipewire-no-threads
+(defmethod mixed:mix ((segment source))
+  (loop with pack = (mixed:pack segment)
+        until (< 0 (mixed:available-read pack))
+        do (bt:with-lock-held ((lock segment))
+             (bt:condition-wait (cvar segment) (lock segment)))))
