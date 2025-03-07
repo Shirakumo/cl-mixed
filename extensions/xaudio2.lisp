@@ -71,7 +71,8 @@
             (setf (interface drain) (com:with-deref (interface :pointer)
                                       (xaudio2:create interface 0 :default)))
             (setf (master drain) (com:with-deref (master :pointer)
-                                   (xaudio2:2.9-interface-create-mastering-voice (interface drain) master (mixed:channels pack) (mixed:samplerate pack) 0 (cffi:null-pointer) (cffi:null-pointer) :other)))
+                                   ;; Specifying 0 for channels and samplerate should default to match device
+                                   (xaudio2:2.9-interface-create-mastering-voice (interface drain) master 0 0 0 (cffi:null-pointer) (cffi:null-pointer) :other)))
             (setf (source drain) (com:with-deref (source :pointer)
                                    (xaudio2:2.9-interface-create-source-voice (interface drain) source format 0 1.0 callback (cffi:null-pointer) (cffi:null-pointer)))))
           (try-library xaudio2:xaudio2.7
@@ -79,7 +80,7 @@
             (setf (interface drain) (com:create xaudio2:CLSID-XAUDIO2 xaudio2:IID-IXAUDIO2))
             (com:check-hresult (xaudio2:2.7-interface-initialize (interface drain) 0 :default))
             (setf (master drain) (com:with-deref (master :pointer)
-                                   (xaudio2:2.7-interface-create-mastering-voice (interface drain) master (mixed:channels pack) (mixed:samplerate pack) 0 0 (cffi:null-pointer) :other)))
+                                   (xaudio2:2.7-interface-create-mastering-voice (interface drain) master 0 0 0 0 (cffi:null-pointer) :other)))
             (setf (source drain) (com:with-deref (source :pointer)
                                    (xaudio2:2.7-interface-create-source-voice (interface drain) source format 0 1.0 callback (cffi:null-pointer) (cffi:null-pointer)))))
           (error "Failed to find a suitable XAudio2 dll."))
