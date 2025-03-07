@@ -6,6 +6,7 @@
    (#:com #:org.shirakumo.com-on)
    (#:xaudio2 #:org.shirakumo.fraf.mixed.xaudio2.cffi))
   (:export
+   #:xaudio2-present-p
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.xaudio2)
 
@@ -41,6 +42,10 @@
      (handler-case (cffi:use-foreign-library ,library)
        (error () (return-from try-library NIL)))
      ,@body))
+
+(defun xaudio2-present-p ()
+  (or (try-library xaudio2:xaudio2.9 T)
+      (try-library xaudio2:xaudio2.7 T)))
 
 (defmethod initialize-instance :after ((drain drain) &key)
   (com:init)
