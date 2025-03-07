@@ -7,7 +7,7 @@
   (:export
    #:jack-error
    #:code
-   #:jack-present-p
+   #:present-p
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.jack)
 
@@ -21,9 +21,9 @@
     (cffi:load-foreign-library 'jack:libjack)
     #+sbcl (ignore-errors (cffi:foreign-funcall "restore_sbcl_signals" :void))))
 
-(defun jack-present-p ()
+(defun present-p ()
   (handler-case (load-lib)
-    (error () (return-from jack-present-p NIL)))
+    (error () (return-from present-p NIL)))
   (cffi:with-foreign-object (status 'jack:status)
     (let* ((client (jack:open-client "mixed-server-probe" '(:no-start-server) status :int 0))
            (status (cffi:mem-ref status 'jack:status)))

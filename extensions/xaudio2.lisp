@@ -6,7 +6,7 @@
    (#:com #:org.shirakumo.com-on)
    (#:xaudio2 #:org.shirakumo.fraf.mixed.xaudio2.cffi))
   (:export
-   #:xaudio2-present-p
+   #:present-p
    #:drain))
 (in-package #:org.shirakumo.fraf.mixed.xaudio2)
 
@@ -43,7 +43,7 @@
        (error () (return-from try-library NIL)))
      ,@body))
 
-(defun xaudio2-present-p ()
+(defun present-p ()
   (or (try-library xaudio2:xaudio2.9 T)
       (try-library xaudio2:xaudio2.7 T)))
 

@@ -7,7 +7,7 @@
   (:export
    #:pipewire-error
    #:code
-   #:pipewire-present-p
+   #:present-p
    #:drain
    #:source))
 (in-package #:org.shirakumo.fraf.mixed.pipewire)
@@ -33,11 +33,11 @@
                                               (format NIL "Call to ~s failed!" (first call))))
          value)))
 
-(defun pipewire-present-p ()
+(defun present-p ()
   (unless (cffi:foreign-library-loaded-p 'pipewire:libpipewire)
     (handler-case (progn (cffi:load-foreign-library 'pipewire:libpipewire)
                          (cffi:load-foreign-library 'pipewire:pipewire-spa))
-      (error () (return-from pipewire-present-p (values NIL :no-such-library)))))
+      (error () (return-from present-p (values NIL :no-such-library)))))
   (pipewire:init (cffi:null-pointer) (cffi:null-pointer))
   (let* ((main-loop (check-null (pipewire:make-main-loop (cffi:null-pointer))))
          (context (check-null (pipewire:make-context (pipewire:get-loop main-loop) (cffi:null-pointer) 0))))
@@ -61,7 +61,7 @@
    (started-p :initform NIL :accessor started-p)))
 
 (defun init-segment (segment direction)
-  (unless (pipewire-present-p)
+  (unless (present-p)
     (error "PipeWire is not present!"))
   (unless (events segment)
     (setf (events segment) (mixed::calloc '(:struct pipewire:stream-events))))

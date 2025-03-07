@@ -7,7 +7,7 @@
   (:export
    #:pulse-error
    #:code
-   #:pulse-present-p
+   #:present-p
    #:drain
    #:source))
 (in-package #:org.shirakumo.fraf.mixed.pulse)
@@ -22,11 +22,11 @@
      (when (< (progn ,@body) 0)
        (error 'pulse-error :code (cffi:mem-ref ,errorvar :int)))))
 
-(defun pulse-present-p ()
+(defun present-p ()
   (unless (cffi:foreign-library-loaded-p 'pulse:libpulse-simple)
     (handler-case (progn (cffi:use-foreign-library pulse:libpulse)
                          (cffi:use-foreign-library pulse:libpulse-simple))
-      (error () (return-from pulse-present-p NIL))))
+      (error () (return-from present-p NIL))))
   (cffi:with-foreign-objects ((err :int)
                               (sample-spec '(:struct pulse:sample-spec)))
     (setf (pulse:sample-spec-format sample-spec) :int16)
