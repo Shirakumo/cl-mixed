@@ -12,4 +12,5 @@
                (:file "xaudio2"))
   :depends-on (:cl-mixed
                :cffi
-               :com-on))
+               :com-on
+               :bordeaux-threads))
