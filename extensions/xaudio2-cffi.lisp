@@ -323,6 +323,7 @@
 
 (cffi:defcstruct (voice-details :conc-name voice-details-)
   (creation-flags :uint32)
+  (active-flags :uint32)
   (input-channels :uint32)
   (input-samplerate :uint32))
 
