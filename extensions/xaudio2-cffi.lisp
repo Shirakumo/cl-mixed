@@ -171,6 +171,11 @@
 (cffi:define-foreign-library xaudio2.7
   (:windows (:or "xaudio2_7.dll" "xaudio2.dll")))
 
+(set 'cl-user::*foreign-system-libraries*
+     (union (when (boundp 'cl-user::*foreign-system-libraries*)
+              (symbol-value 'cl-user::*foreign-system-libraries*))
+            '(xaudio2.7 xaudio2.9)))
+
 (defvar CLSID-XAUDIO2 ;; XAudio 2.7
   (com:guid #x5a508685 #xa254 #x4fba #x9b #x82 #x9a #x24 #xb0 #x03 #x06 #xaf))
 (defvar IID-IXAUDIO2
