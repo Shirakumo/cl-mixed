@@ -8,8 +8,10 @@
    #:audio-format
    #:audio-channel
    #:parameter-type
+   #:stream-state
    #:media-type
    #:media-subtype
+   #:ready-flag
    #:stream-events
    #:stream-events-version
    #:stream-events-destroy
@@ -84,11 +86,21 @@
    #:make-stream
    #:init
    #:deinit
+   #:make-thread-loop
+   #:destroy-thread-loop
+   #:thread-loop-get-loop
+   #:thread-loop-start
+   #:thread-loop-stop
+   #:thread-loop-lock
+   #:thread-loop-unlock
+   #:thread-loop-signal
+   #:thread-loop-wait
    #:make-main-loop
    #:get-loop
    #:make-properties
    #:free-properties
    #:connect-stream
+   #:stream-get-state
    #:run-main-loop
    #:quit-main-loop
    #:enter-loop
@@ -232,6 +244,13 @@
   (:early-process #.(ash 1 11))
   (:rt-trigger-done #.(ash 1 12)))
 
+(cffi:defcenum stream-state
+  (:error -1)
+  (:unconnected 0)
+  (:connecting 1)
+  (:paused 2)
+  (:streaming 3))
+
 (cffi:defcenum (parameter-type :int32)
   :invalid
   :prop-info
@@ -305,6 +324,13 @@
   :midi
   (:start-application #x60000)
   :control)
+
+(cffi:defcenum ready-flag
+  (:buffer-added #x1)
+  (:stream-ready #x2)
+  (:all-preopen #x3)
+  (:complete #x4)
+  (:all #x7))
 
 (cffi:defcstruct (stream-events :conc-name stream-events-)
   (version :uint32)
@@ -413,6 +439,35 @@
 
 (cffi:defcfun (deinit "pw_deinit") :void)
 
+(cffi:defcfun (make-thread-loop "pw_thread_loop_new") :pointer
+  (name :string)
+  (props :pointer))
+
+(cffi:defcfun (destroy-thread-loop "pw_thread_loop_destroy") :void
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-get-loop "pw_thread_loop_get_loop") :pointer
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-start "pw_thread_loop_start") :int
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-stop "pw_thread_loop_stop") :int
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-lock "pw_thread_loop_lock") :void
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-unlock "pw_thread_loop_unlock") :void
+  (loop :pointer))
+
+(cffi:defcfun (thread-loop-signal "pw_thread_loop_signal") :void
+  (loop :pointer)
+  (wait :bool))
+
+(cffi:defcfun (thread-loop-wait "pw_thread_loop_wait") :void
+  (loop :pointer))
+
 (cffi:defcfun (make-main-loop "pw_main_loop_new") :pointer
   (props :pointer))
 
@@ -432,6 +487,10 @@
   (flags stream-flags)
   (params :pointer)
   (param-count :uint32))
+
+(cffi:defcfun (stream-get-state "pw_stream_get_state") :int
+  (stream :pointer)
+  (error :pointer))
 
 (cffi:defcfun (run-main-loop "pw_main_loop_run") :int
   (loop :pointer))
