@@ -128,16 +128,17 @@
     (when (eq :error (pipewire:stream-get-state (pw-stream segment) (cffi:null-pointer)))
       (error 'pipewire-error :message "Failed to set up stream."))))
 
-(defmethod mixed:start ((segment segment)))
+(defmethod mixed:start ((segment segment))
+  (pipewire:thread-loop-start (pw-loop segment)))
 
 (defmethod mixed:mix ((segment segment)))
 
-(defmethod mixed:end ((segment segment)))
+(defmethod mixed:end ((segment segment))
+  (when (pw-loop segment)
+    (pipewire:thread-loop-stop (pw-loop segment))))
 
 (defmethod mixed:free ((segment segment))
   (mixed:end segment)
-  (when (pw-loop segment)
-    (pipewire:thread-loop-stop (pw-loop segment)))
   (when (pw-stream segment)
     (pipewire:destroy-stream (pw-stream segment))
     (setf (pw-stream segment) NIL))
