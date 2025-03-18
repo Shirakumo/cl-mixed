@@ -16,7 +16,7 @@
 (declaim (inline available-read available-write request-write finish-write request-read finish-read))
 (declaim (ftype (function (bip-buffer) (unsigned-byte 32)) available-read))
 (defun available-read (buffer)
-  (declare (optimize speed))
+  (declare (optimize speed (safety 0)))
   (with-buffer-fields (read write full-r2) buffer
     (if full-r2
         (if (< read (mixed:buffer-size buffer))
@@ -26,7 +26,7 @@
 
 (declaim (ftype (function (bip-buffer) (unsigned-byte 32)) available-write))
 (defun available-write (buffer)
-  (declare (optimize speed))
+  (declare (optimize speed (safety 0)))
   (with-buffer-fields (read write full-r2) buffer
     (cond (full-r2
            (- read write))
