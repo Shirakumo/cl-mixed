@@ -621,6 +621,13 @@
   (i :uint32)
   (chain :pointer))
 
+(defcfun (make-segment-convolution "mixed_make_segment_convolution") :int
+  (framesize :uint16)
+  (fir :pointer)
+  (fir-size :uint32)
+  (samplerate :uint32)
+  (segment :pointer))
+
 (defcfun (make-segment-spatial-reverb "mixed_make_segment_spatial_reverb") :int
   (samplerate :uint32)
   (segment :pointer))

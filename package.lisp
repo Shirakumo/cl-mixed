@@ -140,6 +140,7 @@
    #:chain-add-at
    #:chain-remove
    #:chain-remove-at
+   #:make-segment-convolution
    #:make-segment-spatial-reverb
    #:load-plugin
    #:close-plugin
@@ -312,6 +313,12 @@
    #:bypass
    #:wet
    #:gain)
+  ;; segments/convolution.lisp
+  (:export
+   #:convolution
+   #:make-convolution
+   #:samplerate
+   #:framesize)
   ;; segments/delay.lisp
   (:export
    #:delay

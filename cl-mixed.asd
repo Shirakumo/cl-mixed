@@ -27,6 +27,7 @@
                              (:file "chain")
                              (:file "channel-convert")
                              (:file "compressor")
+                             (:file "convolution")
                              (:file "delay")
                              (:file "distribute")
                              (:file "fader")
