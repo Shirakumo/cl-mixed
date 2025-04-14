@@ -8,6 +8,7 @@
    #:wave-format-error
    #:file
    #:source
+   #:load-to-memory
    #:in-memory-source
    #:file-drain))
 (in-package #:org.shirakumo.fraf.mixed.wav)
@@ -199,6 +200,18 @@
 (defmethod mixed:frame-count ((source in-memory-source))
   (/ (length (buffer source))
      (mixed:framesize source)))
+
+(defun load-to-memory (file)
+  (let* ((pack (mixed:make-pack :frames NIL))
+         (source (make-instance 'in-memory-source :file file :pack pack)))
+    (setf (mixed:data pack) (buffer source))
+    (unwind-protect
+         (let ((buffers (loop repeat (mixed:channels pack)
+                              collect (mixed:make-buffer (mixed:frame-count source)))))
+           (mixed:transfer pack buffers))
+      (setf (mixed:data pack) NIL)
+      (mixed:free pack)
+      (mixed:free source))))
 
 (define-condition unsupported-sample-format (wave-format-error)
   ((sample-format :initarg :sample-format :accessor sample-format))
