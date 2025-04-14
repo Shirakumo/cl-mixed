@@ -20,5 +20,26 @@
   (make-instance 'convolution :fir fir :framesize framesize :samplerate samplerate))
 
 (define-field-accessor samplerate convolution :uint32 :samplerate)
-(define-field-accessor framesize convolution :uint32 :framesize)
+(define-field-accessor mix convolution :float :mix)
 
+(defmethod (setf field) ((value buffer) (field (eql :fir)) (segment convolution))
+  (with-error-on-failure nil
+    (mixed:segment-set :fir (handle value) (handle segment)))
+  value)
+
+(defmethod (setf field) ((value vector) (field (eql :fir)) (segment convolution))
+  (check-type value (simple-array single-float (*)))
+  (cffi:with-pointer-to-vector-data (ptr value)
+    (cffi:with-foreign-objects ((buf '(:struct mixed:buffer)))
+      (setf (mixed:buffer-data buf) ptr)
+      (setf (mixed:buffer-size buf) (length value))
+      (setf (mixed:buffer-read buf) 0)
+      (setf (mixed:buffer-write buf) (length value))
+      (setf (mixed:buffer-reserved buf) 0)
+      (setf (mixed:buffer-virtual-p buf) 0)
+      (with-error-on-failure nil
+        (mixed:segment-set :fir buf (handle segment)))))
+  value)
+
+(defmethod (setf fir) (value (segment convolution))
+  (setf (field :fir segment) value))

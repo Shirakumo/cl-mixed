@@ -151,7 +151,8 @@
   :repeat-position
   :framesize
   :oversampling
-  :buffer-size-hint)
+  :buffer-size-hint
+  :fir)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
