@@ -201,6 +201,7 @@
   (/ (length (buffer source))
      (mixed:framesize source)))
 
+;; TODO: generify this to support it for all sources regardless.
 (defun load-to-memory (file)
   (let* ((pack (mixed:make-pack :frames NIL))
          (source (make-instance 'in-memory-source :file file :pack pack)))
