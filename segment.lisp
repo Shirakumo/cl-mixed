@@ -4,7 +4,7 @@
   (loop for field = (cffi:foreign-slot-pointer info '(:struct mixed:segment-info) 'mixed::fields)
         then (cffi:inc-pointer field (cffi:foreign-type-size '(:struct mixed:field-info)))
         repeat 32
-        until (mixed:field-info-flags field)
+        while (mixed:field-info-flags field)
         collect (list :field (mixed:field-info-field field)
                       :description (mixed:field-info-description field)
                       :flags (mixed:field-info-flags field)
@@ -31,6 +31,23 @@
 (defmethod initialize-instance :around ((segment segment) &key)
   (call-next-method)
   (revalidate segment))
+
+(defmethod describe-object :after ((segment segment) stream)
+  (destructuring-bind (&key name description flags min-inputs max-inputs outputs fields) (info segment)
+    (format stream "~&
+Name:       ~a
+Description:
+  ~a
+Flags:~{~%  ~a~}
+Min Inputs: ~d
+Max Inputs: ~d
+Outputs:    ~d
+Fields:"
+            name description (or flags '("None")) min-inputs max-inputs outputs)
+    (dolist (field fields)
+      (destructuring-bind (&key field description flags type type-count) field
+        (format stream "~%  ~2d ~a~[~;~:;~:*[~d]~] ~a~%    ~a"
+                field type type-count flags description)))))
 
 (defmethod info ((segment segment))
   (unless (direct-info segment)

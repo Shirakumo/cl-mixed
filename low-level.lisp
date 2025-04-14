@@ -318,7 +318,7 @@
 (defcstruct (segment-info :class segment-info :conc-name segment-info-)
   (name :string)
   (description :string)
-  (flags :int)
+  (flags info-flags)
   (min-inputs :uint32)
   (max-inputs :uint32)
   (outputs :uint32)

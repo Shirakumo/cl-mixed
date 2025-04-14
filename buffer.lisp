@@ -12,6 +12,15 @@
         (setf (mixed:buffer-size handle) size)
         (setf (mixed:buffer-data handle) (static-vectors:static-vector-pointer data)))))
 
+(defmethod describe-object :after ((buffer buffer) stream)
+  (format stream "~&
+Size:     ~,,'',3:d sample~:p
+To read:  ~,,'',3:d sample~:p
+To write: ~,,'',3:d sample~:p"
+          (size buffer)
+          (available-read buffer)
+          (available-write buffer)))
+
 (defun make-buffer (size)
   (make-instance 'buffer :size size))
 

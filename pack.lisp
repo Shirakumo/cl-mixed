@@ -13,6 +13,21 @@
     (setf (mixed:pack-channels handle) channels)
     (setf (mixed:pack-samplerate handle) samplerate)))
 
+(defmethod describe-object :after ((pack pack) stream)
+  (format stream "~&
+Encoding:   ~a
+Channels:   ~d
+Samplerate: ~a Hz
+Size:       ~,,'',3:d byte~:p
+To read:    ~,,'',3:d byte~:p
+To write:   ~,,'',3:d byte~:p"
+          (encoding pack)
+          (channels pack)
+          (samplerate pack)
+          (size pack)
+          (available-read pack)
+          (available-write pack)))
+
 (defun make-pack (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)))
   (make-instance 'pack :frames frames
                        :encoding encoding

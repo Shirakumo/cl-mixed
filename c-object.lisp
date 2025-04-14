@@ -30,6 +30,11 @@
       (with-cleanup-on-failure (free object)
         (call-next-method))))
 
+(defmethod describe-object :around ((object c-object) stream)
+  (if (handle object)
+      (call-next-method)
+      (format stream "~s (DEALLOCATED)" (type-of object))))
+
 (defmethod free ((object c-object))
   (error "Don't know how to free ~s" object))
 
