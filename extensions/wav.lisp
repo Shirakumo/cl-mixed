@@ -206,6 +206,8 @@
   (let* ((pack (mixed:make-pack :frames NIL))
          (source (make-instance 'in-memory-source :file file :pack pack)))
     (setf (mixed:data pack) (buffer source))
+    (let ((size (nth-value 1 (mixed:request-write pack #xFFFFFFFF))))
+      (mixed:finish-write pack size))
     (unwind-protect
          (let ((buffers (loop repeat (mixed:channels pack)
                               collect (mixed:make-buffer (mixed:frame-count source)))))
