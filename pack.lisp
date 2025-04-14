@@ -4,15 +4,14 @@
   ((data :reader data)))
 
 (defmethod initialize-instance :after ((pack pack) &key frames encoding channels samplerate)
-  (let* ((size (* frames channels (samplesize encoding)))
-         (data (static-vectors:make-static-vector size :element-type '(unsigned-byte 8) :initial-element 0)))
-    (setf (slot-value pack 'data) data)
-    (let ((handle (handle pack)))
-      (setf (mixed:pack-data handle) (static-vectors:static-vector-pointer data))
-      (setf (mixed:pack-size handle) size)
-      (setf (mixed:pack-encoding handle) encoding)
-      (setf (mixed:pack-channels handle) channels)
-      (setf (mixed:pack-samplerate handle) samplerate))))
+  (let ((handle (handle pack)))
+    (setf (data pack) (when frames
+                        (static-vectors:make-static-vector
+                         (* frames channels (samplesize encoding))
+                         :element-type '(unsigned-byte 8) :initial-element 0)))
+    (setf (mixed:pack-encoding handle) encoding)
+    (setf (mixed:pack-channels handle) channels)
+    (setf (mixed:pack-samplerate handle) samplerate)))
 
 (defun make-pack (&key (encoding :float) (channels 2) (samplerate *default-samplerate*) (frames (floor samplerate 100)))
   (make-instance 'pack :frames frames
@@ -27,6 +26,16 @@
   (when (slot-boundp pack 'data)
     (static-vectors:free-static-vector (data pack))
     (slot-makunbound pack 'data)))
+
+(defmethod (setf data) ((data vector) (pack pack))
+  (setf (mixed:pack-data (handle pack)) (static-vectors:static-vector-pointer data))
+  (setf (mixed:pack-size (handle pack)) (length data))
+  (setf (slot-value pack 'data) data))
+
+(defmethod (setf data) ((data null) (pack pack))
+  (setf (mixed:pack-data (handle pack)) (cffi:null-pointer))
+  (setf (mixed:pack-size (handle pack)) 0)
+  (slot-makunbound pack 'data))
 
 (define-accessor size pack mixed:pack-size)
 (define-accessor encoding pack mixed:pack-encoding)
