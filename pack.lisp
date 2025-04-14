@@ -79,6 +79,7 @@ To write:   ~,,'',3:d byte~:p"
   size)
 
 (defmethod transfer ((from buffer) (to pack))
+  (assert (= 1 (channels to)))
   (cffi:with-foreign-objects ((buffers :pointer)
                               (volume :float))
     (setf (cffi:mem-ref buffers :pointer) (handle from))
@@ -88,6 +89,7 @@ To write:   ~,,'',3:d byte~:p"
     to))
 
 (defmethod transfer ((from sequence) (to pack))
+  (assert (= (length from) (channels to)))
   (cffi:with-foreign-objects ((buffers :pointer (length from))
                               (volume :float))
     (setf (cffi:mem-ref volume :float) 1f0)
@@ -98,6 +100,7 @@ To write:   ~,,'',3:d byte~:p"
     to))
 
 (defmethod transfer ((from pack) (to buffer))
+  (assert (= 1 (channels from)))
   (cffi:with-foreign-objects ((buffers :pointer)
                               (volume :float))
     (setf (cffi:mem-ref volume :float) 1f0)
@@ -107,8 +110,9 @@ To write:   ~,,'',3:d byte~:p"
     to))
 
 (defmethod transfer ((from pack) (to sequence))
+  (assert (= (length to) (channels from)))
   (cffi:with-foreign-objects ((buffers :pointer (length to))
-                             (volume :float))
+                              (volume :float))
     (setf (cffi:mem-ref volume :float) 1f0)
     (do-sequence (i buffer to)
       (setf (cffi:mem-aref buffers :pointer i) (handle buffer)))
