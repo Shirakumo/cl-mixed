@@ -9,6 +9,7 @@
    #:mixer
    #:play
    #:play-to-file
+   #:convolution
    #:echo
    #:space
    #:tone

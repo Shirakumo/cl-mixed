@@ -14,6 +14,7 @@
                (:file "echo")
                (:file "play")
                (:file "play-to-file")
+               (:file "convolution")
                (:file "mixer")
                (:file "record-to-file"))
   :depends-on (:cl-mixed
