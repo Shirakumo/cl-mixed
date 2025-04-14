@@ -92,7 +92,7 @@ int load_out_segment(uint32_t samples, struct out **_out){
   long out_samplerate = output_samplerate;
   int out_channels = 2;
   int out_encoding = MPG123_ENC_SIGNED_16;
-  char *out_encname = "signed 16 bit";
+  const char *out_encname = "signed 16 bit";
   uint8_t out_samplesize = 0;
   int out_framesize = 0;
   struct out *out = calloc(1, sizeof(struct out));
@@ -149,7 +149,7 @@ int load_out_segment(uint32_t samples, struct out **_out){
     goto cleanup;
   }
 
-  out_encname = (char *)out123_enc_longname(out_encoding);
+  out_encname = (const char *)out123_enc_longname(out_encoding);
   fprintf(stderr, "Selected: %i channels @ %li Hz, %s %i\n", out_channels, out_samplerate, out_encname);
   
   // Prepare pipeline segments
@@ -209,11 +209,11 @@ void free_mp3(struct mp3 *mp3){
   free(mp3);
 }
 
-int load_mp3_segment(char *file, uint32_t samples, struct mp3 **_mp3){
+int load_mp3_segment(const char *file, uint32_t samples, struct mp3 **_mp3){
   long mp3_samplerate = 0;
   int mp3_channels = 0;
   int mp3_encoding = 0;
-  char *mp3_encname = 0;
+  const char *mp3_encname = 0;
   uint8_t mp3_samplesize = 0;
   struct mp3 *mp3 = calloc(1, sizeof(struct mp3));
 
@@ -244,7 +244,7 @@ int load_mp3_segment(char *file, uint32_t samples, struct mp3 **_mp3){
     goto cleanup;
   }
   
-  mp3_encname = (char *)out123_enc_longname(mp3_encoding);
+  mp3_encname = (const char *)out123_enc_longname(mp3_encoding);
   fprintf(stderr, "MP3: %i channels @ %li Hz, %s\n", mp3_channels, mp3_samplerate, mp3_encname);
 
   mp3->pack.encoding = fmt123_to_mixed(mp3_encoding);
@@ -301,4 +301,109 @@ void free_curses(WINDOW *window){
     delwin(window);
     endwin();
   }
+}
+
+struct wav_header {
+  unsigned char riff[4];
+  uint32_t size;
+  unsigned char wave[4];
+};
+
+struct wav_format {
+  unsigned char fmt[4];
+  uint32_t size;
+  uint16_t format;
+  uint16_t chan_ct;
+  uint32_t sample_rate;
+  uint32_t byte_rate;
+  uint16_t block_align;
+  uint16_t bits_per_sample;
+};
+
+struct wav_data {
+  unsigned char data[4];
+  uint32_t size;
+  char data_start;
+};
+
+int load_wav_pack(const char *file, struct mixed_pack *pack){
+  struct wav_header header;
+  struct wav_format format;
+  struct wav_data data;
+
+  FILE *f = fopen(file, "rb");
+  if(!f) return 0;
+
+  fread(&header, sizeof(header), 1, f);
+  if(strncmp(header.riff, "RIFF", 4)){
+    fprintf(stderr, "WAV file has a bad header!\n");
+    goto cleanup;
+  }
+  if(strncmp(header.wave, "WAVE", 4)){
+    fprintf(stderr, "WAV file has a bad header!\n");
+    goto cleanup;
+  }
+
+  fread(&format, sizeof(format), 1, f);
+  if(strncmp(format.fmt, "fmt ", 4)){
+    fprintf(stderr, "WAV file has a bad header!\n");
+    goto cleanup;
+  }
+
+  // Skip over blocks until we find the data block.
+  fseek(f, sizeof(header), SEEK_SET);
+  fread(&data, sizeof(data), 1, f);
+  while(strncmp(data.data, "data", 4)){
+    fseek(f, data.size-4, SEEK_CUR);
+    if(!fread(&data, sizeof(data), 1, f)){
+      fprintf(stderr, "WAV file has no data block!\n");
+      goto cleanup;
+    }
+  }
+
+  pack->channels = format.chan_ct;
+  pack->samplerate = format.sample_rate;
+
+  switch(format.format){
+  case 1:
+    switch(format.bits_per_sample){
+    case 8: pack->encoding = MIXED_UINT8; break;
+    case 16: pack->encoding = MIXED_INT16; break;
+    case 24: pack->encoding = MIXED_INT24; break;
+    case 32: pack->encoding = MIXED_INT32; break;
+    default:
+      fprintf(stderr, "WAV file has an odd bits/sample count: %d.\n", format.bits_per_sample);
+      goto cleanup;
+    }
+    break;
+  case 3: pack->encoding = MIXED_FLOAT; break;
+  default:
+    fprintf(stderr, "WAV file has an unsupported format: %d.\n", format.format);
+    goto cleanup;
+  }
+
+  uint32_t framecount = data.size / mixed_byte_stride(pack->channels, pack->encoding);
+  if(!mixed_make_pack(framecount, pack)){
+    fprintf(stderr, "Failed to allocate pack.\n");
+    goto cleanup;
+  }
+  
+  fprintf(stderr, "WAV: %i channels @ %li Hz, %s, %li frames\n", pack->channels, pack->samplerate, mixed_type_string(pack->encoding), framecount);
+  
+  void *area;
+  uint32_t size = data.size;
+  mixed_pack_request_write(&area, &size, pack);
+  int read = fread(area, 1, size, f);
+  if(!read){
+    fprintf(stderr, "Failed to read WAV data (%d kb).\n", size/1024);
+    goto cleanup;
+  }
+  mixed_pack_finish_write(read, pack);
+
+  fclose(f);
+  return 1;
+
+ cleanup:
+  fclose(f);
+  return 0;
 }
