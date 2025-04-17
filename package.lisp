@@ -24,6 +24,9 @@
    #:field-type
    #:info-flags
    #:location
+   #:channel-configuration
+   #:channel-configuration-count
+   #:channel-configuration-positions
    #:buffer
    #:buffer-data
    #:buffer-size
@@ -105,6 +108,7 @@
    #:segment-get-out
    #:segment-set
    #:segment-get
+   #:segment-print
    #:make-segment-basic-mixer
    #:make-segment-compressor
    #:make-segment-channel-convert
@@ -150,6 +154,10 @@
    #:make-segment-info
    #:make-segment
    #:samplesize
+   #:byte-stride
+   #:default-speaker-position
+   #:default-channel-configuration
+   #:configuration-surround-p
    #:fwd-fft
    #:inv-fft
    #:translator-from

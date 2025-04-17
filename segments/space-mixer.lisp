@@ -36,6 +36,8 @@
 (define-field-accessor max-distance space-mixer :float :space-max-distance)
 (define-field-accessor rolloff space-mixer :float :space-rolloff)
 (define-field-accessor volume space-mixer :float :volume)
+(define-field-accessor channel-count-out space-mixer mixed:channel_t)
+;; TODO: (define-field-accessor channel-configuration space-mixer)
 
 (defmethod field ((field (eql :attenuation)) (segment space-mixer))
   (cffi:with-foreign-object (value-ptr :pointer)

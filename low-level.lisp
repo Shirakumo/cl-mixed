@@ -50,6 +50,8 @@
 (defctype decibel_t :float)
 (defctype duration_t :float)
 
+(defconstant MAX-SPEAKER-COUNT 33)
+
 (defcenum error
   (:no-error 0)
   :out-of-memory
@@ -77,7 +79,8 @@
   :buffer-missing
   :duplicate-segment
   :bad-segment
-  :buffer-too-small)
+  :buffer-too-small
+  :internal-error)
 
 (defcenum encoding
   (:int8 1)
@@ -152,7 +155,8 @@
   :framesize
   :oversampling
   :buffer-size-hint
-  :fir)
+  :fir
+  :channel-configuration)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
@@ -286,7 +290,12 @@
   :resample-type-enum
   :channel_t
   :decibel_t
-  :duration_t)
+  :duration_t
+  :channel-configuration-pointer)
+
+(defcstruct (channel-configuration :class channel-configuration :conc-name channel-configuration-)
+  (count channel_t)
+  (positions channel_t :count #.MAX-SPEAKER-COUNT))
 
 (declaim (ftype (function (cffi:foreign-pointer) (unsigned-byte 32))
                 buffer-size buffer-read buffer-write buffer-reserved
@@ -481,6 +490,11 @@
   (value :pointer)
   (segment :pointer))
 
+(defcfun (segment-print "mixed_segment_print") :int
+  (str :pointer)
+  (length :size)
+  (segment :pointer))
+
 (defcfun (make-segment-unpacker "mixed_make_segment_unpacker") :int
   (pack :pointer)
   (samplerate :uint32)
@@ -672,6 +686,20 @@
 
 (defcfun (samplesize "mixed_samplesize") :uint8
   (encoding encoding))
+
+(defcfun (byte-stride "mixed_byte_stride") :uint8
+  (channels channel_t)
+  (encoding encoding))
+
+(defcfun (default-speaker-position "mixed_default_speaker_position") :int
+  (position :pointer)
+  (channel channel_t))
+
+(defcfun (default-channel-configuration "mixed_default_channel_configuration") :pointer
+  (channel-count channel_t))
+
+(defcfun (configuration-surround-p "mixed_configuration_is_surround") :bool
+  (configuratino :pointer))
 
 (defcfun (fwd-fft "mixed_fwd_fft") :int
   (framesize :uint16)
