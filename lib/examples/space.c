@@ -96,9 +96,15 @@ int main(int argc, char **argv){
   float pos[3] = {r, 0.0, 0.0};
   float rad;
   float doppler = 0.0;
+  float min_dist = 10.0;
+  float max_dist = 500.0;
   
   // Perform the mixing
-  mixed_segment_start(&chain);
+  if(!mixed_segment_start(&chain)){
+    fprintf(stderr, "Failure starting the segments: %s\n", mixed_error_string(-1));
+    goto cleanup;
+  }
+  
   size_t read = 0, played = 0;
   do{
     void *buffer;
@@ -141,9 +147,12 @@ int main(int argc, char **argv){
     pos[2] = pos[2] + vel[2];
     mixed_segment_set_in(MIXED_SPACE_LOCATION, 0, pos, &space);
     mixed_segment_set_in(MIXED_SPACE_VELOCITY, 0, vel, &space);
+    mixed_segment_set(MIXED_SPACE_MIN_DISTANCE, &min_dist, &space);
+    mixed_segment_set(MIXED_SPACE_MAX_DISTANCE, &max_dist, &space);
     mixed_segment_set(MIXED_SPACE_DOPPLER_FACTOR, &doppler, &space);
 
-    mvprintw(1, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
+    mvprintw(1, 0, "Position: %f %f %f\n", pos[0], pos[1], pos[2]);
+    mvprintw(2, 0, "Read: %4u Processed: %4u Played: %4u Speed: %f Radius: %f\n", read, bytes, played, dphi, r);
     refresh();
   }while(!interrupted);
   mixed_segment_end(&chain);

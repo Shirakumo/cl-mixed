@@ -134,6 +134,8 @@ extern "C" {
     MIXED_BAD_NAME,
     /// A buffer is too small
     MIXED_BUFFER_TOO_SMALL,
+    /// An error was encountered that really should not be possible to hit.
+    MIXED_INTERNAL_ERROR,
   };
 
   /// This enum describes the possible sample encodings.
@@ -396,6 +398,15 @@ extern "C" {
     /// Can only be read.
     /// The default is 1
     MIXED_BUFFER_SIZE_HINT,
+    /// Set the finite input response buffer for the convolution segment.
+    /// Should be a buffer pointer. The buffer's available read data is
+    /// used, but the read is *not* committed, meaning that after the FIR
+    /// is set, the buffer will still have the same amount of available
+    /// data to be read.
+    MIXED_FIR,
+    /// The specific channel configuration of the segment.
+    /// The field is a MIXED_CHANNEL_CONFIGURATION_POINTER.
+    MIXED_CHANNEL_CONFIGURATION
   };
 
   /// This enum descripbes the possible resampling quality options.
@@ -638,7 +649,8 @@ extern "C" {
     MIXED_LEFT_CENTER_BOTTOM = 28,
     MIXED_RIGHT_CENTER_BOTTOM = 29,
     MIXED_LEFT_FRONT_CENTER_TOP = 31,
-    MIXED_RIGHT_FRONT_CENTER_BOTTOM = 32
+    MIXED_RIGHT_FRONT_CENTER_BOTTOM = 32,
+    MIXED_MAX_SPEAKER_COUNT = 33
   };
 
   /// This enum holds type descriptors for the segment fields.
@@ -707,11 +719,21 @@ extern "C" {
     /// A duration in seconds
     /// Corresponds to mixed_duration_t
     MIXED_DURATION_T,
+    /// A pointer to a mixed_channel_configuration
+    MIXED_CHANNEL_CONFIGURATION_POINTER,
   };
 
   /// Type used for channel count descriptions.
   /// 
   typedef uint8_t mixed_channel_t;
+
+  /// Type used for channel speaker configuration descriptions.
+  /// Every element in the array describes a mixed_channel enum
+  /// for the intended speaker of the corresponding channel.
+  MIXED_EXPORT struct mixed_channel_configuration{
+    mixed_channel_t count;
+    mixed_channel_t positions[MIXED_MAX_SPEAKER_COUNT];
+  };
 
   /// Type used for decibel descriptions.
   ///
@@ -1170,6 +1192,12 @@ extern "C" {
   /// If the method is not implemented, the error is set to
   /// MIXED_NOT_IMPLEMENTED.
   MIXED_EXPORT int mixed_segment_get(uint32_t field, void *value, struct mixed_segment *segment);
+
+  /// Convenience to print a string representation of a segment.
+  ///
+  /// Returns the number of characters printed to str excluding
+  /// the null terminating character. Same as snprintf.
+  MIXED_EXPORT int mixed_segment_print(char *str, size_t size, struct mixed_segment *segment);
 
   /// An audio unpacker.
   ///
@@ -1660,6 +1688,22 @@ extern "C" {
   /// Return the number of bytes between two samples in a byte stream.
   /// 
   MIXED_EXPORT uint8_t mixed_byte_stride(mixed_channel_t channels, enum mixed_encoding encoding);
+
+  /// Default the speaker position for the given speaker channel.
+  ///
+  /// If no poistion is known for the requested channel, zero is returned
+  /// and the error is set to MIXED_INVALID_VALUE.
+  MIXED_EXPORT int mixed_default_speaker_position(float position[3], mixed_channel_t channel);
+
+  /// Returns the default channel configuration for the given number of channels.
+  ///
+  /// If no configuration is known for the given set of channels, a null pointer is
+  /// returned, and the error is set to MIXED_INVALID_VALUE.
+  MIXED_EXPORT struct mixed_channel_configuration const* mixed_default_channel_configuration(mixed_channel_t channel_count);
+
+  /// Returns whether the configuration includes side or rear channels.
+  /// 
+  MIXED_EXPORT int mixed_configuration_is_surround(struct mixed_channel_configuration const* configuration);
   
   /// A function to decode a packed sample array to the standardised float buffer format.
   /// The stride is the number of bytes between two samples in the input array.
@@ -1734,6 +1778,18 @@ extern "C" {
   /// Return the ASCII textual description of the given type identifier.
   ///
   MIXED_EXPORT const char *mixed_type_string(int code);
+
+  /// Return the ASCII textual description of the given segment field.
+  /// 
+  MIXED_EXPORT const char *mixed_segment_field_string(int code);
+
+  /// Return the ASCII textual description of the given channel location.
+  /// 
+  MIXED_EXPORT const char *mixed_location_string(int code);
+
+  /// Return the ASCII textual description of the given info flag.
+  /// Note: only one flag at a time can be decoded like this.
+  MIXED_EXPORT const char *mixed_info_flag_string(int code);
 
   /// Returns the ASCII version string of the library.
   ///
