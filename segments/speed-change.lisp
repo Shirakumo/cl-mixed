@@ -5,10 +5,10 @@
   (:default-initargs
    :speed-factor 1.0))
 
-(defmethod initialize-instance :after ((segment speed-change) &key speed-factor bypass)
+(defmethod initialize-instance :after ((segment speed-change) &key speed-factor (bypass NIL bypass-p))
   (with-error-on-failure ()
     (mixed:make-segment-speed-change (float speed-factor 0d0) (handle segment)))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-speed-change (&rest args &key speed-factor)
   (declare (ignore speed-factor))

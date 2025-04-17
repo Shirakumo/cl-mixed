@@ -5,7 +5,7 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment gate) &key samplerate open-threshold close-threshold attack hold release bypass)
+(defmethod initialize-instance :after ((segment gate) &key samplerate open-threshold close-threshold attack hold release (bypass NIL bypass-p))
   (with-error-on-failure ()
     (mixed:make-segment-gate samplerate (handle segment)))
   (when open-threshold (setf (open-threshold segment) open-threshold))
@@ -13,7 +13,7 @@
   (when attack (setf (attack segment) attack))
   (when hold (setf (hold segment) hold))
   (when release (setf (release segment) release))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-gate (&rest args &key samplerate)
   (declare (ignore samplerate))

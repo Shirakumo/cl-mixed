@@ -5,7 +5,7 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment compressor) &key samplerate pregain postgain threshold knee ratio attack release predelay release-zone bypass wet)
+(defmethod initialize-instance :after ((segment compressor) &key samplerate pregain postgain threshold knee ratio attack release predelay release-zone (bypass NIL bypass-p) wet)
   (with-error-on-failure ()
     (mixed:make-segment-compressor samplerate (handle segment)))
   (when pregain (setf (pregain segment) pregain))
@@ -17,7 +17,7 @@
   (when release (setf (release segment) release))
   (when predelay (setf (predelay segment) predelay))
   (when release-zone (setf (release-zone segment) release-zone))
-  (when bypass (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass))
   (when wet (setf (wet segment) wet)))
 
 (defun make-compressor (&rest args &key samplerate pregain postgain threshold knee ratio attack release predelay release-zone bypass wet)

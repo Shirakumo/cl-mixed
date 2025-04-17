@@ -9,10 +9,10 @@
    :type :cubic-in-out
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment fader) &key from to time type samplerate bypass)
+(defmethod initialize-instance :after ((segment fader) &key from to time type samplerate (bypass NIL bypass-p))
   (with-error-on-failure ()
     (mixed:make-segment-fade (float from 0f0) (float to 0f0) (float time 0f0) type samplerate (handle segment)))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-fader (&rest args &key from to time type samplerate)
   (declare (ignore from to time type samplerate))

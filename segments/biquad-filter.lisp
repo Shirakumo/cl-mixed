@@ -6,12 +6,12 @@
    :filter :lowpass
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment biquad-filter) &key filter samplerate (frequency (1- samplerate)) bypass q gain)
+(defmethod initialize-instance :after ((segment biquad-filter) &key filter samplerate (frequency (1- samplerate)) (bypass NIL bypass-p) q gain)
   (with-error-on-failure ()
     (mixed:make-segment-biquad-filter filter (float frequency 0f0) samplerate (handle segment)))
   (when q (setf (q segment) q))
   (when gain (setf (gain segment) gain))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-biquad-filter (&rest args &key pass cutoff samplerate)
   (declare (ignore pass cutoff samplerate))

@@ -3,11 +3,11 @@
 (defclass chain (segment)
   ((segments :initform (make-array 0 :adjustable T :fill-pointer T) :reader segments)))
 
-(defmethod initialize-instance :after ((segment chain) &key segments bypass)
+(defmethod initialize-instance :after ((segment chain) &key segments (bypass NIL bypass-p))
   (with-error-on-failure ()
     (mixed:make-segment-chain (handle segment)))
   (map NIL (lambda (s) (add s segment)) segments)
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-chain (&rest segments)
   (make-instance 'chain :segments segments))

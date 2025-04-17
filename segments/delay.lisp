@@ -5,10 +5,10 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment delay) &key time samplerate bypass)
+(defmethod initialize-instance :after ((segment delay) &key time samplerate (bypass NIL bypass-p))
   (with-error-on-failure ()
     (mixed:make-segment-delay (float time 0f0) samplerate (handle segment)))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-delay (&rest args &key time samplerate)
   (declare (ignore time samplerate))

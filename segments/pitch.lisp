@@ -6,11 +6,11 @@
    :pitch 1.0
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((segment pitch) &key pitch samplerate bypass wet)
+(defmethod initialize-instance :after ((segment pitch) &key pitch samplerate (bypass NIL bypass-p) wet)
   (with-error-on-failure ()
     (mixed:make-segment-pitch (float pitch 0f0) samplerate (handle segment)))
   (when wet (setf (wet segment) wet))
-  (setf (bypass segment) bypass))
+  (when bypass-p (setf (bypass segment) bypass)))
 
 (defun make-pitch (&rest args &key pitch samplerate)
   (declare (ignore pitch samplerate))
