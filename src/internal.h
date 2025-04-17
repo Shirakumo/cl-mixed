@@ -28,6 +28,7 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define LERP(a, b, x) ((a)*(1-(x)) + (b)*(x))
+#define CLAMP(l, v, h) ((v < l)? l : ((v < h)? v : h))
 
 #define IGNORE(...) __ignore(0, __VA_ARGS__)
 static inline void __ignore(char _, ...){(void)_;}
@@ -181,3 +182,77 @@ unsigned int mixed_random_int(void);
 #define atomic_write(PLACE, VAL) __atomic_store_n(&PLACE, VAL, __ATOMIC_SEQ_CST)
 #define atomic_cas(PLACE, OLD, NEW) __sync_bool_compare_and_swap(&PLACE, OLD, NEW)
 #define FREE(PLACE) if(PLACE){mixed_free(PLACE); PLACE=0;}
+
+static inline float vec_dot(const float a[3], const float b[3]){
+  return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+static inline float vec_length(const float v[3]){
+  return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+static inline float vec_distance(const float a[3], const float b[3]){
+  float c[3] = {a[0] - b[0], a[1] - b[1], a[2] - b[2]};
+  return vec_length(c);
+}
+
+static inline float *vec_normalize(float o[3], const float v[3]){
+  float length = vec_length(v);
+  if(0 < length){
+    o[0] = v[0]/length;
+    o[1] = v[1]/length;
+    o[2] = v[2]/length;
+  }else{
+    o[0] = 0.0;
+    o[1] = 0.0;
+    o[2] = 0.0;
+  }
+  return o;
+}
+
+static inline float *vec_normalized(float v[3]){
+  return vec_normalize(v, v);
+}
+
+static inline float *vec_cross(float o[3], const float a[3], const float b[3]){
+  float ax = a[0], ay = a[1], az = a[2];
+  float bx = b[0], by = b[1], bz = b[2];
+  o[0] = (ay * bz) - (az * by);
+  o[1] = (az * bx) - (ax * bz);
+  o[2] = (ax * by) - (ay * bx);
+  return vec_normalize(o, o);
+}
+
+static inline float vec_angle(float a[3], float b[3]){
+  float inner = vec_dot(a,b) / (vec_length(a)*vec_length(b));
+  if(1.0 < inner) return 0.0;
+  if(inner < -1.0) return M_PI;
+  return fabs(acos(inner));
+}
+
+static inline float *vec_mul(float o[3], const float m[9], const float a[3]){
+  float x = a[0], y = a[1], z = a[2];
+  o[0] = x*m[0] + y*m[1] + z*m[2];
+  o[1] = x*m[3] + y*m[4] + z*m[5];
+  o[2] = x*m[6] + y*m[7] + z*m[8];
+  return o;
+}
+
+#define MAX_VBAP_SETS (MIXED_MAX_SPEAKER_COUNT*(MIXED_MAX_SPEAKER_COUNT-1)/2)
+struct vbap_set{
+  mixed_channel_t speakers[3];
+  float inv_mat[9];
+};
+
+struct vbap_data{
+  char dims;
+  mixed_channel_t speaker_count;
+  float speakers[MIXED_MAX_SPEAKER_COUNT][3];
+  int set_count;
+  struct vbap_set sets[MAX_VBAP_SETS];
+};
+
+int mixed_compute_gains(const float position[3], float gains[], mixed_channel_t speakers[], mixed_channel_t *count, struct vbap_data *data);
+int make_vbap(float speakers[][3], mixed_channel_t speaker_count, int dim, struct vbap_data *data);
+int make_vbap_from_configuration(struct mixed_channel_configuration const* configuration, struct vbap_data *data);
+int make_vbap_from_channel_count(mixed_channel_t speaker_count, struct vbap_data *data);
