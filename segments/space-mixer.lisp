@@ -5,17 +5,23 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((space space-mixer) &key samplerate)
+(defmethod initialize-instance :after ((space space-mixer) &key samplerate up soundspeed doppler-factor min-distance max-distance rolloff attenuation channel-count-out channel-configuration)
   (with-error-on-failure ()
-    (mixed:make-segment-space-mixer samplerate (handle space))))
+    (mixed:make-segment-space-mixer samplerate (handle space)))
+  (when samplerate (setf (samplerate space) samplerate))
+  (when up (setf (up space) up))
+  (when soundspeed (setf (soundspeed space) soundspeed))
+  (when doppler-factor (setf (doppler-factor space) doppler-factor))
+  (when min-distance (setf (min-distance space) min-distance))
+  (when max-distance (setf (max-distance space) max-distance))
+  (when rolloff (setf (rolloff space) rolloff))
+  (when attenuation (setf (attenuation space) attenuation))
+  (when channel-count-out (setf (channel-count-out space) channel-count-out))
+  (when channel-configuration (setf (channel-configuration space) channel-configuration)))
 
-(defun make-space-mixer (&rest args &key (samplerate *default-samplerate*) up soundspeed doppler-factor min-distance max-distance rolloff attenuation)
-  (declare (ignore up soundspeed doppler-factor min-distance max-distance rolloff attenuation))
-  (let ((instance (make-instance 'space-mixer :samplerate samplerate)))
-    (loop for (field value) on args by #'cddr
-          do (unless (eql field :samplerate)
-               (setf (field field instance) value)))
-    instance))
+(defun make-space-mixer (&rest args &key samplerate up soundspeed doppler-factor min-distance max-distance rolloff attenuation channel-count-out channel-configuration)
+  (declare (ignore samplerate up soundspeed doppler-factor min-distance max-distance rolloff attenuation channel-count-out channel-configuration))
+  (apply #'make-instance 'space-mixer args))
 
 (defmethod channels ((mixer space-mixer)) 1)
 
@@ -37,7 +43,7 @@
 (define-field-accessor rolloff space-mixer :float :space-rolloff)
 (define-field-accessor volume space-mixer :float :volume)
 (define-field-accessor channel-count-out space-mixer mixed:channel_t)
-;; TODO: (define-field-accessor channel-configuration space-mixer)
+(define-field-accessor channel-configuration space-mixer mixed:channel-configuration)
 
 (defmethod field ((field (eql :attenuation)) (segment space-mixer))
   (cffi:with-foreign-object (value-ptr :pointer)

@@ -293,3 +293,21 @@
     (9 '(:left-front :right-front :center :left-rear :right-rear :left-side :right-side :left-front-top :right-front-top)) ; 9.0
     (10 '(:left-front :right-front :center :subwoofer :left-rear :right-rear :left-side :right-side :left-front-top :right-front-top)) ; 9.1
     ))
+
+(defmethod cffi:translate-from-foreign (value (type mixed:channel-configuration))
+  (let ((count (mixed:channel-configuration-count value)))
+    (loop with ptr = (cffi:foreign-slot-pointer value '(:struct mixed:channel-configuration) 'mixed::positions)
+          for i from 0 below count
+          collect (cffi:mem-aref ptr 'mixed:location i))))
+
+(defmethod cffi:translate-to-foreign (thing (type mixed:channel-configuration))
+  (cffi:translate-into-foreign-memory thing type (cffi:foreign-alloc '(:struct mixed:channel-configuration))))
+
+(defmethod cffi:translate-into-foreign-memory ((thing sequence) (type mixed:channel-configuration) value)
+  (setf (mixed:channel-configuration-count value) (length thing))
+  (let ((ptr (cffi:foreign-slot-pointer value '(:struct mixed:channel-configuration) 'mixed::positions)))
+    (map NIL (lambda (location)
+               (setf (cffi:mem-ref ptr 'mixed:location) location)
+               (cffi:incf-pointer ptr (cffi:foreign-type-size 'mixed:location)))
+         thing))
+  value)
