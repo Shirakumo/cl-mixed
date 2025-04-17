@@ -46,8 +46,10 @@ Fields:"
             name description (or flags '("None")) min-inputs max-inputs outputs)
     (dolist (field fields)
       (destructuring-bind (&key field description flags type type-count) field
-        (format stream "~%  ~2d ~a~[~;~:;~:*[~d]~] ~a~%    ~a"
-                field type type-count flags description)))))
+        (format stream "~%  ~28a ~a~[~;~:;~:*[~d]~] ~a~%    ~a"
+                (mixed:segment-field-string field)
+                (mixed:type-string type)
+                type-count flags description)))))
 
 (defmethod info ((segment segment))
   (unless (direct-info segment)

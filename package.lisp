@@ -165,6 +165,9 @@
    #:error
    #:error-string
    #:type-string
+   #:segment-field-string
+   #:location-string
+   #:info-flag-string
    #:version))
 
 (defpackage #:org.shirakumo.fraf.mixed

@@ -725,4 +725,13 @@
 (defcfun (type-string "mixed_type_string") :string
   (type field-type))
 
+(defcfun (segment-field-string "mixed_segment_field_string") :string
+  (field field))
+
+(defcfun (location-string "mixed_location_string") :string
+  (location location))
+
+(defcfun (info-flag-string "mixed_info_flag_string") :string
+  (flag info-flags))
+
 (defcfun (version "mixed_version") :string)
