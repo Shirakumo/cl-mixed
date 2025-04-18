@@ -39,7 +39,7 @@ function maybe_copy(){
     for file in "$src/libmixed."{dylib,dll,so}; do
         if [[ -e "$file" ]]; then
             ext="${file##*.}"
-            echo "Copying to ../static/$dst.$ext"
+            echo "Copying $file to ../static/$dst.$ext"
             cp "$file" "../static/$dst.$ext"
         fi
     done

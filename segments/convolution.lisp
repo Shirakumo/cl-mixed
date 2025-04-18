@@ -20,7 +20,8 @@
   (make-instance 'convolution :fir fir :framesize framesize :samplerate samplerate))
 
 (define-field-accessor samplerate convolution :uint32 :samplerate)
-(define-field-accessor mix convolution :float :mix)
+(define-field-accessor bypass convolution :bool :bypass)
+(define-field-accessor wet convolution :float :mix)
 
 (defmethod (setf field) ((value buffer) (field (eql :fir)) (segment convolution))
   (with-error-on-failure nil

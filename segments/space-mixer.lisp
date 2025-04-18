@@ -8,7 +8,6 @@
 (defmethod initialize-instance :after ((space space-mixer) &key samplerate up soundspeed doppler-factor min-distance max-distance rolloff attenuation channel-count-out channel-configuration)
   (with-error-on-failure ()
     (mixed:make-segment-space-mixer samplerate (handle space)))
-  (when samplerate (setf (samplerate space) samplerate))
   (when up (setf (up space) up))
   (when soundspeed (setf (soundspeed space) soundspeed))
   (when doppler-factor (setf (doppler-factor space) doppler-factor))
