@@ -202,6 +202,7 @@
   ;; c-object.lisp
   (:export
    #:init
+   #:shutdown
    #:handle
    #:c-object
    #:free

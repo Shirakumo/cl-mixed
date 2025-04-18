@@ -10,6 +10,12 @@
     #+windows (load-library 'mixed::gcc-s)
     (load-library 'mixed::libmixed)))
 
+(defun shutdown ()
+  (when (cffi:foreign-library-loaded-p 'mixed::libmixed)
+    (loop for object being the hash-values of *c-object-table*
+          do (free object))
+    (cffi:close-foreign-library 'mixed::libmixed)))
+
 (defmethod handle (thing)
   (etypecase thing
     (cffi:foreign-pointer thing)))
