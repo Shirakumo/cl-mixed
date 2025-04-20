@@ -5,17 +5,18 @@
   (:default-initargs
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((plane plane-mixer) &key samplerate)
+(defmethod initialize-instance :after ((plane plane-mixer) &key samplerate soundspeed doppler-factor min-distance max-distance rolloff attenuation)
   (with-error-on-failure ()
-    (mixed:make-segment-plane-mixer samplerate (handle plane))))
+    (mixed:make-segment-plane-mixer samplerate (handle plane)))
+  (when soundspeed (setf (soundspeed plane) soundspeed))
+  (when doppler-factor (setf (doppler-factor plane) doppler-factor))
+  (when min-distance (setf (min-distance plane) min-distance))
+  (when max-distance (setf (max-distance plane) max-distance))
+  (when rolloff (setf (rolloff plane) rolloff))
+  (when attenuation (setf (attenuation plane) attenuation)))
 
-(defun make-plane-mixer (&rest args &key (samplerate *default-samplerate*) soundspeed doppler-factor min-distance max-distance rolloff attenuation)
-  (declare (ignore soundspeed doppler-factor min-distance max-distance rolloff attenuation))
-  (let ((instance (make-instance 'plane-mixer :samplerate samplerate)))
-    (loop for (field value) on args by #'cddr
-          do (unless (eql field :samplerate)
-               (setf (field field instance) value)))
-    instance))
+(defun make-plane-mixer (&rest args &key)
+  (apply #'make-instance 'plane-mixer args))
 
 (defmethod channels ((mixer plane-mixer)) 1)
 
