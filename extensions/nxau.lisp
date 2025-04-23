@@ -38,7 +38,7 @@
         (setf (mixed:samplerate pack) (nxau:audio-format-samplerate format))
         (setf (mixed:channels pack) (nxau:audio-format-channels format))
         (setf (mixed:encoding pack) (nxau:audio-format-format format))
-        (setf (mixed:size pack) (nxau:audio-format-buffersize format))))))
+        (setf (mixed:size pack) (* 2 (nxau:audio-format-buffersize format)))))))
 
 (defmethod mixed:free ((drain drain))
   (when (device drain)
@@ -50,7 +50,8 @@
 
 (defmethod mixed:mix ((drain drain))
   (mixed:with-buffer-tx (data start size (mixed:pack drain))
-    (mixed:finish (nxau:play (mixed:data-ptr) size 0.1 (device drain)))))
+    (when (< 0 size)
+      (mixed:finish (nxau:play (mixed:data-ptr) size 0.01 (device drain))))))
 
 (defmethod mixed:end ((drain drain))
   (check-result (nxau:stop (device drain))))
