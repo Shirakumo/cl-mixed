@@ -349,6 +349,10 @@ MIXED_EXPORT const char *mixed_segment_field_string(int code){
     return "finite input response";
   case MIXED_CHANNEL_CONFIGURATION:
     return "channel configuration";
+  case MIXED_EQUALIZER_BAND:
+    return "equalizer bands";
+  case MIXED_SPACE_SPATIAL:
+    return "spatial";
   default:
     return "unknown";
   }
