@@ -428,6 +428,7 @@
    #:input-min-distance
    #:input-max-distance
    #:input-rolloff
+   #:input-spatial-p
    #:soundspeed
    #:doppler-factor
    #:min-distance

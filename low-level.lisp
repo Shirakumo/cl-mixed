@@ -156,7 +156,8 @@
   :oversampling
   :buffer-size-hint
   :fir
-  :channel-configuration)
+  :channel-configuration
+  :space-spatial)
 
 (defcenum resample-type
   (:sinc-best-quality 0)
