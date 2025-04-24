@@ -27,9 +27,9 @@ fi
 
 ## Build
 if [[ "$platform" == "lin" ]]; then
-    TARGET=mixed_shared make all
+    TARGET=mixed_shared make all "$@"
 else
-    TARGET=mixed_shared make native
+    TARGET=mixed_shared make native "$@"
 fi
 
 ## Copy to standardised order
