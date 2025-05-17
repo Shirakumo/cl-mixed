@@ -29,7 +29,7 @@
   (let ((file (file source)))
     (mixed:with-buffer-tx (data start size (mixed:pack source) :direction :output)
       (when (< 0 size)
-        (let* ((frames (opus:check-return file (opus-cffi:read-float (opus:handle file) (mixed:data-ptr) size (cffi:null-pointer))))
+        (let* ((frames (opus:check-return file (opus-cffi:read-float (opus:handle file) (mixed:data-ptr) (truncate size 4) (cffi:null-pointer))))
                (read (* frames 4 (opus:channels file))))
           (cond ((< 0 read)
                  (incf (mixed:frame-position source) frames)
