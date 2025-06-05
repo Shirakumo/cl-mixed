@@ -264,7 +264,13 @@
    #:seek-to-frame
    #:frame-position
    #:frame-count
-   #:device-source)
+   #:device-source
+   #:pcm-stream-source
+   #:data-stream
+   #:data-start
+   #:data-end
+   #:pcm-vector-source
+   #:data-buffer)
   ;; toolkit.lisp
   (:export
    #:*default-samplerate*
