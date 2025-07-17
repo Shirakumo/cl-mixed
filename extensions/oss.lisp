@@ -49,7 +49,8 @@
 
 (defmethod mixed:end ((oss-device oss-device)))
 
-(defclass source (mixed:source oss-device) ())
+;; In this class and in DRAIN put OSS-DEVICE first as its INITIALIZE-INSTANCE :AFTER method should be run last.
+(defclass source (oss-device mixed:source) ())
 
 (defmethod fd-flag ((source source)) :read-only)
 
@@ -60,7 +61,7 @@
         (error "Failed to read."))
       (mixed:finish result))))
 
-(defclass drain (mixed:drain oss-device) ())
+(defclass drain (oss-device mixed:drain) ())
 
 (defmethod fd-flag ((drain drain)) :write-only)
 
