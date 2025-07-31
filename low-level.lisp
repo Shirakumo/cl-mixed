@@ -50,7 +50,8 @@
 (defctype decibel_t :float)
 (defctype duration_t :float)
 
-(defconstant MAX-SPEAKER-COUNT 33)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defconstant MAX-SPEAKER-COUNT 33))
 
 (defcenum error
   (:no-error 0)
