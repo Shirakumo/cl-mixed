@@ -69,6 +69,15 @@
 (defmethod framesize ((source source))
   (framesize (pack source)))
 
+(defmethod samplerate ((source source))
+  (samplerate (pack source)))
+
+(defmethod encoding ((source source))
+  (encoding (pack source)))
+
+(defmethod channels ((source source))
+  (channels (pack source)))
+
 (defmethod byte-position ((source source))
   (* (frame-position source) (framesize (pack source))))
 
