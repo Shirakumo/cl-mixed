@@ -639,7 +639,7 @@
   (chain :pointer))
 
 (defcfun (make-segment-convolution "mixed_make_segment_convolution") :int
-  (framesize :uint16)
+  (framesize :uint32)
   (fir :pointer)
   (fir-size :uint32)
   (samplerate :uint32)
@@ -704,12 +704,12 @@
   (configuratino :pointer))
 
 (defcfun (fwd-fft "mixed_fwd_fft") :int
-  (framesize :uint16)
+  (framesize :uint32)
   (in :pointer)
   (out :pointer))
 
 (defcfun (inv-fft "mixed_inv_fft") :int
-  (framesize :uint16)
+  (framesize :uint32)
   (in :pointer)
   (out :pointer))
 
