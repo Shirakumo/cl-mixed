@@ -7,7 +7,7 @@
 #  define MIXED_VERSION "unknown"
 #endif
 #include "internal.h"
-#include "spiral_fft.h"
+#include "pffft.h"
 
 MIXED_EXPORT uint8_t mixed_samplesize(enum mixed_encoding encoding){
   switch(encoding){
@@ -34,37 +34,39 @@ int mix_noop(struct mixed_segment *segment){
   return 1;
 }
 
+PFFFT_Setup *ffts[16] = {0};
+#define LOG2(X) ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) - 1))
 
-MIXED_EXPORT int mixed_fwd_fft(uint16_t framesize, float *in, float *out){
-  switch(spiral_fft_float(framesize, -1, in, out)){
-  case SPIRAL_OK:
-    return 1;
-  case SPIRAL_SIZE_NOT_SUPPORTED:
-  case SPIRAL_INVALID_PARAM:
+PFFFT_Setup *ensure_ffts(uint32_t framesize){
+  uint32_t pow = LOG2(framesize);
+  if(pow < 3 || 16 <= (pow-3) || !pffft_is_valid_size(framesize, PFFFT_REAL)){
     mixed_err(MIXED_INVALID_VALUE);
     return 0;
-  case SPIRAL_OUT_OF_MEMORY:
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  default:
-    return 0;
   }
+  pow -= 3;
+
+  if(ffts[pow] == 0){
+    ffts[pow] = pffft_new_setup(framesize, PFFFT_COMPLEX);
+    if(ffts[pow] == 0){
+      mixed_err(MIXED_OUT_OF_MEMORY);
+      return 0;
+    }
+  }
+  return ffts[pow];
 }
 
-MIXED_EXPORT int mixed_inv_fft(uint16_t framesize, float *in, float *out){
-  switch(spiral_fft_float(framesize, +1, in, out)){
-  case SPIRAL_OK:
-    return 1;
-  case SPIRAL_SIZE_NOT_SUPPORTED:
-  case SPIRAL_INVALID_PARAM:
-    mixed_err(MIXED_INVALID_VALUE);
-    return 0;
-  case SPIRAL_OUT_OF_MEMORY:
-    mixed_err(MIXED_OUT_OF_MEMORY);
-    return 0;
-  default:
-    return 0;
-  }
+MIXED_EXPORT int mixed_fwd_fft(uint32_t framesize, float *in, float *out){
+  PFFFT_Setup *f = ensure_ffts(framesize);
+  if(!f) return 0;
+  pffft_transform_ordered(f, in, out, 0, PFFFT_FORWARD);
+  return 1;
+}
+
+MIXED_EXPORT int mixed_inv_fft(uint32_t framesize, float *in, float *out){
+  PFFFT_Setup *f = ensure_ffts(framesize);
+  if(!f) return 0;
+  pffft_transform_ordered(f, in, out, 0, PFFFT_BACKWARD);
+  return 1;
 }
 
 MIXED_EXPORT extern inline float mixed_from_db(mixed_decibel_t volume);
@@ -73,6 +75,10 @@ MIXED_EXPORT extern inline  mixed_decibel_t mixed_to_db(float volume);
 thread_local int errorcode = 0;
 
 void mixed_err(int code){
+  errorcode = code;
+}
+
+MIXED_EXPORT void mixed_set_error(int code){
   errorcode = code;
 }
 
@@ -456,16 +462,66 @@ MIXED_EXPORT const char *mixed_version(void){
 }
 
 #ifndef MIXED_NO_CUSTOM_ALLOCATOR
+#if defined(_ISOC11_SOURCE)
+#define ALIGNED_ALLOC aligned_alloc
+#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
+void *ALIGNED_ALLOC(size_t alignment, size_t size){
+  void *addr;
+  if(posix_memalign(&addr, alignment, size) == 0)
+    return addr;
+  return 0;
+}
+#elif _WIN32
+void *ALIGNED_ALLOC(size_t alignment, size_t size){
+  return _aligned_malloc(size, alignment);
+}
+#else
+#include <malloc.h>
+#define ALIGNED_ALLOC memalign
+#endif
+
 void *(*mixed_calloc)(size_t num, size_t size) = calloc;
 void (*mixed_free)(void *ptr) = free;
 void *(*mixed_realloc)(void *ptr, size_t size) = realloc;
+void *(*mixed_aligned_alloc)(size_t alignment, size_t size) = ALIGNED_ALLOC;
 #endif
+
+void *aligned_calloc(size_t alignment, size_t num, size_t size){
+  void *addr = mixed_aligned_alloc(alignment, num*size);
+  if(!addr) return 0;
+  memset(addr, 0, num*size);
+  return addr;
+}
 
 void *crealloc(void *ptr, size_t oldcount, size_t newcount, size_t size){
   size_t newsize = newcount*size;
   size_t oldsize = oldcount*size;
   ptr = mixed_realloc(ptr, newsize);
   if(ptr && oldsize < newsize){
+    memset(((char*)ptr)+oldsize, 0, newsize-oldsize);
+  }
+  return ptr;
+}
+
+static inline int is_aligned(size_t alignment, const void *restrict pointer){
+  return (uintptr_t)pointer % alignment == 0;
+}
+
+void *aligned_crealloc(void *ptr, size_t alignment, size_t oldcount, size_t newcount, size_t size){
+  size_t newsize = newcount*size;
+  size_t oldsize = oldcount*size;
+  ptr = mixed_realloc(ptr, newsize);
+  if(!ptr) return ptr;
+  
+  if(!is_aligned(alignment, ptr)){
+    // Have to get a new, guaranteed aligned block and copy over ourselves.
+    void *new = mixed_aligned_alloc(alignment, newsize);
+    if(!new) return 0;
+    memcpy(new, ptr, oldsize);
+    free(ptr);
+    ptr = new;
+  }
+  if(oldsize < newsize){
     memset(((char*)ptr)+oldsize, 0, newsize-oldsize);
   }
   return ptr;

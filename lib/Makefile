@@ -56,3 +56,14 @@ docs:
 install:
 	$(MAKE) native
 	$(MAKE) -C $(PREFIX) install
+
+release:
+ifndef VERSION
+	$(error "VERSION is unset")
+endif
+	echo "$(VERSION)" > VERSION
+	@git add VERSION
+	@git commit -m "Version bump to $(VERSION)"
+	@git push origin main
+	@git tag "$(VERSION)"
+	@git push origin "$(VERSION)"
