@@ -10,7 +10,11 @@ option(BUILD_TESTER "Build the tester application" ON)
 option(BUILD_SIMD "Build with SIMD as minimum requirement" ON)
 option(BUILD_DOCS "Build the doxygen documentation files" ON)
 option(BUILD_DEBUG_LOG "Build with debug logging output" OFF)
+set(BUILD_C_VERSION 99 CACHE STRING "The C target version to build with. Versions below 99 are not officially supported.")
 set(BUILD_SIMD_VERSION "SSE" CACHE STRING "Which SIMD version to require")
+
+find_library(DL_LIB dl)
+find_library(M_LIB m)
 
 ## Generate version
 find_program(GIT_SCM git DOC "Git version control")
@@ -86,25 +90,31 @@ add_library(samplerate OBJECT
   "libsamplerate/src_linear.c"
   "libsamplerate/src_sinc.c"
   "libsamplerate/src_zoh.c")
+set_property(TARGET samplerate PROPERTY C_STANDARD ${BUILD_C_VERSION})
 target_compile_options(samplerate PRIVATE -O3 ${COMPILATION_FLAGS})
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   target_compile_options(samplerate PRIVATE -fpic -flto)
 endif()
 
-## Spiralfft
-if(ARCH MATCHES "x86_64")
-  add_library(spiralfft OBJECT
-    "spiralfft/sse/spiral_fft_float.c"
-    "spiralfft/sse/spiral_private.c")
-else()
-  add_library(spiralfft OBJECT
-    "spiralfft/scalar/spiral_fft_float.c"
-    "spiralfft/scalar/spiral_private.c")
+## pffft
+add_library(pffft OBJECT
+  "pffft/pffft.c"
+  "pffft/simd/pf_float.h"
+  "pffft/simd/pf_sse1_float.h"
+  "pffft/simd/pf_altivec_float.h"
+  "pffft/simd/pf_neon_float.h"
+  "pffft/simd/pf_scalar_float.h"
+  "pffft/pffft_common.c"
+  "pffft/pffft_priv_impl.h")
+target_include_directories(pffft PRIVATE "pffft/")
+set_property(TARGET pffft PROPERTY C_STANDARD ${BUILD_C_VERSION})
+set_property(TARGET pffft PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_compile_options(pffft PRIVATE -O3 ${COMPILATION_FLAGS} -DPFFFT_SCALVEC_ENABLED=1 -DNDEBUG)
+if(M_LIB)
+  target_compile_options(pffft PRIVATE -D_USE_MATH_DEFINES)
 endif()
-target_include_directories(spiralfft PRIVATE "spiralfft/")
-target_compile_options(spiralfft PRIVATE -O3 ${COMPILATION_FLAGS})
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-  target_compile_options(spiralfft PRIVATE -fpic -flto)
+  target_compile_options(pffft PRIVATE -flto)
 endif()
 
 ## Libmixed
@@ -150,8 +160,8 @@ add_library(mixed OBJECT
   "src/segments/space_mixer.c"
   "src/segments/speed_change.c"
   "src/segments/volume_control.c")
-target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "spiralfft/")
-set_property(TARGET mixed PROPERTY C_STANDARD 99)
+target_include_directories(mixed PRIVATE "src/" "libsamplerate/" "pffft/")
+set_property(TARGET mixed PROPERTY C_STANDARD ${BUILD_C_VERSION})
 set_property(TARGET mixed PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(mixed PRIVATE MIXED_BUILD=1 MIXED_VERSION="${MIXED_VERSION_STRING}")
 if(BUILD_DEBUG_LOG)
@@ -159,23 +169,19 @@ if(BUILD_DEBUG_LOG)
   target_compile_definitions(mixed PRIVATE MIXED_DEBUG=1)
 endif()
 target_compile_options(mixed PRIVATE ${COMPILATION_FLAGS} -W -Wall -Wextra -Wpedantic -Wno-ignored-attributes -Wno-enum-conversion)
-
-find_library(DL_LIB dl)
-find_library(M_LIB m)
 if(DL_LIB)
   message(STATUS "Enabling dynamically linked plugins")
   target_compile_definitions(mixed PRIVATE MIXED_DL=1)
 endif()
-
 install(FILES "src/mixed.h" "src/mixed_encoding.h" DESTINATION include/)
 
 if(BUILD_STATIC)
-  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_static STATIC $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:pffft> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_static PROPERTIES OUTPUT_NAME mixed)
   install(TARGETS mixed_static DESTINATION lib/)
 endif()
 if(BUILD_SHARED)
-  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:spiralfft> $<TARGET_OBJECTS:mixed>)
+  add_library(mixed_shared SHARED $<TARGET_OBJECTS:samplerate> $<TARGET_OBJECTS:pffft> $<TARGET_OBJECTS:mixed>)
   set_target_properties(mixed_shared PROPERTIES OUTPUT_NAME mixed)
   set_property(TARGET mixed_shared PROPERTY VERSION ${MIXED_VERSION_STRING})
   set_property(TARGET mixed_shared PROPERTY SOVERSION ${MIXED_VERSION_MAJOR})
@@ -202,7 +208,7 @@ if(BUILD_TESTER)
       "test/packer.c"
       "test/distribute.c")
     add_dependencies(tester mixed_shared)
-    set_property(TARGET tester PROPERTY C_STANDARD 99)
+    set_property(TARGET tester PROPERTY C_STANDARD ${BUILD_C_VERSION})
     target_compile_options(tester PRIVATE ${COMPILATION_FLAGS})
     target_link_libraries(tester mixed_shared)
     if(PTHREAD_LIB)
@@ -224,19 +230,32 @@ if(BUILD_EXAMPLES)
   set(CURSES_NEED_WIDE TRUE)
   find_package(Curses)
   if(OUT123_FOUND AND MPG123_FOUND AND CURSES_FOUND)
-    file(GLOB example_src "examples/*.c")
+    set(example_src
+      "examples/convolve.c"
+      "examples/effect.c"
+      "examples/fft.c"
+      "examples/ladspa.c"
+      "examples/meta.c"
+      "examples/mix.c"
+      "examples/space.c"
+      "examples/tone.c")
     foreach(example_file ${example_src})
       get_filename_component(example_name ${example_file} NAME_WE)
       set(example_name "example_${example_name}")
       add_executable(${example_name} ${example_file})
       add_dependencies(${example_name} mixed_shared)
-      set_property(TARGET ${example_name} PROPERTY C_STANDARD 99)
+      set_property(TARGET ${example_name} PROPERTY C_STANDARD ${BUILD_C_VERSION})
       target_include_directories(${example_name} PRIVATE ${CURSES_INCLUDE_DIRS} ${MPG123_INCLUDE_DIR} ${OUT123_INCLUDE_DIR})
       target_link_libraries(${example_name} mixed_shared ${CURSES_LIBRARIES} ${OUT123_LIBRARIES} ${MPG123_LIBRARIES})
     endforeach()
   else()
     message(STATUS "Cannot build examples")
   endif()
+
+  add_library(example_plugin SHARED "examples/plugin.c")
+  add_dependencies(example_plugin mixed_shared)
+  set_property(TARGET example_plugin PROPERTY C_STANDARD ${BUILD_C_VERSION})
+  target_link_libraries(example_plugin mixed_shared)
 endif()
 
 ## Doxygen
