@@ -30,7 +30,7 @@
   (cffi:with-foreign-objects ((err :int)
                               (sample-spec '(:struct pulse:sample-spec)))
     (setf (pulse:sample-spec-format sample-spec) :int16)
-    (setf (pulse:sample-spec-rate sample-spec) 44100)
+    (setf (pulse:sample-spec-rate sample-spec) mixed:*default-samplerate*)
     (setf (pulse:sample-spec-channels sample-spec) 2)
     (let ((drain (pulse:simple-new
                   (cffi:null-pointer) "mixed"

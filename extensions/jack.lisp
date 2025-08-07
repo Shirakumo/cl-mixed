@@ -42,7 +42,7 @@
   ((client :initform NIL :accessor client)
    (program-name :initarg :program-name :initform "mixed" :accessor program-name)
    (server :initarg :server :initform "default" :accessor server)
-   (samplerate :initform 44100 :accessor mixed:samplerate)))
+   (samplerate :initform mixed:*default-samplerate* :accessor mixed:samplerate)))
 
 (defmethod initialize-instance :after ((drain drain) &key (channels 2))
   (assert (<= channels 16) (channels))
