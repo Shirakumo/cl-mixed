@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "NXAU playback drain"
-  :homepage "https://Shirakumo.github.io/cl-mixed/"
-  :bug-tracker "https://github.com/Shirakumo/cl-mixed/issues"
-  :source-control (:git "https://github.com/Shirakumo/cl-mixed.git")
+  :homepage "https://shirakumo.org/docs/cl-mixed/"
+  :bug-tracker "https://shirakumo.org/project/cl-mixed/issues"
+  :source-control (:git "https://shirakumo.org/project/cl-mixed.git")
   :serial T
   :components ((:file "nxau-cffi")
                (:file "nxau"))
