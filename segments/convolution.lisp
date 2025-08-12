@@ -6,7 +6,7 @@
    :framesize 2048
    :samplerate *default-samplerate*))
 
-(defmethod initialize-instance :after ((space convolution) &key framesize fir samplerate)
+(defmethod initialize-instance :after ((space convolution) &key framesize fir samplerate wet)
   (with-error-on-failure ()
     (etypecase fir
       ((simple-array single-float (*))
@@ -14,7 +14,8 @@
          (mixed:make-segment-convolution framesize ptr (length fir) samplerate (handle space))))
       (buffer
        (let ((ptr (static-vectors:static-vector-pointer (data fir))))
-         (mixed:make-segment-convolution framesize ptr (size fir) samplerate (handle space)))))))
+         (mixed:make-segment-convolution framesize ptr (size fir) samplerate (handle space))))))
+  (when wet (setf (wet space) wet)))
 
 (defun make-convolution (fir &key (framesize 2048) (samplerate *default-samplerate*))
   (make-instance 'convolution :fir fir :framesize framesize :samplerate samplerate))
